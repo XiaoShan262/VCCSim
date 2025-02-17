@@ -1,0 +1,3 @@
+[submodule "Source/tomlplusplus"]
+	path = Source/tomlplusplus
+	url = https://github.com/marzer/tomlplusplus.git
