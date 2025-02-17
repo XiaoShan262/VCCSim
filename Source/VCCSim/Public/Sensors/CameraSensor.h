@@ -31,7 +31,7 @@ public:
     float CaptureRate = 30.f;
 };
 
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (VCCSIM))
 class VCCSIM_API URGBCameraComponent : public UPrimitiveComponent
 {
     GENERATED_BODY()
@@ -39,6 +39,8 @@ class VCCSIM_API URGBCameraComponent : public UPrimitiveComponent
 public:
     URGBCameraComponent();
     void RGBConfigure(const RGBCameraConfig& Config);
+    bool IsConfigured() const { return bBPConfigured; }
+    int32 GetCameraIndex() const { return CameraIndex; }
     void SetCaptureComponent() const;
 
     UFUNCTION(BlueprintCallable, Category = "RGBCamera")
@@ -70,6 +72,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RGBCamera|Config", 
         meta = (EditCondition = "bOrthographic"))
     float OrthoWidth;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RGBCamera|Config")
+    bool bBPConfigured = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RGBCamera|Config")
+    int32 CameraIndex = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RGBCamera|Performance")
     bool bAutoCapture;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RGBCamera|Performance")

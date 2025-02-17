@@ -13,20 +13,6 @@ DefaultCarPawn = "/VCCSim/Pawn/Husky/Blueprints/BP_CarPawn_Husky.BP_CarPawn_Husk
 # Angle units are in degrees.
 # Left-handed coordinate system.
 
-#[[Robots]]
-#
-#UETag = "Husky"
-#Type = "Car"
-#
-#[Robots.ComponentConfigs.Lidar]
-#NumRays = 32
-#NumPoints = 16000
-#ScannerRangeInner = 100
-#ScannerRangeOuter = 4000
-#ScannerAngleUp = 35
-#ScannerAngleDown = 25
-#bVisualizePoints = true
-
 [[Robots]]
 
 UETag = "Mavic"
@@ -41,18 +27,32 @@ ScannerAngleUp = 25
 ScannerAngleDown = 25
 bVisualizePoints = true
 
-[Robots.ComponentConfigs.DepthCamera]
-FOV = 90   
-Width = 512
-Height = 512
-MaxRange = 2000.0
-MinRange = 0.0
-bOrthographic = false
-CaptureRate = 30.0
+#[Robots.ComponentConfigs.DepthCamera]
+#FOV = 90
+#Width = 512
+#Height = 512
+#MaxRange = 2000.0
+#MinRange = 0.0
+#bOrthographic = false
+#CaptureRate = 30.0
 
 [Robots.ComponentConfigs.RGBCamera]
 FOV = 90
-Width = 512
-Height = 512
+Width = 1500
+Height = 800
 bOrthographic = false
 CaptureRate = 30.0
+
+#[[Robots]]
+#
+#UETag = "Husky"
+#Type = "Car"
+#
+#[Robots.ComponentConfigs.Lidar]
+#NumRays = 32
+#NumPoints = 16000
+#ScannerRangeInner = 100
+#ScannerRangeOuter = 4000
+#ScannerAngleUp = 35
+#ScannerAngleDown = 25
+#bVisualizePoints = true

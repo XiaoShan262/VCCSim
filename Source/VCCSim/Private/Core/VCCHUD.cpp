@@ -315,19 +315,39 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
             }
             else if (Component.first == ESensorType::DepthCamera)
             {
-                UDepthCameraComponent* DepthCameraComponent =
-                    RobotPawn->FindComponentByClass<UDepthCameraComponent>();
-                DepthCameraComponent->DCConfigure(
-                    *static_cast<DepthCameraConfig*>(Component.second.get()));
-                RGrpcMaps.RCMaps.RDCMap[Robot.UETag] = DepthCameraComponent;
+                TArray<UDepthCameraComponent*> DepthCameras;
+                RobotPawn->GetComponents<UDepthCameraComponent>(DepthCameras);
+    
+                for (auto* DepthCam : DepthCameras)
+                {
+                    if (!DepthCam->IsConfigured())
+                    {
+                        DepthCam->DCConfigure(
+                            *static_cast<DepthCameraConfig*>(Component.second.get()));
+                        // Use both robot tag and camera ID/index for unique identification
+                        FString cameraKey = FString::Printf(TEXT("%s^%d"), 
+                            *FString(Robot.UETag.c_str()), DepthCam->GetCameraIndex());
+                        RGrpcMaps.RCMaps.RDCMap[TCHAR_TO_UTF8(*cameraKey)] = DepthCam;
+                    }
+                }
             }
             else if (Component.first == ESensorType::RGBCamera)
             {
-                URGBCameraComponent* RGBCameraComponent =
-                    RobotPawn->FindComponentByClass<URGBCameraComponent>();
-                RGBCameraComponent->RGBConfigure(
-                    *static_cast<RGBCameraConfig*>(Component.second.get()));
-                RGrpcMaps.RCMaps.RRGBCMap[Robot.UETag] = RGBCameraComponent;
+                TArray<URGBCameraComponent*> RGBCameras;
+                RobotPawn->GetComponents<URGBCameraComponent>(RGBCameras);
+
+                for (auto* RGBCam : RGBCameras)
+                {
+                    if (!RGBCam->IsConfigured())
+                    {
+                        RGBCam->RGBConfigure(
+                            *static_cast<RGBCameraConfig*>(Component.second.get()));
+                        // Use both robot tag and camera ID/index for unique identification
+                        FString cameraKey = FString::Printf(TEXT("%s^%d"), 
+                            *FString(Robot.UETag.c_str()), RGBCam->GetCameraIndex());
+                        RGrpcMaps.RCMaps.RRGBCMap[TCHAR_TO_UTF8(*cameraKey)] = RGBCam;
+                    }
+                }
             }
             else
             {

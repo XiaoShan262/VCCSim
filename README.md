@@ -11,7 +11,7 @@ For now, we are using the following development environment.
 We recommend using the same environment to avoid compatibility issues.
 
 - Unreal Engine 5.4.2
-- JetBrains Rider 2024.3.5 (Attention: we still need Visual Studio for essential development environment)
+- JetBrains Rider 2024.3.5 (Attention: Rider needs Visual Studio for essential environment toolkits)
 - Windows 11 (We are not sure if it works on other platforms)
 
 ## HOW TO USE
@@ -42,7 +42,7 @@ We recommend using the same environment to avoid compatibility issues.
 
    You can also build the GRPC by yourself. But it is a bit complicated. The compiled result usually cannot be used directly with UE. So we recommend using our precompiled version.
 
-    We will provide a guide for building the GRPC with UE5 by yourself soon.
+    We will provide a guide for building the GRPC with UE5 by yourself soon.:)
 
 3. Build the project.
 

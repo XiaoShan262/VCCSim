@@ -27,6 +27,8 @@ void URGBCameraComponent::RGBConfigure(const RGBCameraConfig& Config)
     CaptureRate = 1.f / Config.CaptureRate;
     SetCaptureComponent();
     PrimaryComponentTick.bCanEverTick = false;
+
+    
 }
 
 void URGBCameraComponent::SetCaptureComponent() const

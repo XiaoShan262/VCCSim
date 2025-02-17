@@ -32,6 +32,8 @@ void UDepthCameraComponent::DCConfigure(const DepthCameraConfig& Config)
     CaptureRate = 1.f / Config.CaptureRate;
     SetCaptureComponent();
     PrimaryComponentTick.bCanEverTick = false;
+
+    bBPConfigured = true;
 }
 
 void UDepthCameraComponent::SetCaptureComponent() const

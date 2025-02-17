@@ -38,6 +38,8 @@ class VCCSIM_API UDepthCameraComponent : public UPrimitiveComponent
 public:
     UDepthCameraComponent();
     void DCConfigure(const DepthCameraConfig& Config);
+    bool IsConfigured() const { return bBPConfigured; }
+    int32 GetCameraIndex() const { return CameraIndex; }
     void SetCaptureComponent() const;
 
     UFUNCTION(BlueprintCallable, Category = "DepthCamera")
@@ -77,6 +79,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DepthCamera|Config", 
         meta = (EditCondition = "bOrthographic"))
     float OrthoWidth;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DepthCamera|Config")
+    bool bBPConfigured = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DepthCamera|Config")
+    int32 CameraIndex = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DepthCamera|Performance")
     bool bAutoCapture;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DepthCamera|Performance")
