@@ -21,7 +21,8 @@ FVCCSimConfig ParseConfig()
         UE_LOG(LogTemp, Warning, TEXT("ParseConfig: Using default config!"));
         // Get the user's documents directory
         FString DocPath = FPlatformProcess::UserDir();
-        Filename = TCHAR_TO_UTF8(*FPaths::Combine(DocPath, TEXT("VCCSim"), TEXT("RSConfig.toml")));
+        Filename = TCHAR_TO_UTF8(*FPaths::Combine(
+            DocPath, TEXT("VCCSim"), TEXT("RSConfig.toml")));
     }
 
     auto Tbl = toml::parse_file(Filename);

@@ -54,6 +54,8 @@ We recommend using the same environment to avoid compatibility issues.
 
     If you can see the `VCCSim` in the "Plugins" directory in the Explorer, you have successfully cloned the repository. For now, you can build the project and open the editor.
 
+4. Settings in editor
+
     Check the `Show Plugin Content` in the `View Options` to see the plugin content.
 
     ![1739809269482](image/README/1739809269482.png)
@@ -61,3 +63,13 @@ We recommend using the same environment to avoid compatibility issues.
     For now, you can see the `VCCSim` directory in the `Content` directory.
 
     ![1739809329957](image/README/1739809329957.png)
+
+    In order to control the map, you need to set the `Game Instance Class` as `BP_VCCSimGameInstance` in the `Project Settings`.
+
+    For each map you want to use the VCCSim, you need to set the `Game Mode Override` as `BP_VCCSimGameMode`.
+
+5. Set experiment settings
+
+    VCCSim uses the 'RSConfig.toml' file to set the experiment settings.
+
+    The default place of 'RSConfig.toml' file is `/Plugins/VCCSim/Source/VCCSim`. But you can change the path in the `YourUser/VCCSim` directory.
