@@ -1,0 +1,184 @@
+﻿syntax = "proto3";
+
+package VCCSim;
+
+// Attention: The coordinates are left-handed, x is forward, y is right, z is up
+
+// Public:
+message Point {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message PointWithColor {
+  Point point = 1;
+  uint32 color = 2;
+}
+
+message PointCloudWithColor {
+  repeated PointWithColor data = 1;
+}
+
+message EmptyRequest {
+}
+
+message Pose {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+  float roll = 4;
+  float pitch = 5;
+  float yaw = 6;
+}
+
+message PoseOnlyYaw{
+  float x = 1;
+  float y = 2;
+  float z = 3;
+  float yaw = 4;
+}
+
+message twist{
+  float linear_x = 1;
+  float linear_y = 2;
+  float linear_z = 3;
+  float angular_x = 4;
+  float angular_y = 5;
+  float angular_z = 6;
+}
+
+message Odometry {
+  Pose pose = 1;
+  twist twist = 2;
+}
+
+message Status {
+  bool status = 1;
+}
+
+message RobotName {
+  string name = 1;
+}
+
+// Mesh:
+message MeshData {
+  bytes data = 1;           // Binary mesh data
+  uint32 format = 2;        // Format identifier
+  uint32 version = 3;       // Format version
+  bool simplified = 4;      // Whether mesh is simplified
+  Pose transform = 5;       // Mesh world transform
+}
+
+message MeshDataWithOdom {
+  MeshData mesh = 1;
+  Odometry odom = 2;
+}
+
+// Lidar:
+message LidarPoint {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+  int32 hit = 4;
+}
+
+message LidarData {
+  repeated LidarPoint data = 1;
+}
+
+message LidarDataAndOdom {
+  LidarData data = 1;
+  Odometry odom = 2;
+}
+
+// Depth Camera:
+message DepthCameraPointData {
+  repeated Point data = 1;
+}
+
+message DepthCameraImageData {
+  repeated float data = 1;
+}
+
+// RGB Camera:
+message RGBCameraImageData {
+  uint32 width = 1;
+  uint32 height = 2;
+  bytes data = 3;         // Raw RGB data or compressed image data
+  enum Format {
+    RGB = 0;              // Raw RGB format (3 bytes per pixel)
+    BGR = 1;              // Raw BGR format (3 bytes per pixel)
+    JPEG = 2;             // JPEG compressed
+    PNG = 3;              // PNG compressed
+  }
+  Format format = 4;       // Image format
+  uint32 timestamp = 5;    // todo: it's useless for now
+
+  // Optional fields for additional metadata
+  optional uint32 bytes_per_pixel = 6;  // Usually 3 for RGB/BGR
+  optional uint32 stride = 7;           // Bytes per row (for alignment)
+  optional bool is_compressed = 8;      // Whether data is compressed
+}
+
+// Drone:
+message DronePose {
+  string name = 1;
+  Pose pose = 2;
+}
+
+message DronePath {
+  string name = 1;
+  repeated Pose path = 2;
+}
+
+// Car:
+message CarPose {
+  string name = 1;
+  PoseOnlyYaw pose = 2;
+}
+
+message CarPath {
+  string name = 1;
+  repeated PoseOnlyYaw path = 2;
+}
+  
+
+// Services:
+service LidarService {
+  rpc GetLiDARData (RobotName) returns (LidarData); // todo
+  rpc GetLiDAROdom (RobotName) returns (Odometry); // todo
+  rpc GetLiDARDataAndOdom (RobotName) returns (LidarDataAndOdom);
+}
+
+service DepthCameraService {
+  rpc GetDepthCameraPointData (RobotName) returns (DepthCameraPointData);
+  rpc GetDepthCameraImageData (RobotName) returns (DepthCameraImageData); // todo: size?
+  rpc GetDepthCameraOdom (RobotName) returns (Odometry);
+}
+
+service RGBCameraService {
+  rpc GetRGBCameraImageData (RobotName) returns (RGBCameraImageData);
+  rpc GetRGBCameraOdom (RobotName) returns (Odometry);
+}
+
+service DroneService {
+  rpc GetDroneOdom (RobotName) returns (Odometry);
+  rpc SendDronePose (DronePose) returns (Status);
+  rpc SendDronePath (DronePath) returns (Status);
+}
+
+service CarService {
+  rpc GetCarOdom (RobotName) returns (Odometry);
+  rpc SendCarPose (CarPose) returns (Status);
+  rpc SendCarPath (CarPath) returns (Status);
+}
+
+service MeshService {
+  rpc SendMesh (MeshData) returns (Status);
+}
+
+service PointCloudService {
+  rpc SendPointCloudWithColor (PointCloudWithColor) returns (Status);
+}
+

@@ -1,0 +1,660 @@
+﻿#include "Utils/VCCSIMDisplayWidget.h"
+#include "Utils/ConfigParser.h"
+#include "Utils/MeshHandlerComponent.h"
+#include "Utils/InsMeshHolder.h"
+#include "Utils/ImageProcesser.h"
+#include "Components/InstancedStaticMeshComponent.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "EngineUtils.h"
+#include "Engine/StaticMeshActor.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "Engine/World.h"
+
+#include "Windows/WindowsHWrapper.h" // Deal with UpdateResourceW error
+#include "HAL/FileManagerGeneric.h"
+
+
+void URatSIMDisplayWidget::NativeConstruct()
+{
+    Super::NativeConstruct();
+    
+    if (DepthVisualizationMaterial && DepthImageDisplay)
+    {
+        DepthMaterial =
+            UMaterialInstanceDynamic::Create(DepthVisualizationMaterial, this);
+        DepthImageDisplay->SetBrushFromMaterial(DepthMaterial);
+
+        DepthMaterial->SetScalarParameterValue("MinDepth", MinDepth);
+        DepthMaterial->SetScalarParameterValue("MaxDepth", MaxDepth);
+        DepthMaterial->SetScalarParameterValue("Contrast", Contrast);
+        DepthMaterial->SetScalarParameterValue("Brightness", Brightness);
+    }
+    if (RGBVisualizationMaterial && RGBImageDisplay)
+    {
+        RGBMaterial = UMaterialInstanceDynamic::Create(RGBVisualizationMaterial, this);
+        RGBImageDisplay->SetBrushFromMaterial(RGBMaterial);
+    }
+}
+
+void URatSIMDisplayWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+    Super::NativeTick(MyGeometry, InDeltaTime);
+
+    if (LitImageDisplay->IsVisible())
+    {
+        UpdateLitImage(InDeltaTime);
+    }
+
+    if (PCImageDisplay->IsVisible())
+    {
+        UpdatePCImage(InDeltaTime);
+    }
+    
+    if (UnitImageDisplay->IsVisible())
+    {
+        UpdateMeshImage(InDeltaTime);
+    }
+
+    // Process 3 capture request per tick if available.
+    for (int i = 0; i < 3; ++i)
+    {
+        int32 ID;
+        if (CaptureQueue.Dequeue(ID))
+        {
+            CurrentQueueSize--;
+            switch (ID)
+            {
+            case 6:
+                ProcessCapture(6);
+                break;
+            case 7:
+                UpdateLitImage(InDeltaTime);
+                ProcessCapture(7);
+                break;
+            case 8:
+                UpdatePCImage(InDeltaTime);
+                ProcessCapture(8);
+                break;
+            case 9:
+                UpdateMeshImage(InDeltaTime);
+                ProcessCapture(9);
+                break;
+            case 0:
+                ProcessCapture(0);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+}
+
+void URatSIMDisplayWidget::InitFromConfig(const struct FVCCSimConfig& Config)
+{
+    auto SubWindows = Config.VCCSim.SubWindows;
+    auto SubWindowsOpacities = Config.VCCSim.SubWindowsOpacities;
+
+    for (int i = 0; i < SubWindows.size(); ++i)
+    {
+        if (SubWindows[i] == "Lit")
+        {
+            if (!Config.VCCSim.StaticMeshActor.empty())
+            {
+                TArray<UStaticMeshComponent*> MeshComponents;
+                for (const std::string& mesh : Config.VCCSim.StaticMeshActor)
+                {
+                    auto ActorName = mesh.c_str();
+                    for (TActorIterator<AStaticMeshActor> It(GetWorld()); It; ++It)
+                    {
+                        if (It->ActorHasTag(ActorName))
+                        {
+                            MeshComponents.Add(It->GetStaticMeshComponent());
+                        }
+                    }
+                    for (TActorIterator<AStaticMeshActor> It(GetWorld()); It; ++It)
+                    {
+                        if (It->GetName().Contains(ActorName))
+                        {
+                            MeshComponents.Add(It->GetStaticMeshComponent());
+                        }
+                    }
+                }
+                if (MeshComponents.Num() > 0)
+                {
+                    SetLitMeshComponent(MeshComponents, SubWindowsOpacities[i]);
+                }
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("StaticMeshActor not set"));
+            }
+        }
+        else if (SubWindows[i] == "PointCloud")
+        {
+            if (UInsMeshHolder* InstancedMeshHolder = NewObject<UInsMeshHolder>(Holder))
+            {
+                InstancedMeshHolder->SetWorldTransform(FTransform::Identity);
+                InstancedMeshHolder->RegisterComponent();
+                InstancedMeshHolder->CreateStaticMeshes();
+
+                SetPCViewComponent(InstancedMeshHolder->GetInstancedMeshComponentColor(),
+                    SubWindowsOpacities[i]);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("Failed to create InstancedMeshHolder"));
+            }
+        }
+        else if (SubWindows[i] == "Unit")
+        {
+            if (UMeshHandlerComponent* MeshHandlerComponent =
+                NewObject<UMeshHandlerComponent>(Holder))
+            {
+                MeshHandlerComponent->SetWorldTransform(FTransform::Identity);
+                MeshHandlerComponent->RegisterComponent();
+
+                SetMeshHandler(MeshHandlerComponent, SubWindowsOpacities[i]);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("Failed to set MeshHandler"));
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Unknown SubWindow: %s"), 
+                *FString(SubWindows[i].c_str()));
+        }
+    }    
+}
+
+void URatSIMDisplayWidget::SetDepthTexture(UTextureRenderTarget2D* DepthTexture)
+{    
+    if (DepthMaterial && DepthTexture)
+    {
+        DepthRenderTarget = DepthTexture;
+        DepthMaterial->SetTextureParameterValue(TEXT("DepthTexture"), DepthRenderTarget);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, 
+            TEXT("SetDepthTexture failed - Material: %s, Texture: %s"),
+            DepthMaterial ? TEXT("valid") : TEXT("null"),
+            DepthTexture ? TEXT("valid") : TEXT("null"));
+    }
+}
+
+void URatSIMDisplayWidget::SetRGBTexture(UTextureRenderTarget2D* RGBTexture)
+{
+    if (RGBMaterial && RGBTexture)
+    {
+        RGBRenderTarget = RGBTexture;
+        RGBMaterial->SetTextureParameterValue(TEXT("RGBTexture"), RGBRenderTarget);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, 
+            TEXT("SetRGBTexture failed - Material: %s, Texture: %s"),
+            RGBMaterial ? TEXT("valid") : TEXT("null"),
+            RGBTexture ? TEXT("valid") : TEXT("null"));
+    }
+}
+
+void URatSIMDisplayWidget::SetLitMeshComponent(
+    TArray<UStaticMeshComponent*> MeshComponent, const float& Opacity)
+{
+    if (!LitImageDisplay || !GetWorld())
+    {
+        UE_LOG(LogTemp, Error, TEXT("LitImageDisplay or World not valid"));
+        return;
+    }
+
+    LitRenderTarget = NewObject<UTextureRenderTarget2D>(this);
+    LitRenderTarget->InitCustomFormat(LitRenderWidth, LitRenderHeight,
+        PF_B8G8R8A8, true);
+    LitRenderTarget->bAutoGenerateMips = false;
+    LitRenderTarget->UpdateResource();
+
+    LitSceneCapture = NewObject<USceneCaptureComponent2D>(MeshComponent[0]);
+    LitSceneCapture->RegisterComponent();
+    
+    LitSceneCapture->bCaptureEveryFrame = false;
+    LitSceneCapture->bCaptureOnMovement = true;
+    LitSceneCapture->TextureTarget = LitRenderTarget;
+    LitSceneCapture->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+
+    FEngineShowFlags& ShowFlags = LitSceneCapture->ShowFlags;
+    ShowFlags.SetAtmosphere(false);
+    ShowFlags.SetFog(false);
+    ShowFlags.SetBloom(false);
+    ShowFlags.SetAmbientOcclusion(true);
+    ShowFlags.SetAntiAliasing(true);
+    ShowFlags.SetDynamicShadows(true);
+    ShowFlags.SetTemporalAA(false);
+    ShowFlags.SetMotionBlur(false);
+
+    ShowFlags.SetGlobalIllumination(false);
+    ShowFlags.SetReflectionEnvironment(false);
+    ShowFlags.SetDecals(false);
+
+    LitSceneCapture->PrimitiveRenderMode =
+        ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+    for (UStaticMeshComponent* Mesh : MeshComponent)
+    {
+        LitSceneCapture->ShowOnlyComponents.Add(Mesh);
+    }
+    
+    if (LitVisualizationMaterial)
+    {
+        LitMaterial = UMaterialInstanceDynamic::Create(LitVisualizationMaterial, this);
+        LitImageDisplay->SetBrushFromMaterial(LitMaterial);
+        
+        if (LitMaterial)
+        {
+            LitMaterial->SetTextureParameterValue(TEXT("MeshTexture"), LitRenderTarget);
+            LitMaterial->SetScalarParameterValue(TEXT("Opacity"), Opacity);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to create LitMaterial"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("LitVisualizationMaterial not set"));
+    }
+}
+
+void URatSIMDisplayWidget::SetPCViewComponent(
+    UInstancedStaticMeshComponent* InInstancedMeshComponent, const float& Opacity)
+{
+    if (!PCImageDisplay || !GetWorld())
+    {
+        UE_LOG(LogTemp, Error, TEXT("PCImageDisplay or World not valid"));
+        return;
+    }
+
+    PCRenderTarget = NewObject<UTextureRenderTarget2D>(this);
+    PCRenderTarget->InitCustomFormat(PCRenderWidth, PCRenderHeight,
+        PF_B8G8R8A8, true);
+    PCRenderTarget->bAutoGenerateMips = false;
+    PCRenderTarget->UpdateResource();
+
+    if (!Holder)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Holder not valid"));
+        return;
+    }
+    PCSceneCapture = NewObject<USceneCaptureComponent2D>(Holder);
+    PCSceneCapture->RegisterComponent();
+
+    PCSceneCapture->bCaptureOnMovement = true;
+    PCSceneCapture->TextureTarget = PCRenderTarget;
+    PCSceneCapture->bCaptureEveryFrame = false;
+    PCSceneCapture->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+
+    FEngineShowFlags& ShowFlags = PCSceneCapture->ShowFlags;
+    ShowFlags.SetAtmosphere(false);
+    ShowFlags.SetFog(false);
+    ShowFlags.SetBloom(false);
+    ShowFlags.SetAmbientOcclusion(true);
+    ShowFlags.SetAntiAliasing(true);
+    ShowFlags.SetDynamicShadows(true);
+    ShowFlags.SetTemporalAA(false);
+    ShowFlags.SetMotionBlur(false);
+
+    ShowFlags.SetGlobalIllumination(false);
+    ShowFlags.SetReflectionEnvironment(false);
+    ShowFlags.SetDecals(false);
+
+    PCSceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+    PCSceneCapture->ShowOnlyComponents.Add(InInstancedMeshComponent);
+    
+    if (PCVisualizationMaterial)
+    {
+        PCMaterial = UMaterialInstanceDynamic::Create(PCVisualizationMaterial, this);
+        PCImageDisplay->SetBrushFromMaterial(PCMaterial);
+        
+        if (PCMaterial)
+        {
+            PCMaterial->SetTextureParameterValue(TEXT("MeshTexture"), PCRenderTarget);
+            PCMaterial->SetScalarParameterValue(TEXT("Opacity"), Opacity);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to create PCMaterial"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("PCVisualizationMaterial not set"));
+    }
+}
+
+void URatSIMDisplayWidget::SetMeshHandler(UMeshHandlerComponent* InMeshHandler,
+    const float& Opacity)
+{
+    MeshHandler = InMeshHandler;
+    if (!UnitImageDisplay || !GetWorld())
+    {
+        UE_LOG(LogTemp, Error, TEXT("UnitImageDisplay or World not valid"));
+        return;
+    }
+
+    MeshRenderTarget = NewObject<UTextureRenderTarget2D>(this);
+    MeshRenderTarget->InitCustomFormat(MeshRenderWidth, MeshRenderHeight,
+        PF_B8G8R8A8, true);
+    MeshRenderTarget->bAutoGenerateMips = false;
+    MeshRenderTarget->UpdateResource();
+
+    MeshSceneCapture = NewObject<USceneCaptureComponent2D>(MeshHandler);
+    MeshSceneCapture->RegisterComponent();  
+    
+    MeshSceneCapture->bCaptureEveryFrame = false;
+    MeshSceneCapture->bCaptureOnMovement = true;
+    MeshSceneCapture->TextureTarget = MeshRenderTarget;
+    MeshSceneCapture->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+    
+    FEngineShowFlags& ShowFlags = MeshSceneCapture->ShowFlags;
+    ShowFlags.SetAtmosphere(false);
+    ShowFlags.SetFog(false);
+    ShowFlags.SetLighting(true);
+    ShowFlags.SetPostProcessing(true);
+    ShowFlags.SetBloom(false);
+    ShowFlags.SetAmbientOcclusion(true);
+    ShowFlags.SetAntiAliasing(true);
+    ShowFlags.SetDynamicShadows(true);
+    ShowFlags.SetTemporalAA(false);
+    ShowFlags.SetMotionBlur(false);
+
+    ShowFlags.SetGlobalIllumination(false);
+    ShowFlags.SetReflectionEnvironment(false);
+    ShowFlags.SetDecals(false);
+
+    // Set up primitive showing settings
+    MeshSceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+    MeshSceneCapture->ShowOnlyComponents.Add(MeshHandler->GetMeshComponent());
+
+    // Create and setup material for UnitImageDisplay
+    if (MeshVisualizationMaterial)
+    {
+        MeshMaterial = UMaterialInstanceDynamic::Create(MeshVisualizationMaterial, this);
+        UnitImageDisplay->SetBrushFromMaterial(MeshMaterial);
+        
+        if (MeshMaterial)
+        {
+            MeshMaterial->SetTextureParameterValue(TEXT("MeshTexture"), MeshRenderTarget);
+            MeshMaterial->SetScalarParameterValue(TEXT("Opacity"), Opacity);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to create MeshMaterial"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("MeshVisualizationMaterial not set"));
+    }
+}
+
+void URatSIMDisplayWidget::RequestCapture(const int& ID)
+{    
+    if (CurrentQueueSize >= MaxQueuedCaptures)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Too many pending captures. Skipping."));
+        return;
+    }
+
+    CaptureQueue.Enqueue(ID);
+    ++CurrentQueueSize;
+}
+
+void URatSIMDisplayWidget::UpdateLitImage(float InDeltaTime)
+{
+    LitUpdateTimer += InDeltaTime;
+
+    if (LitUpdateTimer >= LitUpdateInterval)
+    {
+        LitUpdateTimer = 0.0f;
+    }
+    else
+    {
+        return;
+    }
+    
+    if (!LitSceneCapture || !LitRenderTarget || !GetWorld())
+    {
+        UE_LOG(LogTemp, Error, TEXT("Required components not set. "
+                                    "LitSceneCapture: %s, LitRenderTarget: %s"),
+               LitSceneCapture ? TEXT("Valid") : TEXT("Invalid"),
+               LitRenderTarget ? TEXT("Valid") : TEXT("Invalid"));
+        return;
+    }
+
+    // Get the actual viewport camera transform
+    APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+    if (!PlayerController)
+    {
+        UE_LOG(LogTemp, Error, TEXT("PlayerController not found"));
+        return;
+    }
+
+    if (PlayerController->PlayerCameraManager)
+    {
+        FVector ViewLocation = PlayerController->PlayerCameraManager->GetCameraLocation();
+        FRotator ViewRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+        LitSceneCapture->SetWorldLocation(ViewLocation);
+        LitSceneCapture->SetWorldRotation(ViewRotation);
+    }
+
+    const float ViewportFOV = PlayerController->PlayerCameraManager
+        ? PlayerController->PlayerCameraManager->GetFOVAngle()
+        : 90.0f;
+    LitSceneCapture->FOVAngle = ViewportFOV;
+    
+    LitSceneCapture->CaptureScene();
+}
+
+void URatSIMDisplayWidget::UpdatePCImage(float InDeltaTime)
+{
+    PCUpdateTimer += InDeltaTime;
+    if (PCUpdateTimer >= PCUpdateInterval)
+    {
+        PCUpdateTimer = 0.0f;
+    }
+    else
+    {
+        return;
+    }
+    
+    if (!PCSceneCapture || !PCRenderTarget || !GetWorld())
+    {
+        UE_LOG(LogTemp, Error, TEXT("Required components not set. "
+                                    "PCSceneCapture: %s, PCRenderTarget: %s"),
+               PCSceneCapture ? TEXT("Valid") : TEXT("Invalid"),
+               PCRenderTarget ? TEXT("Valid") : TEXT("Invalid"));
+        return;
+    }
+
+    // Get the actual viewport camera transform
+    APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+    if (!PlayerController)
+    {
+        UE_LOG(LogTemp, Error, TEXT("PlayerController not found"));
+        return;
+    }
+
+    if (PlayerController->PlayerCameraManager)
+    {
+        FVector ViewLocation = PlayerController->PlayerCameraManager->GetCameraLocation();
+        FRotator ViewRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+        PCSceneCapture->SetWorldLocation(ViewLocation);
+        PCSceneCapture->SetWorldRotation(ViewRotation);
+    }
+
+    const float ViewportFOV = PlayerController->PlayerCameraManager
+        ? PlayerController->PlayerCameraManager->GetFOVAngle()
+        : 90.0f;
+    PCSceneCapture->FOVAngle = ViewportFOV;
+    
+    PCSceneCapture->CaptureScene();
+}
+
+void URatSIMDisplayWidget::UpdateMeshImage(float InDeltaTime)
+{
+    MeshUpdateTimer += InDeltaTime;
+    if (MeshUpdateTimer >= MeshUpdateInterval)
+    {
+        MeshUpdateTimer = 0.0f;
+    }
+    else
+    {
+        return;
+    }    
+    
+    if (!MeshHandler || !MeshSceneCapture || !MeshRenderTarget || !GetWorld())
+    {
+        UE_LOG(LogTemp, Error, TEXT("Required components not set. "
+                                    "MeshHandler: %s, SceneCapture: %s, RenderTarget: %s"), 
+               MeshHandler ? TEXT("Valid") : TEXT("Invalid"),
+               MeshSceneCapture ? TEXT("Valid") : TEXT("Invalid"),
+               MeshRenderTarget ? TEXT("Valid") : TEXT("Invalid"));
+        return;
+    }
+
+    // Get the actual viewport camera transform
+    APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+    if (!PlayerController)
+    {
+        UE_LOG(LogTemp, Error, TEXT("PlayerController not found"));
+        return;
+    }
+
+    FVector ViewLocation;
+    FRotator ViewRotation;
+    PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
+    
+    // Update scene capture to match the actual view
+    MeshSceneCapture->SetWorldLocation(ViewLocation);
+    MeshSceneCapture->SetWorldRotation(ViewRotation);
+
+    // Get the FOV from the viewport
+    const float ViewportFOV = PlayerController->PlayerCameraManager 
+        ? PlayerController->PlayerCameraManager->GetFOVAngle()
+        : 90.0f;
+    
+    MeshSceneCapture->FOVAngle = ViewportFOV;
+
+    MeshSceneCapture->CaptureScene();
+}
+
+void URatSIMDisplayWidget::ProcessCapture(const int32 ID)
+{
+    // Update and capture the image
+    switch (ID)
+    {
+    case 6:
+        if (RGBRenderTarget)
+        {
+            SaveRenderTargetToDisk(RGBRenderTarget, "RGBCapture");
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("URatSIMDisplayWidget::ProcessCapture: "
+                                          "RGBRenderTarget not set"));
+        }
+        break;
+    case 7:
+        if (LitSceneCapture && LitRenderTarget)
+        {
+            SaveRenderTargetToDisk(LitRenderTarget, "LitCapture");
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("URatSIMDisplayWidget::ProcessCapture: "
+                                          "LitSceneCapture or LitRenderTarget not set"));
+        }
+        break;
+    case 8:
+        if (PCSceneCapture && PCRenderTarget)
+        {
+            SaveRenderTargetToDisk(PCRenderTarget, "PCCapture");
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("URatSIMDisplayWidget::ProcessCapture: "
+                                          "PCSceneCapture or PCRenderTarget not set"));
+        }
+        break;
+    case 9:
+        if (MeshSceneCapture && MeshRenderTarget)
+        {
+            SaveRenderTargetToDisk(MeshRenderTarget, "MeshCapture");
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("URatSIMDisplayWidget::ProcessCapture: "
+                                          "MeshSceneCapture or MeshRenderTarget not set"));
+        }
+        break;
+    case 0:
+        if (DepthRenderTarget)
+        {
+            SaveRenderTargetToDisk(DepthRenderTarget, "DepthCapture");
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("URatSIMDisplayWidget::ProcessCapture: "
+                                          "DepthRenderTarget not set"));
+        }
+        break;
+    default:
+        UE_LOG(LogTemp, Warning, TEXT("Invalid ID: %d"), ID);
+    }
+}
+
+void URatSIMDisplayWidget::SaveRenderTargetToDisk(
+    UTextureRenderTarget2D* RenderTarget, const FString& FileName) const
+{
+    if (!RenderTarget)
+    {
+        UE_LOG(LogTemp, Error, TEXT("RenderTarget is null. Cannot save to disk."));
+        return;
+    }
+
+    FTextureRenderTargetResource* RTResource =
+        RenderTarget->GameThread_GetRenderTargetResource();
+    if (!RTResource)
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("RenderTargetResource is null. Cannot save to disk."));
+        return;
+    }
+
+    FIntPoint Size = RTResource->GetSizeXY();
+    TArray<FColor> Pixels;
+    Pixels.SetNum(Size.X * Size.Y);
+
+    bool bReadPixels = RTResource->ReadPixels(Pixels);
+    if (!bReadPixels)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to read pixels from RenderTarget."));
+        return;
+    }
+
+    auto CurTime = FDateTime::Now();
+    FString FilePath = LogSavePath + "/" + FileName + "_" + 
+        CurTime.ToString() + ".png";
+
+    // Create directory synchronously as it's typically quick
+    FFileManagerGeneric FileManager;
+    if (!FileManager.MakeDirectory(*FPaths::GetPath(FilePath), true))
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to create directory for render target."));
+        return;
+    }
+
+    // Start async task to save the image
+    (new FAutoDeleteAsyncTask<FAsyncImageSaveTask>(
+        Pixels, Size, FilePath))->StartBackgroundTask();
+}

@@ -1,0 +1,58 @@
+﻿[RatSimPresets]
+IP = "0.0.0.0"
+Port = 50996
+MainCharacter = "Mavic" # Name or Tag, but tag is recommended.
+StaticMeshActor = ["MFMesh", "CompanionCube"] # Name or Tag
+SubWindows = ["Lit", "Unit", "PointCloud"]
+SubWindowsOpacities = [0.95, 0.85, 0.75]
+LS_StartOffset = 0 # Frame
+LogSavePath = "D:/UE_Projects/ShippingPort/Log/CaptureImgs"
+DefaultDronePawn = "/RatSim/Pawn/Drone/BP_QuadcopterDrone.BP_QuadcopterDrone_C"
+DefaultCarPawn = "/RatSim/Pawn/Husky/Blueprints/BP_CarPawn_Husky.BP_CarPawn_Husky_C"
+# Length units are in centimeters like ue.
+# Angle units are in degrees.
+# Left-handed coordinate system.
+
+#[[Robots]]
+#
+#UETag = "Husky"
+#Type = "Car"
+#
+#[Robots.ComponentConfigs.Lidar]
+#NumRays = 32
+#NumPoints = 16000
+#ScannerRangeInner = 100
+#ScannerRangeOuter = 4000
+#ScannerAngleUp = 35
+#ScannerAngleDown = 25
+#bVisualizePoints = true
+
+[[Robots]]
+
+UETag = "Mavic"
+Type = "Drone"
+
+[Robots.ComponentConfigs.Lidar]
+NumRays = 32
+NumPoints = 16000
+ScannerRangeInner = 300
+ScannerRangeOuter = 3000
+ScannerAngleUp = 25
+ScannerAngleDown = 25
+bVisualizePoints = true
+
+[Robots.ComponentConfigs.DepthCamera]
+FOV = 90   
+Width = 512
+Height = 512
+MaxRange = 2000.0
+MinRange = 0.0
+bOrthographic = false
+CaptureRate = 30.0
+
+[Robots.ComponentConfigs.RGBCamera]
+FOV = 90
+Width = 512
+Height = 512
+bOrthographic = false
+CaptureRate = 30.0
