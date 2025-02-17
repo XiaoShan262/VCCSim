@@ -42,7 +42,7 @@ void UInsMeshHolder::OnRegister()
 	UMaterialInterface* MaterialAsset = Cast<UMaterialInterface>(StaticLoadObject(
 		UMaterialInterface::StaticClass(),
 		nullptr,
-		TEXT("/RatSim/Lidar/Materials/M_Point.M_Point")
+		TEXT("/VCCSim/Lidar/Materials/M_Point.M_Point")
 	));
 	if (MaterialAsset)
 	{
@@ -84,7 +84,7 @@ void UInsMeshHolder::CreateStaticMeshes()
 	UMaterialInterface* BaseMaterial = Cast<UMaterialInterface>(StaticLoadObject(
 		UMaterialInterface::StaticClass(),
 		nullptr,
-		TEXT("/RatSim/Materials/M_Point_Color.M_Point_Color")
+		TEXT("/VCCSim/Materials/M_Point_Color.M_Point_Color")
 	));
     
 	if (BaseMaterial)

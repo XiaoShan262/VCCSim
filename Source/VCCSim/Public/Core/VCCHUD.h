@@ -6,14 +6,14 @@
 #include "Utils/ConfigParser.h"
 #include "VCCHUD.generated.h"
 
-class URatSIMDisplayWidget;
+class UVCCSIMDisplayWidget;
 class UPauseMenuWidget;
 class UInputAction;
 class UInputMappingContext;
 struct FRobotGrpcMaps;
 
 UCLASS()
-class VCCSIM_API ARatHUD : public AHUD
+class VCCSIM_API AVCCHUD : public AHUD
 {
 	GENERATED_BODY()
 
@@ -48,7 +48,7 @@ protected:
 
 private:
 	UPROPERTY()
-	TObjectPtr<URatSIMDisplayWidget> WidgetInstance;
+	TObjectPtr<UVCCSIMDisplayWidget> WidgetInstance;
 	UPROPERTY()
 	TObjectPtr<UPauseMenuWidget> CurrentPauseMenu;
 	UPROPERTY()

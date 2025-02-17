@@ -8,7 +8,7 @@
 class UMeshHandlerComponent;
 
 UCLASS()
-class VCCSIM_API URatSIMDisplayWidget : public UUserWidget
+class VCCSIM_API UVCCSIMDisplayWidget : public UUserWidget
 {
     GENERATED_BODY()
 

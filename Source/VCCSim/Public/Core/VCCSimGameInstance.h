@@ -5,12 +5,12 @@
 #include "VCCSimGameInstance.generated.h"
 
 UCLASS()
-class VCCSIM_API URatSimGameInstance : public UGameInstance
+class VCCSIM_API UVCCSimGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 
 public:
-	URatSimGameInstance();
+	UVCCSimGameInstance();
 
 	virtual void Init() override;
 

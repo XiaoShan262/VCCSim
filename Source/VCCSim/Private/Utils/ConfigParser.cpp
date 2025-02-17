@@ -12,30 +12,33 @@ using namespace std::literals;
 FVCCSimConfig ParseConfig()
 {
     FVCCSimConfig Config;
-    auto Filename = "D:/UE_Projects/ShippingPort/Plugins/RatSim/Source/RatSim/RSConfig.toml"sv;
+    
+    std::string Filename = TCHAR_TO_UTF8(*FPaths::Combine(FPaths::ProjectPluginsDir(),
+        TEXT("VCCSim/Source/VCCSim/RSConfig.toml")));;
+    
     if (!std::filesystem::exists(Filename))
     {
         UE_LOG(LogTemp, Warning, TEXT("ParseConfig: Using default config!"));
         // Get the user's documents directory
         FString DocPath = FPlatformProcess::UserDir();
-        Filename = TCHAR_TO_UTF8(*FPaths::Combine(DocPath, TEXT("RatSim"), TEXT("RSConfig.toml")));
+        Filename = TCHAR_TO_UTF8(*FPaths::Combine(DocPath, TEXT("VCCSim"), TEXT("RSConfig.toml")));
     }
 
     auto Tbl = toml::parse_file(Filename);
 
-    if (auto ratSim = Tbl["RatSimPresets"].as_table())
+    if (auto VCCSim = Tbl["VCCSimPresets"].as_table())
     {
         Config.VCCSim.Server =
-            std::string((*ratSim)["IP"].value_or("0.0.0.0"sv)) + ":" +
-            std::to_string((*ratSim)["Port"].value_or(50996));
-        Config.VCCSim.MainCharacter = (*ratSim)["MainCharacter"].value_or("");
-        Config.VCCSim.LS_StartOffset = (*ratSim)["LS_StartOffset"].value_or(0);
-        Config.VCCSim.LogSavePath = (*ratSim)["LogSavePath"].value_or(
+            std::string((*VCCSim)["IP"].value_or("0.0.0.0"sv)) + ":" +
+            std::to_string((*VCCSim)["Port"].value_or(50996));
+        Config.VCCSim.MainCharacter = (*VCCSim)["MainCharacter"].value_or("");
+        Config.VCCSim.LS_StartOffset = (*VCCSim)["LS_StartOffset"].value_or(0);
+        Config.VCCSim.LogSavePath = (*VCCSim)["LogSavePath"].value_or(
             TCHAR_TO_UTF8(FPlatformProcess::UserDir()));
-        Config.VCCSim.DefaultDronePawn = (*ratSim)["DefaultDronePawn"].value_or("");
-        Config.VCCSim.DefaultCarPawn = (*ratSim)["DefaultCarPawn"].value_or("");
+        Config.VCCSim.DefaultDronePawn = (*VCCSim)["DefaultDronePawn"].value_or("");
+        Config.VCCSim.DefaultCarPawn = (*VCCSim)["DefaultCarPawn"].value_or("");
         
-        if (auto staticMeshActors = (*ratSim)["StaticMeshActor"].as_array())
+        if (auto staticMeshActors = (*VCCSim)["StaticMeshActor"].as_array())
         {
             for (const auto& actor : *staticMeshActors)
             {
@@ -45,7 +48,7 @@ FVCCSimConfig ParseConfig()
                 }
             }
         }
-        if (auto subWindows = (*ratSim)["SubWindows"].as_array())
+        if (auto subWindows = (*VCCSim)["SubWindows"].as_array())
         {
             for (const auto& window : *subWindows)
             {
@@ -56,7 +59,7 @@ FVCCSimConfig ParseConfig()
             }
         }
         if (auto subWindowsOpacities
-            = (*ratSim)["SubWindowsOpacities"].as_array())
+            = (*VCCSim)["SubWindowsOpacities"].as_array())
         {
             for (const auto& opacity : *subWindowsOpacities)
             {

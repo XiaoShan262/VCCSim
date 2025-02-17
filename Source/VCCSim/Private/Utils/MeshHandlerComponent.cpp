@@ -55,7 +55,7 @@ void UMeshHandlerComponent::OnRegister()
     
     // Load and set material
     FString MaterialPath =
-        TEXT("/RatSim/Materials/M_Single_Frame.M_Single_Frame");
+        TEXT("/VCCSim/Materials/M_Dynamic_mesh.M_Dynamic_mesh");
     MeshMaterial = Cast<UMaterialInterface>(StaticLoadObject(
         UMaterialInterface::StaticClass(), nullptr, *MaterialPath));
     

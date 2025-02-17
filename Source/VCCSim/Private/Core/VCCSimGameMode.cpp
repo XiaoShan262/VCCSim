@@ -3,15 +3,15 @@
 #include "IImageWrapperModule.h"
 
 
-ARatSimGameMode::ARatSimGameMode(const FObjectInitializer& ObjectInitializer)
+AVCCSimGameMode::AVCCSimGameMode(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
 	DefaultPawnClass = nullptr;
-	HUDClass = ARatHUD::StaticClass();
+	HUDClass = AVCCHUD::StaticClass();
 }
 
 
-void ARatSimGameMode::StartPlay()
+void AVCCSimGameMode::StartPlay()
 {
     Super::StartPlay();
     UserSettings = GEngine->GetGameUserSettings();

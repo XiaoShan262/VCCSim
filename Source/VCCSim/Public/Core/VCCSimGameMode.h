@@ -7,14 +7,14 @@
 
 
 UCLASS()
-class VCCSIM_API ARatSimGameMode : public AGameModeBase
+class VCCSIM_API AVCCSimGameMode : public AGameModeBase
 {
 public:
     GENERATED_BODY()
 
     virtual void StartPlay() override;
 
-    ARatSimGameMode(const FObjectInitializer& ObjectInitializer);
+    AVCCSimGameMode(const FObjectInitializer& ObjectInitializer);
 
 private:
 	TWeakObjectPtr<UGameUserSettings> UserSettings;

@@ -2,13 +2,13 @@
 
 #include "Core/VCCSim.h"
 
-#define LOCTEXT_NAMESPACE "FRatSimModule"
+#define LOCTEXT_NAMESPACE "FVCCSimModule"
 
 void FVCCSimModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory;
 	// the exact timing is specified in the .uplugin file per-module
-	UE_LOG(LogTemp, Warning, TEXT("RatSim module has started!"));
+	UE_LOG(LogTemp, Warning, TEXT("VCCSim module has started!"));
 }
 
 void FVCCSimModule::ShutdownModule()
@@ -16,7 +16,7 @@ void FVCCSimModule::ShutdownModule()
 	// This function may be called during shutdown to clean up your module.
 	// For modules that support dynamic reloading,
 	// we call this function before unloading the module.
-	UE_LOG(LogTemp, Warning, TEXT("RatSim module has shut down!"));
+	UE_LOG(LogTemp, Warning, TEXT("VCCSim module has shut down!"));
 }
 
 #undef LOCTEXT_NAMESPACE

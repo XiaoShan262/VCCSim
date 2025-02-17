@@ -67,7 +67,7 @@ protected:
 		FLinearColor(1.0f, 0.8f, 0.0f, 1.0f);
 
 	UPROPERTY()
-	URatSimGameInstance* GameInstance;
+	UVCCSimGameInstance* GameInstance;
 
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Map1Button;
@@ -116,5 +116,5 @@ protected:
 
 private:
 	UPROPERTY()
-	URatSimGameInstance* GameInstance;
+	UVCCSimGameInstance* GameInstance;
 };

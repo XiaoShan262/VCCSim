@@ -14,7 +14,7 @@
 #include "HAL/FileManagerGeneric.h"
 
 
-void URatSIMDisplayWidget::NativeConstruct()
+void UVCCSIMDisplayWidget::NativeConstruct()
 {
     Super::NativeConstruct();
     
@@ -36,7 +36,7 @@ void URatSIMDisplayWidget::NativeConstruct()
     }
 }
 
-void URatSIMDisplayWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+void UVCCSIMDisplayWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
 
@@ -89,7 +89,7 @@ void URatSIMDisplayWidget::NativeTick(const FGeometry& MyGeometry, float InDelta
     }
 }
 
-void URatSIMDisplayWidget::InitFromConfig(const struct FVCCSimConfig& Config)
+void UVCCSIMDisplayWidget::InitFromConfig(const struct FVCCSimConfig& Config)
 {
     auto SubWindows = Config.VCCSim.SubWindows;
     auto SubWindowsOpacities = Config.VCCSim.SubWindowsOpacities;
@@ -168,7 +168,7 @@ void URatSIMDisplayWidget::InitFromConfig(const struct FVCCSimConfig& Config)
     }    
 }
 
-void URatSIMDisplayWidget::SetDepthTexture(UTextureRenderTarget2D* DepthTexture)
+void UVCCSIMDisplayWidget::SetDepthTexture(UTextureRenderTarget2D* DepthTexture)
 {    
     if (DepthMaterial && DepthTexture)
     {
@@ -184,7 +184,7 @@ void URatSIMDisplayWidget::SetDepthTexture(UTextureRenderTarget2D* DepthTexture)
     }
 }
 
-void URatSIMDisplayWidget::SetRGBTexture(UTextureRenderTarget2D* RGBTexture)
+void UVCCSIMDisplayWidget::SetRGBTexture(UTextureRenderTarget2D* RGBTexture)
 {
     if (RGBMaterial && RGBTexture)
     {
@@ -200,7 +200,7 @@ void URatSIMDisplayWidget::SetRGBTexture(UTextureRenderTarget2D* RGBTexture)
     }
 }
 
-void URatSIMDisplayWidget::SetLitMeshComponent(
+void UVCCSIMDisplayWidget::SetLitMeshComponent(
     TArray<UStaticMeshComponent*> MeshComponent, const float& Opacity)
 {
     if (!LitImageDisplay || !GetWorld())
@@ -265,7 +265,7 @@ void URatSIMDisplayWidget::SetLitMeshComponent(
     }
 }
 
-void URatSIMDisplayWidget::SetPCViewComponent(
+void UVCCSIMDisplayWidget::SetPCViewComponent(
     UInstancedStaticMeshComponent* InInstancedMeshComponent, const float& Opacity)
 {
     if (!PCImageDisplay || !GetWorld())
@@ -331,7 +331,7 @@ void URatSIMDisplayWidget::SetPCViewComponent(
     }
 }
 
-void URatSIMDisplayWidget::SetMeshHandler(UMeshHandlerComponent* InMeshHandler,
+void UVCCSIMDisplayWidget::SetMeshHandler(UMeshHandlerComponent* InMeshHandler,
     const float& Opacity)
 {
     MeshHandler = InMeshHandler;
@@ -397,7 +397,7 @@ void URatSIMDisplayWidget::SetMeshHandler(UMeshHandlerComponent* InMeshHandler,
     }
 }
 
-void URatSIMDisplayWidget::RequestCapture(const int& ID)
+void UVCCSIMDisplayWidget::RequestCapture(const int& ID)
 {    
     if (CurrentQueueSize >= MaxQueuedCaptures)
     {
@@ -409,7 +409,7 @@ void URatSIMDisplayWidget::RequestCapture(const int& ID)
     ++CurrentQueueSize;
 }
 
-void URatSIMDisplayWidget::UpdateLitImage(float InDeltaTime)
+void UVCCSIMDisplayWidget::UpdateLitImage(float InDeltaTime)
 {
     LitUpdateTimer += InDeltaTime;
 
@@ -455,7 +455,7 @@ void URatSIMDisplayWidget::UpdateLitImage(float InDeltaTime)
     LitSceneCapture->CaptureScene();
 }
 
-void URatSIMDisplayWidget::UpdatePCImage(float InDeltaTime)
+void UVCCSIMDisplayWidget::UpdatePCImage(float InDeltaTime)
 {
     PCUpdateTimer += InDeltaTime;
     if (PCUpdateTimer >= PCUpdateInterval)
@@ -500,7 +500,7 @@ void URatSIMDisplayWidget::UpdatePCImage(float InDeltaTime)
     PCSceneCapture->CaptureScene();
 }
 
-void URatSIMDisplayWidget::UpdateMeshImage(float InDeltaTime)
+void UVCCSIMDisplayWidget::UpdateMeshImage(float InDeltaTime)
 {
     MeshUpdateTimer += InDeltaTime;
     if (MeshUpdateTimer >= MeshUpdateInterval)
@@ -548,7 +548,7 @@ void URatSIMDisplayWidget::UpdateMeshImage(float InDeltaTime)
     MeshSceneCapture->CaptureScene();
 }
 
-void URatSIMDisplayWidget::ProcessCapture(const int32 ID)
+void UVCCSIMDisplayWidget::ProcessCapture(const int32 ID)
 {
     // Update and capture the image
     switch (ID)
@@ -613,7 +613,7 @@ void URatSIMDisplayWidget::ProcessCapture(const int32 ID)
     }
 }
 
-void URatSIMDisplayWidget::SaveRenderTargetToDisk(
+void UVCCSIMDisplayWidget::SaveRenderTargetToDisk(
     UTextureRenderTarget2D* RenderTarget, const FString& FileName) const
 {
     if (!RenderTarget)

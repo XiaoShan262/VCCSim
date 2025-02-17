@@ -2,7 +2,7 @@
 #include "CoreMinimal.h"
 #include "CarPawn.generated.h"
 
-class ARatSimPath;
+class AVCCSimPath;
 
 UCLASS(HideCategories=("Animation"))
 class VCCSIM_API ACarPawn : public APawn
@@ -70,7 +70,7 @@ public:
 	TObjectPtr<UStaticMesh> RearWheelsMesh;
 
 	UPROPERTY(BlueprintReadWrite, EditInstanceOnly, Category="Driving", Interp)
-	TObjectPtr<ARatSimPath> Path;
+	TObjectPtr<AVCCSimPath> Path;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Driving", Interp, meta=(UIMin="0", ClampMin="0"))
 	float DistanceTraveled;

@@ -1,4 +1,4 @@
-﻿[RatSimPresets]
+﻿[VCCSimPresets]
 IP = "0.0.0.0"
 Port = 50996
 MainCharacter = "Mavic" # Name or Tag, but tag is recommended.
@@ -7,8 +7,8 @@ SubWindows = ["Lit", "Unit", "PointCloud"]
 SubWindowsOpacities = [0.95, 0.85, 0.75]
 LS_StartOffset = 0 # Frame
 LogSavePath = "D:/UE_Projects/ShippingPort/Log/CaptureImgs"
-DefaultDronePawn = "/RatSim/Pawn/Drone/BP_QuadcopterDrone.BP_QuadcopterDrone_C"
-DefaultCarPawn = "/RatSim/Pawn/Husky/Blueprints/BP_CarPawn_Husky.BP_CarPawn_Husky_C"
+DefaultDronePawn = "/VCCSim/Pawn/Drone/BP_QuadcopterDrone.BP_QuadcopterDrone_C"
+DefaultCarPawn = "/VCCSim/Pawn/Husky/Blueprints/BP_CarPawn_Husky.BP_CarPawn_Husky_C"
 # Length units are in centimeters like ue.
 # Angle units are in degrees.
 # Left-handed coordinate system.

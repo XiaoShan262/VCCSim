@@ -2,7 +2,7 @@
 #include "Components/SplineComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-ARatSimPath::ARatSimPath()
+AVCCSimPath::AVCCSimPath()
 {
 	Spline = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
 	RootComponent = Spline;
@@ -16,7 +16,7 @@ ARatSimPath::ARatSimPath()
 	PathLength = 0;
 }
 
-void ARatSimPath::OnConstruction(const FTransform& Transform)
+void AVCCSimPath::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 
@@ -32,7 +32,7 @@ void ARatSimPath::OnConstruction(const FTransform& Transform)
 	MovePivotToFirstPoint();
 }
 
-void ARatSimPath::DiscoverTraceIgnores()
+void AVCCSimPath::DiscoverTraceIgnores()
 {
 	// Find all actors which has Tag IgnoreTrace.
 	TArray<AActor*> FoundActors;
@@ -43,7 +43,7 @@ void ARatSimPath::DiscoverTraceIgnores()
 	}
 }
 
-void ARatSimPath::SnapAllPointsToGround()
+void AVCCSimPath::SnapAllPointsToGround()
 {
 	if (SnapToGround)
 	{
@@ -66,7 +66,7 @@ void ARatSimPath::SnapAllPointsToGround()
 	}
 }
 
-void ARatSimPath::ReverseSpline()
+void AVCCSimPath::ReverseSpline()
 {
 	if (bReverseSpline)
 	{
@@ -97,7 +97,7 @@ void ARatSimPath::ReverseSpline()
 	}
 }
 
-void ARatSimPath::FlattenAllTangents()
+void AVCCSimPath::FlattenAllTangents()
 {
 	if (FlattenTangents)
 	{
@@ -114,7 +114,7 @@ void ARatSimPath::FlattenAllTangents()
 	}
 }
 
-void ARatSimPath::MovePivotToFirstPoint()
+void AVCCSimPath::MovePivotToFirstPoint()
 {
 	NewSplinePointLocations.Empty();
 	// Save the locations of all points

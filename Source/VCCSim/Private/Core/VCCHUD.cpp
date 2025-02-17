@@ -13,7 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 
 
-void ARatHUD::BeginPlay()
+void AVCCHUD::BeginPlay()
 {
     Super::BeginPlay();
     
@@ -23,7 +23,7 @@ void ARatHUD::BeginPlay()
     RunServer(Config, Holder, RCMaps);
 }
 
-void ARatHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void AVCCHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
 
@@ -57,7 +57,7 @@ void ARatHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
     ShutdownServer();
 }
 
-void ARatHUD::SetupEnhancedInput()
+void AVCCHUD::SetupEnhancedInput()
 {
     if (!DefaultMappingContext || !PauseAction) return;
     APlayerController* PC = GetOwningPlayerController();
@@ -75,14 +75,14 @@ void ARatHUD::SetupEnhancedInput()
     {
         // Bind the pause action
         EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Triggered,
-            this, &ARatHUD::OnPauseActionTriggered);
+            this, &AVCCHUD::OnPauseActionTriggered);
     }
 
     PC->SetInputMode(FInputModeGameOnly());
     PC->bShowMouseCursor = false;
 }
 
-void ARatHUD::OnPauseActionTriggered()
+void AVCCHUD::OnPauseActionTriggered()
 {    
     if (CurrentPauseMenu)
     {
@@ -109,16 +109,16 @@ void ARatHUD::OnPauseActionTriggered()
     }
 }
 
-void ARatHUD::SetupWidgetsAndLS(const FVCCSimConfig& Config)
+void AVCCHUD::SetupWidgetsAndLS(const FVCCSimConfig& Config)
 {
     if (!WidgetClass)
     {
-        static ConstructorHelpers::FClassFinder<URatSIMDisplayWidget>
-            HUDWidgetClass(TEXT("WidgetBlueprint'/RatSim/HUD/BP_RatSIMDisplayWidget_VF'"));
+        static ConstructorHelpers::FClassFinder<UVCCSIMDisplayWidget>
+            HUDWidgetClass(TEXT("WidgetBlueprint'/VCCSim/HUD/BP_VCCSIMDisplayWidget_VF'"));
         WidgetClass = HUDWidgetClass.Succeeded() ? HUDWidgetClass.Class : nullptr;
     }
 
-    WidgetInstance = CreateWidget<URatSIMDisplayWidget>(GetWorld(), WidgetClass);
+    WidgetInstance = CreateWidget<UVCCSIMDisplayWidget>(GetWorld(), WidgetClass);
     if (WidgetInstance)
     {
         WidgetInstance->AddToViewport();
@@ -157,7 +157,7 @@ void ARatHUD::SetupWidgetsAndLS(const FVCCSimConfig& Config)
     WidgetInstance->InitFromConfig(Config);
 }
 
-void ARatHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> FoundPawns)
+void AVCCHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> FoundPawns)
 {
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), APawn::StaticClass(), FoundPawns);
     
@@ -254,7 +254,7 @@ void ARatHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> Fo
     }
 }
 
-FRobotGrpcMaps ARatHUD::SetupActors(const FVCCSimConfig& Config)
+FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
 {
     TArray<AActor*> FoundPawns;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), APawn::StaticClass(), FoundPawns);
@@ -342,7 +342,7 @@ FRobotGrpcMaps ARatHUD::SetupActors(const FVCCSimConfig& Config)
     return RGrpcMaps;
 }
 
-APawn* ARatHUD::CreatePawn(const FVCCSimConfig& Config, const FRobot& Robot)
+APawn* AVCCHUD::CreatePawn(const FVCCSimConfig& Config, const FRobot& Robot)
 {
     UWorld* World = GetWorld();
     if (!World)

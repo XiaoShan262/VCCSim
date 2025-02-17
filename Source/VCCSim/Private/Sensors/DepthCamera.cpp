@@ -21,7 +21,7 @@ UDepthCameraComponent::UDepthCameraComponent()
 }
 
 void UDepthCameraComponent::DCConfigure(const DepthCameraConfig& Config)
-{
+{  
     FOV = Config.FOV;
     MaxRange = Config.MaxRange;
     MinRange = Config.MinRange;

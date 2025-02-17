@@ -10,11 +10,11 @@ struct FSplinePoint;
 UCLASS(HideCategories=("Default", "Replication", "REndering", "Collision",
 	"HLOD", "Input", "Physics", "Networking", "Actor", "Cooking", "Hidden",
 	"World Partition", "Tick", "Events", "Data Layers"))
-class VCCSIM_API ARatSimPath : public AActor
+class VCCSIM_API AVCCSimPath : public AActor
 {
 	GENERATED_BODY()
 public:	
-	ARatSimPath();
+	AVCCSimPath();
 	virtual void OnConstruction(const FTransform& Transform) override; 
 	
 	UFUNCTION(BlueprintCallable, Category="Default")

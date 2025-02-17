@@ -46,11 +46,11 @@ void UMenuWidgets::NativeConstruct()
     MapTestButton->OnUnhovered.AddDynamic(this, &UMenuWidgets::OnMapTestUnhovered);
 
     // Initialize game instance
-    GameInstance = Cast<URatSimGameInstance>(GetGameInstance());
+    GameInstance = Cast<UVCCSimGameInstance>(GetGameInstance());
     
     if (!GameInstance)
     {
-        UE_LOG(LogTemp, Error, TEXT("MenuWidgets: Failed to get RatSimGameInstance"));
+        UE_LOG(LogTemp, Error, TEXT("MenuWidgets: Failed to get VCCSimGameInstance"));
         if (StatusText)
         {
             StatusText->SetText(FText::FromString(TEXT("Error: Game instance not found")));
@@ -264,7 +264,7 @@ void UPauseMenuWidget::NativeConstruct()
     Super::NativeConstruct();
 
     // Get GameInstance reference
-    GameInstance = Cast<URatSimGameInstance>(GetGameInstance());
+    GameInstance = Cast<UVCCSimGameInstance>(GetGameInstance());
 
     if (ResumeButton)
     {

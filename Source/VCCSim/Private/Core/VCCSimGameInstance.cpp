@@ -1,22 +1,22 @@
 ﻿#include "Core/VCCSimGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 
-URatSimGameInstance::URatSimGameInstance()
+UVCCSimGameInstance::UVCCSimGameInstance()
 {
 	// Default values
 	MainMenuMapName = TEXT("MainMenu");
 	SimulationSpeed = 1.0f;
 }
 
-void URatSimGameInstance::Init()
+void UVCCSimGameInstance::Init()
 {
 	Super::Init();
 
 	// Initialize your game instance here
-	UE_LOG(LogTemp, Log, TEXT("RatSim GameInstance Initialized"));
+	UE_LOG(LogTemp, Log, TEXT("VCCSim GameInstance Initialized"));
 }
 
-void URatSimGameInstance::LoadMap(const FString& MapName)
+void UVCCSimGameInstance::LoadMap(const FString& MapName)
 {
 	// Check if the map name is valid
 	if (AvailableMaps.Contains(MapName))
@@ -30,20 +30,20 @@ void URatSimGameInstance::LoadMap(const FString& MapName)
 	}
 }
 
-void URatSimGameInstance::ReturnToMainMenu()
+void UVCCSimGameInstance::ReturnToMainMenu()
 {
 	UGameplayStatics::OpenLevel(this, *MainMenuMapName);
 }
 
-void URatSimGameInstance::SaveGameState()
+void UVCCSimGameInstance::SaveGameState()
 {
 }
 
-void URatSimGameInstance::LoadGameState()
+void UVCCSimGameInstance::LoadGameState()
 {
 }
 
-void URatSimGameInstance::SetSimulationSpeed(float Speed)
+void UVCCSimGameInstance::SetSimulationSpeed(float Speed)
 {
 	SimulationSpeed = FMath::Clamp(Speed, 0.1f, 10.0f);
 }
