@@ -1101,6 +1101,13 @@ class RGBCameraService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>> PrepareAsyncGetRGBCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>>(PrepareAsyncGetRGBCameraOdomRaw(context, request, cq));
     }
+    virtual ::grpc::Status GetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::VCCSim::RGBCameraImageData* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::RGBCameraImageData>> AsyncGetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::RGBCameraImageData>>(AsyncGetRGBIndexedCameraImageDataRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::RGBCameraImageData>> PrepareAsyncGetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::RGBCameraImageData>>(PrepareAsyncGetRGBIndexedCameraImageDataRaw(context, request, cq));
+    }
     class async_interface {
      public:
       virtual ~async_interface() {}
@@ -1108,6 +1115,8 @@ class RGBCameraService final {
       virtual void GetRGBCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::RGBCameraImageData* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void GetRGBCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, std::function<void(::grpc::Status)>) = 0;
       virtual void GetRGBCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void GetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::RGBCameraImageData* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void GetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::RGBCameraImageData* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
@@ -1117,6 +1126,8 @@ class RGBCameraService final {
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::RGBCameraImageData>* PrepareAsyncGetRGBCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>* AsyncGetRGBCameraOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>* PrepareAsyncGetRGBCameraOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::RGBCameraImageData>* AsyncGetRGBIndexedCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::RGBCameraImageData>* PrepareAsyncGetRGBIndexedCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -1135,6 +1146,13 @@ class RGBCameraService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>> PrepareAsyncGetRGBCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>>(PrepareAsyncGetRGBCameraOdomRaw(context, request, cq));
     }
+    ::grpc::Status GetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::VCCSim::RGBCameraImageData* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>> AsyncGetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>>(AsyncGetRGBIndexedCameraImageDataRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>> PrepareAsyncGetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>>(PrepareAsyncGetRGBIndexedCameraImageDataRaw(context, request, cq));
+    }
     class async final :
       public StubInterface::async_interface {
      public:
@@ -1142,6 +1160,8 @@ class RGBCameraService final {
       void GetRGBCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::RGBCameraImageData* response, ::grpc::ClientUnaryReactor* reactor) override;
       void GetRGBCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, std::function<void(::grpc::Status)>) override;
       void GetRGBCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void GetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::RGBCameraImageData* response, std::function<void(::grpc::Status)>) override;
+      void GetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::RGBCameraImageData* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
       friend class Stub;
       explicit async(Stub* stub): stub_(stub) { }
@@ -1157,8 +1177,11 @@ class RGBCameraService final {
     ::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>* PrepareAsyncGetRGBCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>* AsyncGetRGBCameraOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>* PrepareAsyncGetRGBCameraOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>* AsyncGetRGBIndexedCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>* PrepareAsyncGetRGBIndexedCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_GetRGBCameraImageData_;
     const ::grpc::internal::RpcMethod rpcmethod_GetRGBCameraOdom_;
+    const ::grpc::internal::RpcMethod rpcmethod_GetRGBIndexedCameraImageData_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -1168,6 +1191,7 @@ class RGBCameraService final {
     virtual ~Service();
     virtual ::grpc::Status GetRGBCameraImageData(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::RGBCameraImageData* response);
     virtual ::grpc::Status GetRGBCameraOdom(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response);
+    virtual ::grpc::Status GetRGBIndexedCameraImageData(::grpc::ServerContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::RGBCameraImageData* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_GetRGBCameraImageData : public BaseClass {
@@ -1209,7 +1233,27 @@ class RGBCameraService final {
       ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_GetRGBCameraImageData<WithAsyncMethod_GetRGBCameraOdom<Service > > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_GetRGBIndexedCameraImageData : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_GetRGBIndexedCameraImageData() {
+      ::grpc::Service::MarkMethodAsync(2);
+    }
+    ~WithAsyncMethod_GetRGBIndexedCameraImageData() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetRGBIndexedCameraImageData(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::RGBCameraImageData* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetRGBIndexedCameraImageData(::grpc::ServerContext* context, ::VCCSim::IndexedCamera* request, ::grpc::ServerAsyncResponseWriter< ::VCCSim::RGBCameraImageData>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_GetRGBCameraImageData<WithAsyncMethod_GetRGBCameraOdom<WithAsyncMethod_GetRGBIndexedCameraImageData<Service > > > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_GetRGBCameraImageData : public BaseClass {
    private:
@@ -1264,7 +1308,34 @@ class RGBCameraService final {
     virtual ::grpc::ServerUnaryReactor* GetRGBCameraOdom(
       ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Odometry* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_GetRGBCameraImageData<WithCallbackMethod_GetRGBCameraOdom<Service > > CallbackService;
+  template <class BaseClass>
+  class WithCallbackMethod_GetRGBIndexedCameraImageData : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_GetRGBIndexedCameraImageData() {
+      ::grpc::Service::MarkMethodCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::VCCSim::IndexedCamera, ::VCCSim::RGBCameraImageData>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::RGBCameraImageData* response) { return this->GetRGBIndexedCameraImageData(context, request, response); }));}
+    void SetMessageAllocatorFor_GetRGBIndexedCameraImageData(
+        ::grpc::MessageAllocator< ::VCCSim::IndexedCamera, ::VCCSim::RGBCameraImageData>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::VCCSim::IndexedCamera, ::VCCSim::RGBCameraImageData>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_GetRGBIndexedCameraImageData() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetRGBIndexedCameraImageData(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::RGBCameraImageData* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* GetRGBIndexedCameraImageData(
+      ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::RGBCameraImageData* /*response*/)  { return nullptr; }
+  };
+  typedef WithCallbackMethod_GetRGBCameraImageData<WithCallbackMethod_GetRGBCameraOdom<WithCallbackMethod_GetRGBIndexedCameraImageData<Service > > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_GetRGBCameraImageData : public BaseClass {
@@ -1296,6 +1367,23 @@ class RGBCameraService final {
     }
     // disable synchronous version of this method
     ::grpc::Status GetRGBCameraOdom(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Odometry* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_GetRGBIndexedCameraImageData : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_GetRGBIndexedCameraImageData() {
+      ::grpc::Service::MarkMethodGeneric(2);
+    }
+    ~WithGenericMethod_GetRGBIndexedCameraImageData() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetRGBIndexedCameraImageData(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::RGBCameraImageData* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1341,6 +1429,26 @@ class RGBCameraService final {
     }
   };
   template <class BaseClass>
+  class WithRawMethod_GetRGBIndexedCameraImageData : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_GetRGBIndexedCameraImageData() {
+      ::grpc::Service::MarkMethodRaw(2);
+    }
+    ~WithRawMethod_GetRGBIndexedCameraImageData() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetRGBIndexedCameraImageData(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::RGBCameraImageData* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetRGBIndexedCameraImageData(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithRawCallbackMethod_GetRGBCameraImageData : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
@@ -1382,6 +1490,28 @@ class RGBCameraService final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     virtual ::grpc::ServerUnaryReactor* GetRGBCameraOdom(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_GetRGBIndexedCameraImageData : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_GetRGBIndexedCameraImageData() {
+      ::grpc::Service::MarkMethodRawCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetRGBIndexedCameraImageData(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_GetRGBIndexedCameraImageData() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetRGBIndexedCameraImageData(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::RGBCameraImageData* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* GetRGBIndexedCameraImageData(
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
@@ -1438,9 +1568,36 @@ class RGBCameraService final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedGetRGBCameraOdom(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::RobotName,::VCCSim::Odometry>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_GetRGBCameraImageData<WithStreamedUnaryMethod_GetRGBCameraOdom<Service > > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_GetRGBIndexedCameraImageData : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_GetRGBIndexedCameraImageData() {
+      ::grpc::Service::MarkMethodStreamed(2,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::VCCSim::IndexedCamera, ::VCCSim::RGBCameraImageData>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::VCCSim::IndexedCamera, ::VCCSim::RGBCameraImageData>* streamer) {
+                       return this->StreamedGetRGBIndexedCameraImageData(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_GetRGBIndexedCameraImageData() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status GetRGBIndexedCameraImageData(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::RGBCameraImageData* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedGetRGBIndexedCameraImageData(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::IndexedCamera,::VCCSim::RGBCameraImageData>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_GetRGBCameraImageData<WithStreamedUnaryMethod_GetRGBCameraOdom<WithStreamedUnaryMethod_GetRGBIndexedCameraImageData<Service > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_GetRGBCameraImageData<WithStreamedUnaryMethod_GetRGBCameraOdom<Service > > StreamedService;
+  typedef WithStreamedUnaryMethod_GetRGBCameraImageData<WithStreamedUnaryMethod_GetRGBCameraOdom<WithStreamedUnaryMethod_GetRGBIndexedCameraImageData<Service > > > StreamedService;
 };
 
 class DroneService final {

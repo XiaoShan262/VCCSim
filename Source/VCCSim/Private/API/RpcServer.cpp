@@ -86,6 +86,8 @@ public:
 				CompletionQueue.get(), RGrpcMaps.RCMaps.RRGBCMap);
         	new RGBCameraGetOdomCall(&RGBCameraService,
         		CompletionQueue.get(), RGrpcMaps.RCMaps.RRGBCMap);
+        	new RGBIndexedCameraImageDataCall(&RGBCameraService,
+				CompletionQueue.get(), RGrpcMaps.RCMaps.RRGBCMap);
         	
         	new SendMeshCall(&MeshService, CompletionQueue.get(), MeshComponent);
         	new SendPointCloudWithColorCall(&PointCloudService,

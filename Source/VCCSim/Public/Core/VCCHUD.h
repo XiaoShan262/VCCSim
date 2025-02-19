@@ -10,6 +10,7 @@ class UVCCSIMDisplayWidget;
 class UPauseMenuWidget;
 class UInputAction;
 class UInputMappingContext;
+class ARecorder;
 struct FRobotGrpcMaps;
 
 UCLASS()
@@ -53,4 +54,6 @@ private:
 	TObjectPtr<UPauseMenuWidget> CurrentPauseMenu;
 	UPROPERTY()
 	AActor* Holder = nullptr;
+	UPROPERTY()
+	ARecorder* Recorder = nullptr;
 };

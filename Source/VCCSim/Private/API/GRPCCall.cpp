@@ -131,7 +131,8 @@ void LidarGetDataAndOdomCall::ProcessRequest()
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("LidarGetDataAndOdomCall: Lidar component not found!"));
+        UE_LOG(LogTemp, Warning, TEXT("LidarGetDataAndOdomCall: "
+                                      "Lidar component not found!"));
     }
 }
 
@@ -315,8 +316,10 @@ void DepthCameraGetOdomCall::ProcessRequest()
     {
         const FVector Pose = RCMap_[request_.name()]->GetComponentLocation();
         const FRotator Rot = RCMap_[request_.name()]->GetComponentRotation();
-        const FVector LinearVelocity = RCMap_[request_.name()]->GetPhysicsLinearVelocity();
-        const FVector AngularVelocity = RCMap_[request_.name()]->GetPhysicsAngularVelocityInDegrees();
+        const FVector LinearVelocity =
+            RCMap_[request_.name()]->GetPhysicsLinearVelocity();
+        const FVector AngularVelocity =
+            RCMap_[request_.name()]->GetPhysicsAngularVelocityInDegrees();
 
         VCCSim::Pose* PoseData = response_.mutable_pose();
         PoseData->set_x(Pose.X);
@@ -357,7 +360,8 @@ void RGBCameraGetImageDataCall::PrepareNextCall()
 
 void RGBCameraGetImageDataCall::InitializeRequest()
 {
-    service_->RequestGetRGBCameraImageData(&ctx_, &request_, &responder_, cq_, cq_, this);
+    service_->RequestGetRGBCameraImageData(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
 }
 
 void RGBCameraGetImageDataCall::ProcessRequest()
@@ -386,7 +390,8 @@ void RGBCameraGetImageDataCall::ProcessRequest()
     TWeakPtr<TPromise<void>> WeakPromise = Promise;
     TWeakObjectPtr<URGBCameraComponent> WeakRGBCamera(RGBCamera);
 
-    RGBCamera->AsyncGetRGBImageData([this, WeakPromise, WeakRGBCamera](TArray<FRGBPixel> RGBImage) {
+    RGBCamera->AsyncGetRGBImageData([this, WeakPromise, WeakRGBCamera](
+        TArray<FRGBPixel> RGBImage) {
         auto StrongPromise = WeakPromise.Pin();
         auto StrongRGBCamera = WeakRGBCamera.Get();
         
@@ -424,7 +429,8 @@ void RGBCameraGetImageDataCall::ProcessRequest()
         response_.set_data(PackedData.GetData(), PackedData.Num());
         
         StrongPromise->SetValue();
-    });
+    }
+    );
 
     // Wait with timeout
     const float TimeoutSeconds = 5.0f;
@@ -464,8 +470,10 @@ void RGBCameraGetOdomCall::ProcessRequest()
     {
         const FVector Pose = RCMap_[request_.name()]->GetComponentLocation();
         const FRotator Rot = RCMap_[request_.name()]->GetComponentRotation();
-        const FVector LinearVelocity = RCMap_[request_.name()]->GetPhysicsLinearVelocity();
-        const FVector AngularVelocity = RCMap_[request_.name()]->GetPhysicsAngularVelocityInDegrees();
+        const FVector LinearVelocity =
+            RCMap_[request_.name()]->GetPhysicsLinearVelocity();
+        const FVector AngularVelocity =
+            RCMap_[request_.name()]->GetPhysicsAngularVelocityInDegrees();
 
         VCCSim::Pose* PoseData = response_.mutable_pose();
         PoseData->set_x(Pose.X);
@@ -490,8 +498,115 @@ void RGBCameraGetOdomCall::ProcessRequest()
     }
 }
 
+RGBIndexedCameraImageDataCall::RGBIndexedCameraImageDataCall(
+    VCCSim::RGBCameraService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, URGBCameraComponent*> rrgbcmap)
+        : AsyncCallTemplateM(service, cq, rrgbcmap)
+{
+    Proceed(true);
+}
+
+void RGBIndexedCameraImageDataCall::PrepareNextCall()
+{
+    new RGBIndexedCameraImageDataCall(service_, cq_, RCMap_);
+}
+
+void RGBIndexedCameraImageDataCall::InitializeRequest()
+{
+    service_->RequestGetRGBIndexedCameraImageData(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void RGBIndexedCameraImageDataCall::ProcessRequest()
+{
+    Promise = MakeShared<TPromise<void>>();
+    auto Future = Promise->GetFuture();
+    std::string CameraName = request_.robot_name().name() + "^" +
+                             std::to_string(request_.index());
+
+    if (!RCMap_.contains(CameraName))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("RGBCameraGetImageDataCall: "
+                                    "RGB Camera component not found!"));
+        Promise->SetValue();
+        return;
+    }
+
+    auto* RGBCamera = RCMap_[CameraName];
+    if (!RGBCamera)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("RGBCameraGetImageDataCall: "
+                                    "Invalid RGB Camera reference!"));
+        Promise->SetValue();
+        return;
+    }
+
+    // Capture both WeakPtr to Promise and RGBCamera
+    TWeakPtr<TPromise<void>> WeakPromise = Promise;
+    TWeakObjectPtr<URGBCameraComponent> WeakRGBCamera(RGBCamera);
+
+    RGBCamera->AsyncGetRGBImageData([this, WeakPromise, WeakRGBCamera](
+        TArray<FRGBPixel> RGBImage) {
+        auto StrongPromise = WeakPromise.Pin();
+        auto StrongRGBCamera = WeakRGBCamera.Get();
+        
+        if (!StrongPromise)
+        {
+            UE_LOG(LogTemp, Error, TEXT(
+                "Promise was destroyed before completion"));
+            return;
+        }
+
+        if (!StrongRGBCamera)
+        {
+            UE_LOG(LogTemp, Error, TEXT(
+                "RGB Camera was destroyed before completion"));
+            StrongPromise->SetValue();
+            return;
+        }
+
+        // Pack RGB data into bytes
+        const int32 NumPixels = RGBImage.Num();
+        const int32 BytesPerPixel = 3; // RGB
+        TArray<uint8> PackedData;
+        PackedData.SetNum(NumPixels * BytesPerPixel);
+
+        for (int32 i = 0; i < NumPixels; ++i)
+        {
+            const FRGBPixel& Pixel = RGBImage[i];
+            const int32 BaseIndex = i * BytesPerPixel;
+            PackedData[BaseIndex] = Pixel.R;
+            PackedData[BaseIndex + 1] = Pixel.G;
+            PackedData[BaseIndex + 2] = Pixel.B;
+        }
+
+        response_.set_width(StrongRGBCamera->Width);
+        response_.set_height(StrongRGBCamera->Height);
+        response_.set_format(VCCSim::RGBCameraImageData::RGB);
+        response_.set_data(PackedData.GetData(), PackedData.Num());
+        
+        StrongPromise->SetValue();
+    }
+    );
+
+    // Wait with timeout
+    const float TimeoutSeconds = 5.0f;
+    if (!Future.WaitFor(FTimespan::FromSeconds(TimeoutSeconds)))
+    {
+        UE_LOG(LogTemp, Error, TEXT("GetRGBImageData timed out after "
+                                   "%f seconds"), TimeoutSeconds);
+        if (Promise.IsValid())
+        {
+            Promise->SetValue();  // Ensure promise is completed
+        }
+    }
+}
+
+
 SendMeshCall::SendMeshCall(VCCSim::MeshService::AsyncService* service,
-                           grpc::ServerCompletionQueue* cq, UMeshHandlerComponent* mesh_component)
+                           grpc::ServerCompletionQueue* cq,
+                           UMeshHandlerComponent* mesh_component)
     : AsyncCallTemplate(service, cq, mesh_component)
 {
     Proceed(true);
@@ -530,7 +645,8 @@ void SendMeshCall::ProcessRequest()
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("SendMeshCall: Mesh component not found!"));
+        UE_LOG(LogTemp, Error, TEXT("SendMeshCall: "
+                                    "Mesh component not found!"));
     }
     response_.set_status(true);
 }
@@ -550,7 +666,8 @@ void SendPointCloudWithColorCall::PrepareNextCall()
 
 void SendPointCloudWithColorCall::InitializeRequest()
 {
-    service_->RequestSendPointCloudWithColor(&ctx_, &request_, &responder_, cq_, cq_, this);
+    service_->RequestSendPointCloudWithColor(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
 }
 
 void SendPointCloudWithColorCall::ProcessRequest()
@@ -591,7 +708,8 @@ void SendDronePoseCall::PrepareNextCall()
 
 void SendDronePoseCall::InitializeRequest()
 {
-    service_->RequestSendDronePose(&ctx_, &request_, &responder_, cq_, cq_, this);
+    service_->RequestSendDronePose(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
 }
 
 void SendDronePoseCall::ProcessRequest()

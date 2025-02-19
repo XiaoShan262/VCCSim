@@ -17,7 +17,7 @@ URGBCameraComponent::URGBCameraComponent()
     PrimaryComponentTick.bCanEverTick = true;
 }
 
-void URGBCameraComponent::RGBConfigure(const RGBCameraConfig& Config)
+void URGBCameraComponent::RGBConfigure(const FRGBCameraConfig& Config)
 { 
     FOV = Config.FOV;
     Width = Config.Width;
@@ -25,28 +25,55 @@ void URGBCameraComponent::RGBConfigure(const RGBCameraConfig& Config)
     bOrthographic = Config.bOrthographic;
     OrthoWidth = Config.OrthoWidth;
     CaptureRate = 1.f / Config.CaptureRate;
+    RGBRenderTarget->InitCustomFormat(Width, Height,
+        PF_B8G8R8A8, false);
+    RGBRenderTarget->UpdateResource();
     SetCaptureComponent();
     PrimaryComponentTick.bCanEverTick = false;
 
-    
+    bBPConfigured = true;
 }
 
 void URGBCameraComponent::SetCaptureComponent() const
 {
     if (CaptureComponent)
     {
+        // Basic camera settings
         CaptureComponent->ProjectionType = bOrthographic ?
             ECameraProjectionMode::Orthographic : ECameraProjectionMode::Perspective;
         CaptureComponent->FOVAngle = FOV;
         CaptureComponent->OrthoWidth = OrthoWidth;
-        CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
-        CaptureComponent->bCaptureEveryFrame = false;
-        CaptureComponent->bCaptureOnMovement = true;
 
         FEngineShowFlags& ShowFlags = CaptureComponent->ShowFlags;
+        ShowFlags.SetAtmosphere(true);
         ShowFlags.SetAntiAliasing(true);
         ShowFlags.SetDynamicShadows(true);
         ShowFlags.SetMotionBlur(false);
+        ShowFlags.SetBloom(true);
+        ShowFlags.SetAmbientOcclusion(true);
+        ShowFlags.SetGlobalIllumination(true);
+        ShowFlags.SetIndirectLightingCache(true);
+        ShowFlags.SetTonemapper(true);
+        ShowFlags.SetPostProcessing(true);
+        ShowFlags.SetAmbientCubemap(true);
+
+        // Capture settings
+        CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+        CaptureComponent->bCaptureEveryFrame = false;
+        CaptureComponent->bCaptureOnMovement = false;
+        CaptureComponent->bAlwaysPersistRenderingState = true;
+
+        // Post Process Settings
+        CaptureComponent->PostProcessSettings.bOverride_AmbientOcclusionIntensity = true;
+        CaptureComponent->PostProcessSettings.AmbientOcclusionIntensity = 1.0f;
+        CaptureComponent->PostProcessSettings.bOverride_AmbientOcclusionRadius = true;
+        CaptureComponent->PostProcessSettings.AmbientOcclusionRadius = 100.0f;
+        CaptureComponent->PostProcessSettings.bOverride_AmbientOcclusionQuality = true;
+        CaptureComponent->PostProcessSettings.AmbientOcclusionQuality = 100.0f;
+
+        // Enhanced indirect lighting
+        CaptureComponent->PostProcessSettings.bOverride_IndirectLightingIntensity = true;
+        CaptureComponent->PostProcessSettings.IndirectLightingIntensity = 1.2f;
     }
     else 
     {
@@ -96,7 +123,7 @@ void URGBCameraComponent::InitializeRenderTargets()
 {
     RGBRenderTarget = NewObject<UTextureRenderTarget2D>(this);
     RGBRenderTarget->InitCustomFormat(Width, Height,
-        PF_B8G8R8A8, true);
+        PF_B8G8R8A8, false);
     
     RGBRenderTarget->UpdateResource();
     CaptureComponent->TextureTarget = RGBRenderTarget;
@@ -115,26 +142,50 @@ bool URGBCameraComponent::CheckComponentAndRenderTarget() const
 
 TArray<FRGBPixel> URGBCameraComponent::GetRGBImageDataGameThread()
 {
-    check(IsInGameThread());
-    if (CheckComponentAndRenderTarget()) return {};
-
-    CaptureComponent->CaptureScene();
-    ProcessRGBTexture();
+    UE_LOG(LogTemp, Warning, TEXT("Starting GetRGBImageDataGameThread"));
     
-    return GetRGBImage();
+    if (CheckComponentAndRenderTarget())
+    {
+        return {};
+    }
+    
+    CaptureComponent->CaptureScene();
+    UE_LOG(LogTemp, Warning, TEXT("Scene captured"));
+
+    // Create a shared promise that will outlive this function
+    static TSharedPtr<TPromise<TArray<FRGBPixel>>> Promise;
+    Promise = MakeShared<TPromise<TArray<FRGBPixel>>>();
+    TFuture<TArray<FRGBPixel>> Future = Promise->GetFuture();
+    
+    ProcessRGBTextureAsync([](const TArray<FColor>& CompletedData)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ProcessRGBTextureAsync callback with %d colors"), CompletedData.Num());
+        if (Promise.IsValid())
+        {
+            Promise->SetValue(TransformFColorToRGBPixel(CompletedData));
+        }
+    });
+    
+    UE_LOG(LogTemp, Warning, TEXT("Waiting for future"));
+    if (Future.WaitFor(FTimespan::FromSeconds(10.0f)))  // Increased timeout
+    {
+        auto Result = Future.Get();
+        UE_LOG(LogTemp, Warning, TEXT("Future completed with %d pixels"), Result.Num());
+        return Result;
+    }
+    
+    UE_LOG(LogTemp, Warning, TEXT("Future timed out"));
+    return {};
 }
 
 void URGBCameraComponent::CaptureRGBScene()
 {
     if (CheckComponentAndRenderTarget())
     {
-        UE_LOG(LogTemp, Error, TEXT("URGBCameraComponent: "
-                                    "Capture component or render target not initialized!"));
         return;
     }
     
     CaptureComponent->CaptureScene();
-    ProcessRGBTexture();
 }
 
 void URGBCameraComponent::AsyncGetRGBImageData(
@@ -146,9 +197,10 @@ void URGBCameraComponent::AsyncGetRGBImageData(
     });
 }
 
-void URGBCameraComponent::ProcessRGBTexture()
+void URGBCameraComponent::ProcessRGBTextureAsync(
+    TFunction<void(const TArray<FColor>&)> OnComplete)
 {
-    FTextureRenderTargetResource* RenderTargetResource =
+    FTextureRenderTargetResource* RenderTargetResource = 
         RGBRenderTarget->GameThread_GetRenderTargetResource();
     
     if (!RenderTargetResource)
@@ -157,52 +209,51 @@ void URGBCameraComponent::ProcessRGBTexture()
         return;
     }
 
-    RGBData.Empty(Width * Height);
-    
-    struct FReadSurfaceContext
+    // Ensure RGBData has correct size
+    if (RGBData.Num() != Width * Height)
     {
-        TArray<FColor>* OutData;
-        FTextureRenderTargetResource* RenderTarget;
-        FIntRect Rect;
-        FReadSurfaceDataFlags Flags;
-    };
-
-    FReadSurfaceContext Context = {
+        RGBData.SetNumUninitialized(Width * Height);
+    }
+    
+    FReadSurfaceContext Context =
+    {
         &RGBData,
         RenderTargetResource,
         FIntRect(0, 0, Width, Height),
         FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX)
     };
 
+    auto SharedCallback = MakeShared<TFunction<void(const TArray<FColor>&)>>(MoveTemp(OnComplete));
+    // Capture the OnComplete callback in the render command
     ENQUEUE_RENDER_COMMAND(ReadSurfaceCommand)(
-        [Context](FRHICommandListImmediate& RHICmdList)
-        {
+        [Context, SharedCallback](FRHICommandListImmediate& RHICmdList)
+        {            
             RHICmdList.ReadSurfaceData(
                 Context.RenderTarget->GetRenderTargetTexture(),
                 Context.Rect,
                 *Context.OutData,
                 Context.Flags
             );
+            
+            // Execute callback on game thread when render is complete
+            AsyncTask(ENamedThreads::GameThread,
+                [SharedCallback, OutData = Context.OutData]()
+                {
+                    (*SharedCallback)(*OutData);
+                }
+            );
         });
-
-    FlushRenderingCommands();
 }
 
-TArray<FRGBPixel> URGBCameraComponent::GetRGBImage()
+TArray<FRGBPixel> TransformFColorToRGBPixel(const TArray<FColor>& Colors)
 {
     TArray<FRGBPixel> RGBImage;
-    RGBImage.Empty(Width * Height);
-
-    if (RGBData.Num() == 0)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("No RGB data available!"));
-        return RGBImage;
-    }
-
-    for (const FColor& Color : RGBData)
-    {
-        RGBImage.Add(FRGBPixel(Color.R, Color.G, Color.B));
-    }
-
+    RGBImage.Init(FRGBPixel(), Colors.Num());
+    ParallelFor(Colors.Num(), [&](int32 i)
+        {
+            RGBImage[i].R = Colors[i].R;
+            RGBImage[i].G = Colors[i].G;
+            RGBImage[i].B = Colors[i].B;
+        });
     return RGBImage;
 }

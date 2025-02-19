@@ -38,6 +38,8 @@ FVCCSimConfig ParseConfig()
             TCHAR_TO_UTF8(FPlatformProcess::UserDir()));
         Config.VCCSim.DefaultDronePawn = (*VCCSim)["DefaultDronePawn"].value_or("");
         Config.VCCSim.DefaultCarPawn = (*VCCSim)["DefaultCarPawn"].value_or("");
+        Config.VCCSim.RecordInterval = (*VCCSim)["RecordInterval"].value_or(0.2);
+        Config.VCCSim.BufferSize = (*VCCSim)["BufferSize"].value_or(100);
         
         if (auto staticMeshActors = (*VCCSim)["StaticMeshActor"].as_array())
         {
@@ -88,6 +90,33 @@ FVCCSimConfig ParseConfig()
 
             r.Type = robotDetails["Type"].value_or("None"sv) == "Drone" ?
                 EPawnType::Drone : EPawnType::Car;
+            
+            if (auto recordComps = robotDetails["RecordComponents"].as_array())
+            {
+                for (const auto& comp : *recordComps)
+                {
+                    if (auto compName = comp.value<std::string>())
+                    {
+                        if (*compName == "Lidar")
+                        {
+                            r.RecordComponents.insert(ESensorType::Lidar);
+                        }
+                        else if (*compName == "DepthCamera")
+                        {
+                            r.RecordComponents.insert(ESensorType::DepthCamera);
+                        }
+                        else if (*compName == "RGBCamera")
+                        {
+                            r.RecordComponents.insert(ESensorType::RGBCamera);
+                        }
+                        else
+                        {
+                            UE_LOG(LogTemp, Warning, TEXT("ParseConfig: Component %s not found!"),
+                                *FString{UTF8_TO_TCHAR((*compName).c_str())});
+                        }
+                    }
+                }
+            }
 
             if (auto ComponentConfigs = robotDetails["ComponentConfigs"].as_table())
             {
@@ -136,7 +165,7 @@ FVCCSimConfig ParseConfig()
                     }
                     else if (comp_name == "RGBCamera")
                     {
-                        auto rgbConfig = std::make_shared<RGBCameraConfig>();
+                        auto rgbConfig = std::make_shared<FRGBCameraConfig>();
                         if (auto table = comp_config.as_table())
                         {
                             rgbConfig->FOV = (*table)["FOV"].value_or(rgbConfig->FOV);

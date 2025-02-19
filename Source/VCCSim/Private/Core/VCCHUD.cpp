@@ -4,6 +4,7 @@
 #include "Sensors/LidarSensor.h"
 #include "Sensors/DepthCamera.h"
 #include "Sensors/CameraSensor.h"
+#include "Simulation/Recorder.h"
 #include "Utils/ConfigParser.h"
 #include "Utils/InsMeshHolder.h"
 #include "Utils/VCCSIMDisplayWidget.h"
@@ -18,9 +19,11 @@ void AVCCHUD::BeginPlay()
     Super::BeginPlay();
     
     FVCCSimConfig Config = ParseConfig();
+    Recorder = GetWorld()->SpawnActor<ARecorder>(ARecorder::StaticClass(), FTransform::Identity);
     SetupWidgetsAndLS(Config);
     auto RCMaps = SetupActors(Config);
     RunServer(Config, Holder, RCMaps);
+    // Recorder->StartRecording();
 }
 
 void AVCCHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -300,6 +303,17 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
         {
             RGrpcMaps.RMaps.DroneMap[Robot.UETag] = RobotPawn;
         }
+        else if (Robot.Type == EPawnType::Car)
+        {
+            RGrpcMaps.RMaps.CarMap[Robot.UETag] = RobotPawn;
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Unknown pawn type!"));
+            continue;
+        }
+
+        FRecordComponents RecordComponents;
         
         for (const auto& Component : Robot.ComponentConfigs)
         {
@@ -312,6 +326,11 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                 LidarComponent->FirstCall();
                 LidarComponent->MeshHolder = Holder->FindComponentByClass<UInsMeshHolder>();
                 RGrpcMaps.RCMaps.RLMap[Robot.UETag] = LidarComponent;
+
+                if (Robot.RecordComponents.contains(ESensorType::Lidar))
+                {
+                    RecordComponents.LidarComponents.Add(LidarComponent);
+                }
             }
             else if (Component.first == ESensorType::DepthCamera)
             {
@@ -329,6 +348,11 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                             *FString(Robot.UETag.c_str()), DepthCam->GetCameraIndex());
                         RGrpcMaps.RCMaps.RDCMap[TCHAR_TO_UTF8(*cameraKey)] = DepthCam;
                     }
+
+                    if (Robot.RecordComponents.contains(ESensorType::DepthCamera))
+                    {
+                        RecordComponents.DepthCameraComponents.Add(DepthCam);
+                    }
                 }
             }
             else if (Component.first == ESensorType::RGBCamera)
@@ -341,11 +365,16 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                     if (!RGBCam->IsConfigured())
                     {
                         RGBCam->RGBConfigure(
-                            *static_cast<RGBCameraConfig*>(Component.second.get()));
+                            *static_cast<FRGBCameraConfig*>(Component.second.get()));
                         // Use both robot tag and camera ID/index for unique identification
                         FString cameraKey = FString::Printf(TEXT("%s^%d"), 
                             *FString(Robot.UETag.c_str()), RGBCam->GetCameraIndex());
                         RGrpcMaps.RCMaps.RRGBCMap[TCHAR_TO_UTF8(*cameraKey)] = RGBCam;
+                    }
+
+                    if (Robot.RecordComponents.contains(ESensorType::RGBCamera))
+                    {
+                        RecordComponents.RGBCameraComponents.Add(RGBCam);
                     }
                 }
             }
@@ -354,6 +383,30 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                 UE_LOG(LogTemp, Warning, TEXT(
                     "ARatHUD::SetupActors: Unknown component, %d"), Component.first);
             }
+        }
+
+        size_t NonEmptyComponents = 0;
+        if (RecordComponents.LidarComponents.Num() > 0)
+        {
+            NonEmptyComponents++;
+        }
+        if (RecordComponents.DepthCameraComponents.Num() > 0)
+        {
+            NonEmptyComponents++;
+        }
+        if (RecordComponents.RGBCameraComponents.Num() > 0)
+        {
+            NonEmptyComponents++;
+        }
+        if (NonEmptyComponents != Robot.RecordComponents.size())
+        {
+            UE_LOG(LogTemp, Error, TEXT("ARatHUD::SetupActors: "
+                "RecordComponents size mismatch!"));
+        }
+
+        if (Robot.RecordComponents.size() > 0)
+        {
+            Recorder->RecordComponents.Add(RobotPawn, RecordComponents);
         }
     }
 

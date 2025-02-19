@@ -366,6 +366,11 @@ class RGBCameraServiceStub(object):
                 request_serializer=VCCSim__pb2.RobotName.SerializeToString,
                 response_deserializer=VCCSim__pb2.Odometry.FromString,
                 _registered_method=True)
+        self.GetRGBIndexedCameraImageData = channel.unary_unary(
+                '/VCCSim.RGBCameraService/GetRGBIndexedCameraImageData',
+                request_serializer=VCCSim__pb2.IndexedCamera.SerializeToString,
+                response_deserializer=VCCSim__pb2.RGBCameraImageData.FromString,
+                _registered_method=True)
 
 
 class RGBCameraServiceServicer(object):
@@ -383,6 +388,12 @@ class RGBCameraServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetRGBIndexedCameraImageData(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_RGBCameraServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -395,6 +406,11 @@ def add_RGBCameraServiceServicer_to_server(servicer, server):
                     servicer.GetRGBCameraOdom,
                     request_deserializer=VCCSim__pb2.RobotName.FromString,
                     response_serializer=VCCSim__pb2.Odometry.SerializeToString,
+            ),
+            'GetRGBIndexedCameraImageData': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetRGBIndexedCameraImageData,
+                    request_deserializer=VCCSim__pb2.IndexedCamera.FromString,
+                    response_serializer=VCCSim__pb2.RGBCameraImageData.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -451,6 +467,33 @@ class RGBCameraService(object):
             '/VCCSim.RGBCameraService/GetRGBCameraOdom',
             VCCSim__pb2.RobotName.SerializeToString,
             VCCSim__pb2.Odometry.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetRGBIndexedCameraImageData(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.RGBCameraService/GetRGBIndexedCameraImageData',
+            VCCSim__pb2.IndexedCamera.SerializeToString,
+            VCCSim__pb2.RGBCameraImageData.FromString,
             options,
             channel_credentials,
             insecure,

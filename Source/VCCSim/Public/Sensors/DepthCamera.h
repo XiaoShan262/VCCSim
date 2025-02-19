@@ -47,6 +47,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "DepthCamera")
     void VisualizePointCloud();
 
+    TArray<FDCPoint> GetPointCloudDataGameThread();
+    TArray<float> GetDepthImageDataGameThread();
     // For grpc server
     void AsyncGetPointCloudData(TFunction<void(TArray<FDCPoint>)> Callback);
     void AsyncGetDepthImageData(TFunction<void(TArray<float>)> Callback);
@@ -93,8 +95,6 @@ public:
     
 private:
     bool CheckComponentAndRenderTarget() const;
-    TArray<FDCPoint> GetPointCloudDataGameThread();
-    TArray<float> GetDepthImageDataGameThread();
     
     UPROPERTY()
     USceneCaptureComponent2D* CaptureComponent = nullptr;

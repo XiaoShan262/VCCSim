@@ -205,6 +205,25 @@ protected:
     virtual void ProcessRequest() override final;
 };
 
+class RGBIndexedCameraImageDataCall : public AsyncCallTemplateM<
+    VCCSim::IndexedCamera, VCCSim::RGBCameraImageData,
+    VCCSim::RGBCameraService::AsyncService,
+    std::map<std::string, URGBCameraComponent*>>
+{
+public:
+    RGBIndexedCameraImageDataCall(
+        VCCSim::RGBCameraService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        std::map<std::string, URGBCameraComponent*> rrgbcmap);
+protected:
+    virtual void PrepareNextCall() override final;
+    virtual void InitializeRequest() override final;
+    virtual void ProcessRequest() override final;
+private:
+    TSharedPtr<TPromise<void>> Promise;
+};
+
+    
 /* --------------------------Misc Handler---------------------------------- */
 class SendMeshCall : public AsyncCallTemplate<VCCSim::MeshData,
     VCCSim::Status, VCCSim::MeshService::AsyncService, UMeshHandlerComponent> {

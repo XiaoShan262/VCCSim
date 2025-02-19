@@ -10,6 +10,7 @@
 #include "RHIResources.h"
 #include "CameraSensor.generated.h"
 
+
 struct FRGBPixel
 {
     uint8 R;
@@ -20,7 +21,7 @@ struct FRGBPixel
     FRGBPixel(uint8 InR, uint8 InG, uint8 InB) : R(InR), G(InG), B(InB) {}
 };
 
-class RGBCameraConfig : public SensorConfig
+class FRGBCameraConfig : public SensorConfig
 {
 public:
     float FOV = 90.0f;
@@ -38,7 +39,7 @@ class VCCSIM_API URGBCameraComponent : public UPrimitiveComponent
 
 public:
     URGBCameraComponent();
-    void RGBConfigure(const RGBCameraConfig& Config);
+    void RGBConfigure(const FRGBCameraConfig& Config);
     bool IsConfigured() const { return bBPConfigured; }
     int32 GetCameraIndex() const { return CameraIndex; }
     void SetCaptureComponent() const;
@@ -46,6 +47,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "RGBCamera")
     void CaptureRGBScene();
 
+    // For Recorder
+    // TArray<FColor> 
+    
     // For GRPC call
     void AsyncGetRGBImageData(TFunction<void(TArray<FRGBPixel>)> Callback);
 
@@ -54,10 +58,8 @@ protected:
     virtual void OnComponentCreated() override;
     virtual void TickComponent(float DeltaTime, ELevelTick TickType,
         FActorComponentTickFunction* ThisTickFunction) override;
-    
+    void ProcessRGBTextureAsync(TFunction<void(const TArray<FColor>&)> OnComplete);
     void InitializeRenderTargets();
-    void ProcessRGBTexture();
-    TArray<FRGBPixel> GetRGBImage();
 
 public:
     // Configuration Properties
@@ -85,6 +87,14 @@ public:
     UTextureRenderTarget2D* RGBRenderTarget = nullptr;
     
 private:
+    struct FReadSurfaceContext
+    {
+        TArray<FColor>* OutData;
+        FTextureRenderTargetResource* RenderTarget;
+        FIntRect Rect;
+        FReadSurfaceDataFlags Flags;
+    };
+    
     bool CheckComponentAndRenderTarget() const;
     TArray<FRGBPixel> GetRGBImageDataGameThread();
     
@@ -94,3 +104,5 @@ private:
     float TimeSinceLastCapture;
     FCriticalSection DataLock;
 };
+
+TArray<FRGBPixel> TransformFColorToRGBPixel(const TArray<FColor>& Colors);

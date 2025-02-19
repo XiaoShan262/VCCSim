@@ -61,6 +61,11 @@ message RobotName {
   string name = 1;
 }
 
+message IndexedCamera{
+    RobotName robot_name = 1;
+    uint32 index = 2;
+}
+
 // Mesh:
 message MeshData {
   bytes data = 1;           // Binary mesh data
@@ -160,6 +165,7 @@ service DepthCameraService {
 service RGBCameraService {
   rpc GetRGBCameraImageData (RobotName) returns (RGBCameraImageData);
   rpc GetRGBCameraOdom (RobotName) returns (Odometry);
+  rpc GetRGBIndexedCameraImageData (IndexedCamera) returns (RGBCameraImageData);
 }
 
 service DroneService {

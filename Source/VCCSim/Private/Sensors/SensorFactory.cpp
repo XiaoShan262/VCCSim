@@ -62,8 +62,8 @@ UPrimitiveComponent* FSensorFactory::CreateSensor(
 		}
 	case ESensorType::RGBCamera:
 		{
-			const RGBCameraConfig* CameraConfig =
-				static_cast<const RGBCameraConfig*>(&Config);
+			const FRGBCameraConfig* CameraConfig =
+				static_cast<const FRGBCameraConfig*>(&Config);
 			if (!CameraConfig)
 			{
 				UE_LOG(LogTemp, Error, TEXT("FSensorFactory::CreateSensor: "

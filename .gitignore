@@ -74,3 +74,8 @@ Plugins/**/Intermediate/*
 DerivedDataCache/*
 
 Source/grpc/*
+Logs/*
+Client/PyClient/GRPC/VCCSim_pb2_grpc.py
+Client/PyClient/GRPC/VCCSim_pb2.py
+.vscode/settings.json
+/Client/PyClient/VCCSim/__pycache__/*

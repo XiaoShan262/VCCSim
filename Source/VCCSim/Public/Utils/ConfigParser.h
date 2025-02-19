@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <set>
 #include <memory>
 #include "Sensors/SensorBase.h"
 #include "Pawns/PawnBase.h"
@@ -12,6 +13,7 @@ struct FRobot
 	std::string UETag;
 	EPawnType Type;
 	std::vector<FComponentConfig> ComponentConfigs;
+	std::set<ESensorType> RecordComponents;
 };
 
 struct FVCCSimPresets
@@ -25,6 +27,8 @@ struct FVCCSimPresets
 	std::string LogSavePath;
 	std::string DefaultDronePawn;
 	std::string DefaultCarPawn;
+	float RecordInterval;
+	int BufferSize;
 };
 
 struct FVCCSimConfig
