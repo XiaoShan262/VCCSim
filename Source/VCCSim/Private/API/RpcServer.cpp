@@ -57,6 +57,8 @@ public:
         CompletionQueue = Builder.AddCompletionQueue();
         Server = Builder.BuildAndStart();
 
+    	RGBIndexedCameraImageDataCall::InitializeImageModule();
+
         if (Server)
         {
             UE_LOG(LogTemp, Warning, TEXT("Asynchronous Server listening on %s"),
@@ -70,10 +72,12 @@ public:
 			}
         	new SendDronePoseCall(&DroneService, CompletionQueue.get(), DroneMap);
         	
-        	// new LidarGetDataCall(&service, CompletionQueue.get(), LidarComponent);
-        	// new LidarGetOdomCall(&service, CompletionQueue.get(), LidarComponent);
-        	new LidarGetDataAndOdomCall(&LidarService,
-        		CompletionQueue.get(), RGrpcMaps.RCMaps.RLMap);
+        	new LidarGetDataCall(&LidarService, CompletionQueue.get(), 
+				RGrpcMaps.RCMaps.RLMap);
+        	new LidarGetOdomCall(&LidarService, CompletionQueue.get(),
+        		RGrpcMaps.RCMaps.RLMap);
+        	new LidarGetDataAndOdomCall(&LidarService, CompletionQueue.get(),
+        		RGrpcMaps.RCMaps.RLMap);
         	
 			new DepthCameraGetImageDataCall(&DepthCameraService,
 				CompletionQueue.get(), RGrpcMaps.RCMaps.RDCMap);

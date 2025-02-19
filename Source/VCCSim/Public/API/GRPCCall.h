@@ -111,11 +111,16 @@ protected:
 };
 
 /* ---------------------------------LiDAR---------------------------------- */
-class LidarGetDataCall : public AsyncCallTemplate<VCCSim::RobotName,
-    VCCSim::LidarData, VCCSim::LidarService::AsyncService, ULidarComponent> {
+class LidarGetDataCall : public AsyncCallTemplateM<
+    VCCSim::RobotName, VCCSim::LidarData,
+    VCCSim::LidarService::AsyncService,
+    std::map<std::string, ULidarComponent*>>
+{
 public:
-    LidarGetDataCall(VCCSim::LidarService::AsyncService* service,
-        grpc::ServerCompletionQueue* cq, ULidarComponent* lidar_component);
+    LidarGetDataCall(
+        VCCSim::LidarService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        std::map<std::string, ULidarComponent*> RLMap);
 
 protected:
     virtual void PrepareNextCall() override final;
@@ -123,11 +128,16 @@ protected:
     virtual void ProcessRequest() override final;
 };
 
-class LidarGetOdomCall : public AsyncCallTemplate<VCCSim::RobotName,
-    VCCSim::Odometry, VCCSim::LidarService::AsyncService, ULidarComponent> {
+class LidarGetOdomCall : public AsyncCallTemplateM<
+    VCCSim::RobotName, VCCSim::Odometry,
+    VCCSim::LidarService::AsyncService,
+    std::map<std::string, ULidarComponent*>>
+{
 public:
-    LidarGetOdomCall(VCCSim::LidarService::AsyncService* service,
-        grpc::ServerCompletionQueue* cq, ULidarComponent* lidar_component);
+    LidarGetOdomCall(
+        VCCSim::LidarService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        std::map<std::string, ULidarComponent*> RLMap);
 
 protected:
     virtual void PrepareNextCall() override final;
@@ -136,7 +146,8 @@ protected:
 };
 
 class LidarGetDataAndOdomCall : public AsyncCallTemplateM<
-    VCCSim::RobotName, VCCSim::LidarDataAndOdom, VCCSim::LidarService::AsyncService,
+    VCCSim::RobotName, VCCSim::LidarDataAndOdom,
+    VCCSim::LidarService::AsyncService,
     std::map<std::string, ULidarComponent*>>
 {
 public:
@@ -231,18 +242,25 @@ public:
         VCCSim::RGBCameraService::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
         std::map<std::string, URGBCameraComponent*> rrgbcmap);
+    static void InitializeImageModule()
+    {
+        // Load module once at startup
+        if (!ImageWrapperModule)
+        {
+            ImageWrapperModule = &FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+        }
+    }
 protected:
     virtual void PrepareNextCall() override final;
     virtual void InitializeRequest() override final;
     virtual void ProcessRequest() override final;
 private:
+    static IImageWrapperModule* ImageWrapperModule;
+    TSharedPtr<IImageWrapper> ImageWrapper;
+    
     TArray<uint8> ConvertToPNG(const TArray<FColor>& ImageData, int32 Width, int32 Height) 
     {
         TArray<uint8> PNGData;
-        
-        // Get ImageWrapper module
-        auto& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
-        TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
         
         if (ImageWrapper.IsValid())
         {
@@ -257,20 +275,22 @@ private:
                 RawBGRA[4*i + 3] = ImageData[i].A;
             }
             
-            // Compress to PNG
-            if (ImageWrapper->SetRaw(RawBGRA.GetData(), RawBGRA.Num(), Width, Height, ERGBFormat::BGRA, 8)) 
+            if (ImageWrapper->SetRaw(RawBGRA.GetData(), RawBGRA.Num(),
+                Width, Height, ERGBFormat::BGRA, 8)) 
             {
                 const TArray64<uint8>& CompressedData = ImageWrapper->GetCompressed();
                 PNGData.Append(CompressedData.GetData(), CompressedData.Num());
             }
             else
             {
-                UE_LOG(LogTemp, Error, TEXT("Failed to set raw image data for PNG conversion"));
+                UE_LOG(LogTemp, Error, TEXT("RGBIndexedCameraImageDataCall:"
+                                            "Failed to set raw image data for PNG conversion"));
             }
         }
         else
         {
-            UE_LOG(LogTemp, Error, TEXT("Failed to create PNG image wrapper"));
+            UE_LOG(LogTemp, Error, TEXT("RGBIndexedCameraImageDataCall:"
+                                        "Failed to create PNG image wrapper"));
         }
         
         return PNGData;

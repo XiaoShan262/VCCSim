@@ -84,9 +84,6 @@ extern LidarDataDefaultTypeInternal _LidarData_default_instance_;
 class LidarDataAndOdom;
 struct LidarDataAndOdomDefaultTypeInternal;
 extern LidarDataAndOdomDefaultTypeInternal _LidarDataAndOdom_default_instance_;
-class LidarPoint;
-struct LidarPointDefaultTypeInternal;
-extern LidarPointDefaultTypeInternal _LidarPoint_default_instance_;
 class MeshData;
 struct MeshDataDefaultTypeInternal;
 extern MeshDataDefaultTypeInternal _MeshData_default_instance_;
@@ -870,7 +867,7 @@ class RGBCameraImageData final
     return reinterpret_cast<const RGBCameraImageData*>(
         &_RGBCameraImageData_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 18;
+  static constexpr int kIndexInFileMessages = 17;
   friend void swap(RGBCameraImageData& a, RGBCameraImageData& b) { a.Swap(&b); }
   inline void Swap(RGBCameraImageData* other) {
     if (other == this) return;
@@ -1809,233 +1806,6 @@ class Point final
 };
 // -------------------------------------------------------------------
 
-class LidarPoint final
-    : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:VCCSim.LidarPoint) */ {
- public:
-  inline LidarPoint() : LidarPoint(nullptr) {}
-  ~LidarPoint() PROTOBUF_FINAL;
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(LidarPoint* msg, std::destroying_delete_t) {
-    SharedDtor(*msg);
-    ::google::protobuf::internal::SizedDelete(msg, sizeof(LidarPoint));
-  }
-#endif
-
-  template <typename = void>
-  explicit PROTOBUF_CONSTEXPR LidarPoint(
-      ::google::protobuf::internal::ConstantInitialized);
-
-  inline LidarPoint(const LidarPoint& from) : LidarPoint(nullptr, from) {}
-  inline LidarPoint(LidarPoint&& from) noexcept
-      : LidarPoint(nullptr, std::move(from)) {}
-  inline LidarPoint& operator=(const LidarPoint& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline LidarPoint& operator=(LidarPoint&& from) noexcept {
-    if (this == &from) return *this;
-    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
-  }
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields()
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::google::protobuf::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::google::protobuf::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const LidarPoint& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const LidarPoint* internal_default_instance() {
-    return reinterpret_cast<const LidarPoint*>(
-        &_LidarPoint_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages = 13;
-  friend void swap(LidarPoint& a, LidarPoint& b) { a.Swap(&b); }
-  inline void Swap(LidarPoint* other) {
-    if (other == this) return;
-    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
-      InternalSwap(other);
-    } else {
-      ::google::protobuf::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(LidarPoint* other) {
-    if (other == this) return;
-    ABSL_DCHECK(GetArena() == other->GetArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  LidarPoint* New(::google::protobuf::Arena* arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<LidarPoint>(arena);
-  }
-  using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const LidarPoint& from);
-  using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const LidarPoint& from) { LidarPoint::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(
-      ::google::protobuf::MessageLite& to_msg,
-      const ::google::protobuf::MessageLite& from_msg);
-
-  public:
-  bool IsInitialized() const {
-    return true;
-  }
-  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
-  #if defined(PROTOBUF_CUSTOM_VTABLE)
-  private:
-  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  static ::uint8_t* _InternalSerialize(
-      const MessageLite& msg, ::uint8_t* target,
-      ::google::protobuf::io::EpsCopyOutputStream* stream);
-
-  public:
-  ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
-  ::uint8_t* _InternalSerialize(
-      ::uint8_t* target,
-      ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-    return _InternalSerialize(*this, target, stream);
-  }
-  #else   // PROTOBUF_CUSTOM_VTABLE
-  ::size_t ByteSizeLong() const final;
-  ::uint8_t* _InternalSerialize(
-      ::uint8_t* target,
-      ::google::protobuf::io::EpsCopyOutputStream* stream) const final;
-  #endif  // PROTOBUF_CUSTOM_VTABLE
-  int GetCachedSize() const { return _impl_._cached_size_.Get(); }
-
-  private:
-  void SharedCtor(::google::protobuf::Arena* arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(LidarPoint* other);
- private:
-  template <typename T>
-  friend ::absl::string_view(
-      ::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "VCCSim.LidarPoint"; }
-
- protected:
-  explicit LidarPoint(::google::protobuf::Arena* arena);
-  LidarPoint(::google::protobuf::Arena* arena, const LidarPoint& from);
-  LidarPoint(::google::protobuf::Arena* arena, LidarPoint&& from) noexcept
-      : LidarPoint(arena) {
-    *this = ::std::move(from);
-  }
-  const ::google::protobuf::internal::ClassData* GetClassData() const PROTOBUF_FINAL;
-  static void* PlacementNew_(const void*, void* mem,
-                             ::google::protobuf::Arena* arena);
-  static constexpr auto InternalNewImpl_();
-  static const ::google::protobuf::internal::ClassDataFull _class_data_;
-
- public:
-  ::google::protobuf::Metadata GetMetadata() const;
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-  enum : int {
-    kXFieldNumber = 1,
-    kYFieldNumber = 2,
-    kZFieldNumber = 3,
-    kHitFieldNumber = 4,
-  };
-  // float x = 1;
-  void clear_x() ;
-  float x() const;
-  void set_x(float value);
-
-  private:
-  float _internal_x() const;
-  void _internal_set_x(float value);
-
-  public:
-  // float y = 2;
-  void clear_y() ;
-  float y() const;
-  void set_y(float value);
-
-  private:
-  float _internal_y() const;
-  void _internal_set_y(float value);
-
-  public:
-  // float z = 3;
-  void clear_z() ;
-  float z() const;
-  void set_z(float value);
-
-  private:
-  float _internal_z() const;
-  void _internal_set_z(float value);
-
-  public:
-  // int32 hit = 4;
-  void clear_hit() ;
-  ::int32_t hit() const;
-  void set_hit(::int32_t value);
-
-  private:
-  ::int32_t _internal_hit() const;
-  void _internal_set_hit(::int32_t value);
-
-  public:
-  // @@protoc_insertion_point(class_scope:VCCSim.LidarPoint)
- private:
-  class _Internal;
-  friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<
-      2, 4, 0,
-      0, 2>
-      _table_;
-
-  friend class ::google::protobuf::MessageLite;
-  friend class ::google::protobuf::Arena;
-  template <typename T>
-  friend class ::google::protobuf::Arena::InternalHelper;
-  using InternalArenaConstructable_ = void;
-  using DestructorSkippable_ = void;
-  struct Impl_ {
-    inline explicit constexpr Impl_(
-        ::google::protobuf::internal::ConstantInitialized) noexcept;
-    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
-                          ::google::protobuf::Arena* arena);
-    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
-                          ::google::protobuf::Arena* arena, const Impl_& from,
-                          const LidarPoint& from_msg);
-    float x_;
-    float y_;
-    float z_;
-    ::int32_t hit_;
-    ::google::protobuf::internal::CachedSize _cached_size_;
-    PROTOBUF_TSAN_DECLARE_MEMBER
-  };
-  union { Impl_ _impl_; };
-  friend struct ::TableStruct_VCCSim_2eproto;
-};
-// -------------------------------------------------------------------
-
 class EmptyRequest final
     : public ::google::protobuf::internal::ZeroFieldsBase
 /* @@protoc_insertion_point(class_definition:VCCSim.EmptyRequest) */ {
@@ -2242,7 +2012,7 @@ class DepthCameraImageData final
     return reinterpret_cast<const DepthCameraImageData*>(
         &_DepthCameraImageData_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 17;
+  static constexpr int kIndexInFileMessages = 16;
   friend void swap(DepthCameraImageData& a, DepthCameraImageData& b) { a.Swap(&b); }
   inline void Swap(DepthCameraImageData* other) {
     if (other == this) return;
@@ -3115,7 +2885,7 @@ class LidarData final
     return reinterpret_cast<const LidarData*>(
         &_LidarData_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 14;
+  static constexpr int kIndexInFileMessages = 13;
   friend void swap(LidarData& a, LidarData& b) { a.Swap(&b); }
   inline void Swap(LidarData* other) {
     if (other == this) return;
@@ -3204,23 +2974,23 @@ class LidarData final
   enum : int {
     kDataFieldNumber = 1,
   };
-  // repeated .VCCSim.LidarPoint data = 1;
+  // repeated .VCCSim.Point data = 1;
   int data_size() const;
   private:
   int _internal_data_size() const;
 
   public:
   void clear_data() ;
-  ::VCCSim::LidarPoint* mutable_data(int index);
-  ::google::protobuf::RepeatedPtrField<::VCCSim::LidarPoint>* mutable_data();
+  ::VCCSim::Point* mutable_data(int index);
+  ::google::protobuf::RepeatedPtrField<::VCCSim::Point>* mutable_data();
 
   private:
-  const ::google::protobuf::RepeatedPtrField<::VCCSim::LidarPoint>& _internal_data() const;
-  ::google::protobuf::RepeatedPtrField<::VCCSim::LidarPoint>* _internal_mutable_data();
+  const ::google::protobuf::RepeatedPtrField<::VCCSim::Point>& _internal_data() const;
+  ::google::protobuf::RepeatedPtrField<::VCCSim::Point>* _internal_mutable_data();
   public:
-  const ::VCCSim::LidarPoint& data(int index) const;
-  ::VCCSim::LidarPoint* add_data();
-  const ::google::protobuf::RepeatedPtrField<::VCCSim::LidarPoint>& data() const;
+  const ::VCCSim::Point& data(int index) const;
+  ::VCCSim::Point* add_data();
+  const ::google::protobuf::RepeatedPtrField<::VCCSim::Point>& data() const;
   // @@protoc_insertion_point(class_scope:VCCSim.LidarData)
  private:
   class _Internal;
@@ -3244,7 +3014,7 @@ class LidarData final
     inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
                           ::google::protobuf::Arena* arena, const Impl_& from,
                           const LidarData& from_msg);
-    ::google::protobuf::RepeatedPtrField< ::VCCSim::LidarPoint > data_;
+    ::google::protobuf::RepeatedPtrField< ::VCCSim::Point > data_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
@@ -3522,7 +3292,7 @@ class DronePose final
     return reinterpret_cast<const DronePose*>(
         &_DronePose_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 19;
+  static constexpr int kIndexInFileMessages = 18;
   friend void swap(DronePose& a, DronePose& b) { a.Swap(&b); }
   inline void Swap(DronePose* other) {
     if (other == this) return;
@@ -3737,7 +3507,7 @@ class DronePath final
     return reinterpret_cast<const DronePath*>(
         &_DronePath_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 20;
+  static constexpr int kIndexInFileMessages = 19;
   friend void swap(DronePath& a, DronePath& b) { a.Swap(&b); }
   inline void Swap(DronePath* other) {
     if (other == this) return;
@@ -3953,7 +3723,7 @@ class DepthCameraPointData final
     return reinterpret_cast<const DepthCameraPointData*>(
         &_DepthCameraPointData_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 16;
+  static constexpr int kIndexInFileMessages = 15;
   friend void swap(DepthCameraPointData& a, DepthCameraPointData& b) { a.Swap(&b); }
   inline void Swap(DepthCameraPointData* other) {
     if (other == this) return;
@@ -4151,7 +3921,7 @@ class CarPose final
     return reinterpret_cast<const CarPose*>(
         &_CarPose_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 21;
+  static constexpr int kIndexInFileMessages = 20;
   friend void swap(CarPose& a, CarPose& b) { a.Swap(&b); }
   inline void Swap(CarPose* other) {
     if (other == this) return;
@@ -4366,7 +4136,7 @@ class CarPath final
     return reinterpret_cast<const CarPath*>(
         &_CarPath_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 22;
+  static constexpr int kIndexInFileMessages = 21;
   friend void swap(CarPath& a, CarPath& b) { a.Swap(&b); }
   inline void Swap(CarPath* other) {
     if (other == this) return;
@@ -4994,7 +4764,7 @@ class LidarDataAndOdom final
     return reinterpret_cast<const LidarDataAndOdom*>(
         &_LidarDataAndOdom_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 15;
+  static constexpr int kIndexInFileMessages = 14;
   friend void swap(LidarDataAndOdom& a, LidarDataAndOdom& b) { a.Swap(&b); }
   inline void Swap(LidarDataAndOdom* other) {
     if (other == this) return;
@@ -6580,101 +6350,9 @@ inline void MeshDataWithOdom::set_allocated_odom(::VCCSim::Odometry* value) {
 
 // -------------------------------------------------------------------
 
-// LidarPoint
-
-// float x = 1;
-inline void LidarPoint::clear_x() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.x_ = 0;
-}
-inline float LidarPoint::x() const {
-  // @@protoc_insertion_point(field_get:VCCSim.LidarPoint.x)
-  return _internal_x();
-}
-inline void LidarPoint::set_x(float value) {
-  _internal_set_x(value);
-  // @@protoc_insertion_point(field_set:VCCSim.LidarPoint.x)
-}
-inline float LidarPoint::_internal_x() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.x_;
-}
-inline void LidarPoint::_internal_set_x(float value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.x_ = value;
-}
-
-// float y = 2;
-inline void LidarPoint::clear_y() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.y_ = 0;
-}
-inline float LidarPoint::y() const {
-  // @@protoc_insertion_point(field_get:VCCSim.LidarPoint.y)
-  return _internal_y();
-}
-inline void LidarPoint::set_y(float value) {
-  _internal_set_y(value);
-  // @@protoc_insertion_point(field_set:VCCSim.LidarPoint.y)
-}
-inline float LidarPoint::_internal_y() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.y_;
-}
-inline void LidarPoint::_internal_set_y(float value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.y_ = value;
-}
-
-// float z = 3;
-inline void LidarPoint::clear_z() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.z_ = 0;
-}
-inline float LidarPoint::z() const {
-  // @@protoc_insertion_point(field_get:VCCSim.LidarPoint.z)
-  return _internal_z();
-}
-inline void LidarPoint::set_z(float value) {
-  _internal_set_z(value);
-  // @@protoc_insertion_point(field_set:VCCSim.LidarPoint.z)
-}
-inline float LidarPoint::_internal_z() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.z_;
-}
-inline void LidarPoint::_internal_set_z(float value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.z_ = value;
-}
-
-// int32 hit = 4;
-inline void LidarPoint::clear_hit() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.hit_ = 0;
-}
-inline ::int32_t LidarPoint::hit() const {
-  // @@protoc_insertion_point(field_get:VCCSim.LidarPoint.hit)
-  return _internal_hit();
-}
-inline void LidarPoint::set_hit(::int32_t value) {
-  _internal_set_hit(value);
-  // @@protoc_insertion_point(field_set:VCCSim.LidarPoint.hit)
-}
-inline ::int32_t LidarPoint::_internal_hit() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.hit_;
-}
-inline void LidarPoint::_internal_set_hit(::int32_t value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.hit_ = value;
-}
-
-// -------------------------------------------------------------------
-
 // LidarData
 
-// repeated .VCCSim.LidarPoint data = 1;
+// repeated .VCCSim.Point data = 1;
 inline int LidarData::_internal_data_size() const {
   return _internal_data().size();
 }
@@ -6685,39 +6363,39 @@ inline void LidarData::clear_data() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.data_.Clear();
 }
-inline ::VCCSim::LidarPoint* LidarData::mutable_data(int index)
+inline ::VCCSim::Point* LidarData::mutable_data(int index)
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_mutable:VCCSim.LidarData.data)
   return _internal_mutable_data()->Mutable(index);
 }
-inline ::google::protobuf::RepeatedPtrField<::VCCSim::LidarPoint>* LidarData::mutable_data()
+inline ::google::protobuf::RepeatedPtrField<::VCCSim::Point>* LidarData::mutable_data()
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_mutable_list:VCCSim.LidarData.data)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   return _internal_mutable_data();
 }
-inline const ::VCCSim::LidarPoint& LidarData::data(int index) const
+inline const ::VCCSim::Point& LidarData::data(int index) const
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_get:VCCSim.LidarData.data)
   return _internal_data().Get(index);
 }
-inline ::VCCSim::LidarPoint* LidarData::add_data() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+inline ::VCCSim::Point* LidarData::add_data() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::VCCSim::LidarPoint* _add = _internal_mutable_data()->Add();
+  ::VCCSim::Point* _add = _internal_mutable_data()->Add();
   // @@protoc_insertion_point(field_add:VCCSim.LidarData.data)
   return _add;
 }
-inline const ::google::protobuf::RepeatedPtrField<::VCCSim::LidarPoint>& LidarData::data() const
+inline const ::google::protobuf::RepeatedPtrField<::VCCSim::Point>& LidarData::data() const
     ABSL_ATTRIBUTE_LIFETIME_BOUND {
   // @@protoc_insertion_point(field_list:VCCSim.LidarData.data)
   return _internal_data();
 }
-inline const ::google::protobuf::RepeatedPtrField<::VCCSim::LidarPoint>&
+inline const ::google::protobuf::RepeatedPtrField<::VCCSim::Point>&
 LidarData::_internal_data() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return _impl_.data_;
 }
-inline ::google::protobuf::RepeatedPtrField<::VCCSim::LidarPoint>*
+inline ::google::protobuf::RepeatedPtrField<::VCCSim::Point>*
 LidarData::_internal_mutable_data() {
   ::google::protobuf::internal::TSanRead(&_impl_);
   return &_impl_.data_;

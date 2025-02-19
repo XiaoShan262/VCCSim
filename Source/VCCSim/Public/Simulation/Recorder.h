@@ -1,10 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HAL/FileManager.h"
-#include "Misc/Paths.h"
-#include "Async/AsyncWork.h"
-#include "Sensors/SensorBase.h"
+#include "HAL/Runnable.h"
+#include "HAL/RunnableThread.h"
+#include "Containers/Queue.h"
 #include "Recorder.generated.h"
 
 
@@ -60,61 +59,123 @@ struct FPawnBuffer
     FString PoseFilePath;
 };
 
+template<typename T>
+class TRingBuffer
+{
+public:
+    explicit TRingBuffer(int32 Size) : MaxSize(Size), Head(0), Tail(0)
+    {
+        Buffer.SetNum(Size);
+    }
+
+    bool Enqueue(const T& Item)
+    {
+        const int32 NewTail = (Tail + 1) % MaxSize;
+        if (NewTail == Head) return false; // Buffer full
+        
+        Buffer[Tail] = Item;
+        Tail = NewTail;
+        return true;
+    }
+
+    bool Dequeue(T& OutItem)
+    {
+        if (Head == Tail) return false; // Buffer empty
+        
+        OutItem = Buffer[Head];
+        Head = (Head + 1) % MaxSize;
+        return true;
+    }
+
+    void Reset() { Head = Tail = 0; }
+    bool IsEmpty() const { return Head == Tail; }
+
+private:
+    TArray<T> Buffer;
+    int32 MaxSize;
+    int32 Head;
+    int32 Tail;
+};
+
+class FRecorderWorker : public FRunnable
+{
+public:
+    FRecorderWorker(const FString& InBasePath, int32 InBufferSize)
+        : BasePath(InBasePath)
+        , BufferSize(InBufferSize)
+        , bStopRequested(false)
+    {
+        Thread = FRunnableThread::Create(
+            this, TEXT("RecorderWorker"));
+    }
+
+    virtual ~FRecorderWorker()
+    {
+        Stop();
+        if (Thread)
+        {
+            Thread->WaitForCompletion();
+            delete Thread;
+        }
+    }
+
+    // FRunnable interface
+    virtual bool Init() override { return true; }
+    virtual uint32 Run() override;
+    virtual void Stop() override { bStopRequested = true; }
+
+    void EnqueueData(const FPawnBuffer& Data)
+    {
+        FScopeLock Lock(&QueueLock);
+        DataQueue.Enqueue(Data);
+    }
+
+private:
+    FString BasePath;
+    int32 BufferSize;
+    FRunnableThread* Thread;
+    FCriticalSection QueueLock;
+    TQueue<FPawnBuffer> DataQueue;
+    TAtomic<bool> bStopRequested;
+};
+
 UCLASS()
 class VCCSIM_API ARecorder : public AActor
 {
     GENERATED_BODY()
 public:
     ARecorder();
-    virtual void Tick(float DeltaTime) override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     
     void StartRecording();
     void StopRecording();
 
-    TMap<APawn*, FRecordComponents> RecordComponents;
+    // Called by sensor components to submit data
+    void SubmitPoseData(TSharedPtr<APawn> Pawn, const FPoseData& Data);
+    void SubmitLidarData(TSharedPtr<APawn> Pawn, const FLidarData& Data);
+    void SubmitDepthData(TSharedPtr<APawn> Pawn, const FDepthCameraData& Data);
+    void SubmitRGBData(TSharedPtr<APawn> Pawn, const FRGBCameraData& Data);
+
+    TMap<TSharedPtr<APawn>, FRecordComponents> RecordComponents;
 
 private:
-    // Configuration
     UPROPERTY(EditAnywhere, Category = "Recording")
-    float RecordRate = 0.2f;
-    
-    UPROPERTY(EditAnywhere, Category = "Recording")
-    int32 BufferSize = 100; // Number of frames to buffer before saving
+    int32 BufferSize = 100;
     
     UPROPERTY(EditAnywhere, Category = "Recording")
     FString LogBasePath = FPaths::ProjectSavedDir() / TEXT("Recordings");
 
-    // State variables
-    float TimeSinceLastRecord = 0.0f;
     bool bRecording = false;
     FString CurrentRecordingPath;
-    TMap<APawn*, FPawnBuffer> PawnBuffers;
-    FCriticalSection DataLock;
-
-    // Helper functions
-    void InitializeRecordingDirectories();
-    void RecordFrame();
-    void SavePawnData(APawn* Pawn, const FPawnBuffer& Buffer);
-    void FlushAllBuffers();
     
-    // Async save task
-    class FAsyncSaveTask : public FNonAbandonableTask
-    {
-    public:
-        FAsyncSaveTask(const FString& FilePath, const TArray<uint8>& InData)
-            : Path(FilePath), Data(InData) {}
+    // Double buffering for each pawn
+    TMap<TSharedPtr<APawn>, TRingBuffer<FPoseData>> PoseBuffers;
+    TMap<TSharedPtr<APawn>, TRingBuffer<FLidarData>> LidarBuffers;
+    TMap<TSharedPtr<APawn>, TRingBuffer<FDepthCameraData>> DepthBuffers;
+    TMap<TSharedPtr<APawn>, TRingBuffer<FRGBCameraData>> RGBBuffers;
+    
+    FCriticalSection DataLock;
+    TUniquePtr<FRecorderWorker> RecorderWorker;
 
-        void DoWork()
-        {
-            FFileHelper::SaveArrayToFile(Data, *Path);
-        }
-        FORCEINLINE TStatId GetStatId() const
-        {
-            RETURN_QUICK_DECLARE_CYCLE_STAT(FAsyncSaveTask, STATGROUP_ThreadPoolAsyncTasks);
-        }
-    private:
-        FString Path;
-        TArray<uint8> Data;
-    };
+    void SwapAndProcessBuffers();
 };

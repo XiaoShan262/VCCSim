@@ -81,15 +81,8 @@ message MeshDataWithOdom {
 }
 
 // Lidar:
-message LidarPoint {
-  float x = 1;
-  float y = 2;
-  float z = 3;
-  int32 hit = 4;
-}
-
 message LidarData {
-  repeated LidarPoint data = 1;
+  repeated Point data = 1;
 }
 
 message LidarDataAndOdom {
@@ -151,8 +144,8 @@ message CarPath {
 
 // Services:
 service LidarService {
-  rpc GetLiDARData (RobotName) returns (LidarData); // todo
-  rpc GetLiDAROdom (RobotName) returns (Odometry); // todo
+  rpc GetLiDARData (RobotName) returns (LidarData);
+  rpc GetLiDAROdom (RobotName) returns (Odometry);
   rpc GetLiDARDataAndOdom (RobotName) returns (LidarDataAndOdom);
 }
 

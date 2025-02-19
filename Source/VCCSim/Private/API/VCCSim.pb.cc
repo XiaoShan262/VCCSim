@@ -226,34 +226,6 @@ struct PointDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 PointDefaultTypeInternal _Point_default_instance_;
-
-inline constexpr LidarPoint::Impl_::Impl_(
-    ::_pbi::ConstantInitialized) noexcept
-      : x_{0},
-        y_{0},
-        z_{0},
-        hit_{0},
-        _cached_size_{0} {}
-
-template <typename>
-PROTOBUF_CONSTEXPR LidarPoint::LidarPoint(::_pbi::ConstantInitialized)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(_class_data_.base()),
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(),
-#endif  // PROTOBUF_CUSTOM_VTABLE
-      _impl_(::_pbi::ConstantInitialized()) {
-}
-struct LidarPointDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR LidarPointDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~LidarPointDefaultTypeInternal() {}
-  union {
-    LidarPoint _instance;
-  };
-};
-
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 LidarPointDefaultTypeInternal _LidarPoint_default_instance_;
               template <typename>
 PROTOBUF_CONSTEXPR EmptyRequest::EmptyRequest(::_pbi::ConstantInitialized)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
@@ -805,18 +777,6 @@ const ::uint32_t
         0,
         1,
         ~0u,  // no _has_bits_
-        PROTOBUF_FIELD_OFFSET(::VCCSim::LidarPoint, _internal_metadata_),
-        ~0u,  // no _extensions_
-        ~0u,  // no _oneof_case_
-        ~0u,  // no _weak_field_map_
-        ~0u,  // no _inlined_string_donated_
-        ~0u,  // no _split_
-        ~0u,  // no sizeof(Split)
-        PROTOBUF_FIELD_OFFSET(::VCCSim::LidarPoint, _impl_.x_),
-        PROTOBUF_FIELD_OFFSET(::VCCSim::LidarPoint, _impl_.y_),
-        PROTOBUF_FIELD_OFFSET(::VCCSim::LidarPoint, _impl_.z_),
-        PROTOBUF_FIELD_OFFSET(::VCCSim::LidarPoint, _impl_.hit_),
-        ~0u,  // no _has_bits_
         PROTOBUF_FIELD_OFFSET(::VCCSim::LidarData, _internal_metadata_),
         ~0u,  // no _extensions_
         ~0u,  // no _oneof_case_
@@ -940,16 +900,15 @@ static const ::_pbi::MigrationSchema
         {110, 120, -1, sizeof(::VCCSim::IndexedCamera)},
         {122, 135, -1, sizeof(::VCCSim::MeshData)},
         {140, 150, -1, sizeof(::VCCSim::MeshDataWithOdom)},
-        {152, -1, -1, sizeof(::VCCSim::LidarPoint)},
-        {164, -1, -1, sizeof(::VCCSim::LidarData)},
-        {173, 183, -1, sizeof(::VCCSim::LidarDataAndOdom)},
-        {185, -1, -1, sizeof(::VCCSim::DepthCameraPointData)},
-        {194, -1, -1, sizeof(::VCCSim::DepthCameraImageData)},
-        {203, 219, -1, sizeof(::VCCSim::RGBCameraImageData)},
-        {227, 237, -1, sizeof(::VCCSim::DronePose)},
-        {239, -1, -1, sizeof(::VCCSim::DronePath)},
-        {249, 259, -1, sizeof(::VCCSim::CarPose)},
-        {261, -1, -1, sizeof(::VCCSim::CarPath)},
+        {152, -1, -1, sizeof(::VCCSim::LidarData)},
+        {161, 171, -1, sizeof(::VCCSim::LidarDataAndOdom)},
+        {173, -1, -1, sizeof(::VCCSim::DepthCameraPointData)},
+        {182, -1, -1, sizeof(::VCCSim::DepthCameraImageData)},
+        {191, 207, -1, sizeof(::VCCSim::RGBCameraImageData)},
+        {215, 225, -1, sizeof(::VCCSim::DronePose)},
+        {227, -1, -1, sizeof(::VCCSim::DronePath)},
+        {237, 247, -1, sizeof(::VCCSim::CarPose)},
+        {249, -1, -1, sizeof(::VCCSim::CarPath)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::VCCSim::_Point_default_instance_._instance,
@@ -965,7 +924,6 @@ static const ::_pb::Message* const file_default_instances[] = {
     &::VCCSim::_IndexedCamera_default_instance_._instance,
     &::VCCSim::_MeshData_default_instance_._instance,
     &::VCCSim::_MeshDataWithOdom_default_instance_._instance,
-    &::VCCSim::_LidarPoint_default_instance_._instance,
     &::VCCSim::_LidarData_default_instance_._instance,
     &::VCCSim::_LidarDataAndOdom_default_instance_._instance,
     &::VCCSim::_DepthCameraPointData_default_instance_._instance,
@@ -999,67 +957,65 @@ const char descriptor_table_protodef_VCCSim_2eproto[] ABSL_ATTRIBUTE_SECTION_VAR
     "\r\022\022\n\nsimplified\030\004 \001(\010\022\037\n\ttransform\030\005 \001(\013"
     "2\014.VCCSim.Pose\"R\n\020MeshDataWithOdom\022\036\n\004me"
     "sh\030\001 \001(\0132\020.VCCSim.MeshData\022\036\n\004odom\030\002 \001(\013"
-    "2\020.VCCSim.Odometry\":\n\nLidarPoint\022\t\n\001x\030\001 "
-    "\001(\002\022\t\n\001y\030\002 \001(\002\022\t\n\001z\030\003 \001(\002\022\013\n\003hit\030\004 \001(\005\"-"
-    "\n\tLidarData\022 \n\004data\030\001 \003(\0132\022.VCCSim.Lidar"
-    "Point\"S\n\020LidarDataAndOdom\022\037\n\004data\030\001 \001(\0132"
-    "\021.VCCSim.LidarData\022\036\n\004odom\030\002 \001(\0132\020.VCCSi"
-    "m.Odometry\"3\n\024DepthCameraPointData\022\033\n\004da"
-    "ta\030\001 \003(\0132\r.VCCSim.Point\"$\n\024DepthCameraIm"
-    "ageData\022\014\n\004data\030\001 \003(\002\"\266\002\n\022RGBCameraImage"
-    "Data\022\r\n\005width\030\001 \001(\r\022\016\n\006height\030\002 \001(\r\022\014\n\004d"
-    "ata\030\003 \001(\014\0221\n\006format\030\004 \001(\0162!.VCCSim.RGBCa"
-    "meraImageData.Format\022\021\n\ttimestamp\030\005 \001(\r\022"
-    "\034\n\017bytes_per_pixel\030\006 \001(\rH\000\210\001\001\022\023\n\006stride\030"
-    "\007 \001(\rH\001\210\001\001\022\032\n\ris_compressed\030\010 \001(\010H\002\210\001\001\"-"
-    "\n\006Format\022\007\n\003RGB\020\000\022\007\n\003BGR\020\001\022\010\n\004JPEG\020\002\022\007\n\003"
-    "PNG\020\003B\022\n\020_bytes_per_pixelB\t\n\007_strideB\020\n\016"
-    "_is_compressed\"5\n\tDronePose\022\014\n\004name\030\001 \001("
-    "\t\022\032\n\004pose\030\002 \001(\0132\014.VCCSim.Pose\"5\n\tDronePa"
-    "th\022\014\n\004name\030\001 \001(\t\022\032\n\004path\030\002 \003(\0132\014.VCCSim."
-    "Pose\":\n\007CarPose\022\014\n\004name\030\001 \001(\t\022!\n\004pose\030\002 "
-    "\001(\0132\023.VCCSim.PoseOnlyYaw\":\n\007CarPath\022\014\n\004n"
-    "ame\030\001 \001(\t\022!\n\004path\030\002 \003(\0132\023.VCCSim.PoseOnl"
-    "yYaw2\275\001\n\014LidarService\0224\n\014GetLiDARData\022\021."
-    "VCCSim.RobotName\032\021.VCCSim.LidarData\0223\n\014G"
-    "etLiDAROdom\022\021.VCCSim.RobotName\032\020.VCCSim."
-    "Odometry\022B\n\023GetLiDARDataAndOdom\022\021.VCCSim"
-    ".RobotName\032\030.VCCSim.LidarDataAndOdom2\347\001\n"
-    "\022DepthCameraService\022J\n\027GetDepthCameraPoi"
-    "ntData\022\021.VCCSim.RobotName\032\034.VCCSim.Depth"
-    "CameraPointData\022J\n\027GetDepthCameraImageDa"
-    "ta\022\021.VCCSim.RobotName\032\034.VCCSim.DepthCame"
-    "raImageData\0229\n\022GetDepthCameraOdom\022\021.VCCS"
-    "im.RobotName\032\020.VCCSim.Odometry2\236\001\n\020RGBCa"
-    "meraService\0227\n\020GetRGBCameraOdom\022\021.VCCSim"
-    ".RobotName\032\020.VCCSim.Odometry\022Q\n\034GetRGBIn"
-    "dexedCameraImageData\022\025.VCCSim.IndexedCam"
-    "era\032\032.VCCSim.RGBCameraImageData2\253\001\n\014Dron"
-    "eService\0223\n\014GetDroneOdom\022\021.VCCSim.RobotN"
-    "ame\032\020.VCCSim.Odometry\0222\n\rSendDronePose\022\021"
-    ".VCCSim.DronePose\032\016.VCCSim.Status\0222\n\rSen"
-    "dDronePath\022\021.VCCSim.DronePath\032\016.VCCSim.S"
-    "tatus2\237\001\n\nCarService\0221\n\nGetCarOdom\022\021.VCC"
-    "Sim.RobotName\032\020.VCCSim.Odometry\022.\n\013SendC"
-    "arPose\022\017.VCCSim.CarPose\032\016.VCCSim.Status\022"
-    ".\n\013SendCarPath\022\017.VCCSim.CarPath\032\016.VCCSim"
-    ".Status2;\n\013MeshService\022,\n\010SendMesh\022\020.VCC"
-    "Sim.MeshData\032\016.VCCSim.Status2[\n\021PointClo"
-    "udService\022F\n\027SendPointCloudWithColor\022\033.V"
-    "CCSim.PointCloudWithColor\032\016.VCCSim.Statu"
-    "sb\006proto3"
+    "2\020.VCCSim.Odometry\"(\n\tLidarData\022\033\n\004data\030"
+    "\001 \003(\0132\r.VCCSim.Point\"S\n\020LidarDataAndOdom"
+    "\022\037\n\004data\030\001 \001(\0132\021.VCCSim.LidarData\022\036\n\004odo"
+    "m\030\002 \001(\0132\020.VCCSim.Odometry\"3\n\024DepthCamera"
+    "PointData\022\033\n\004data\030\001 \003(\0132\r.VCCSim.Point\"$"
+    "\n\024DepthCameraImageData\022\014\n\004data\030\001 \003(\002\"\266\002\n"
+    "\022RGBCameraImageData\022\r\n\005width\030\001 \001(\r\022\016\n\006he"
+    "ight\030\002 \001(\r\022\014\n\004data\030\003 \001(\014\0221\n\006format\030\004 \001(\016"
+    "2!.VCCSim.RGBCameraImageData.Format\022\021\n\tt"
+    "imestamp\030\005 \001(\r\022\034\n\017bytes_per_pixel\030\006 \001(\rH"
+    "\000\210\001\001\022\023\n\006stride\030\007 \001(\rH\001\210\001\001\022\032\n\ris_compress"
+    "ed\030\010 \001(\010H\002\210\001\001\"-\n\006Format\022\007\n\003RGB\020\000\022\007\n\003BGR\020"
+    "\001\022\010\n\004JPEG\020\002\022\007\n\003PNG\020\003B\022\n\020_bytes_per_pixel"
+    "B\t\n\007_strideB\020\n\016_is_compressed\"5\n\tDronePo"
+    "se\022\014\n\004name\030\001 \001(\t\022\032\n\004pose\030\002 \001(\0132\014.VCCSim."
+    "Pose\"5\n\tDronePath\022\014\n\004name\030\001 \001(\t\022\032\n\004path\030"
+    "\002 \003(\0132\014.VCCSim.Pose\":\n\007CarPose\022\014\n\004name\030\001"
+    " \001(\t\022!\n\004pose\030\002 \001(\0132\023.VCCSim.PoseOnlyYaw\""
+    ":\n\007CarPath\022\014\n\004name\030\001 \001(\t\022!\n\004path\030\002 \003(\0132\023"
+    ".VCCSim.PoseOnlyYaw2\275\001\n\014LidarService\0224\n\014"
+    "GetLiDARData\022\021.VCCSim.RobotName\032\021.VCCSim"
+    ".LidarData\0223\n\014GetLiDAROdom\022\021.VCCSim.Robo"
+    "tName\032\020.VCCSim.Odometry\022B\n\023GetLiDARDataA"
+    "ndOdom\022\021.VCCSim.RobotName\032\030.VCCSim.Lidar"
+    "DataAndOdom2\347\001\n\022DepthCameraService\022J\n\027Ge"
+    "tDepthCameraPointData\022\021.VCCSim.RobotName"
+    "\032\034.VCCSim.DepthCameraPointData\022J\n\027GetDep"
+    "thCameraImageData\022\021.VCCSim.RobotName\032\034.V"
+    "CCSim.DepthCameraImageData\0229\n\022GetDepthCa"
+    "meraOdom\022\021.VCCSim.RobotName\032\020.VCCSim.Odo"
+    "metry2\236\001\n\020RGBCameraService\0227\n\020GetRGBCame"
+    "raOdom\022\021.VCCSim.RobotName\032\020.VCCSim.Odome"
+    "try\022Q\n\034GetRGBIndexedCameraImageData\022\025.VC"
+    "CSim.IndexedCamera\032\032.VCCSim.RGBCameraIma"
+    "geData2\253\001\n\014DroneService\0223\n\014GetDroneOdom\022"
+    "\021.VCCSim.RobotName\032\020.VCCSim.Odometry\0222\n\r"
+    "SendDronePose\022\021.VCCSim.DronePose\032\016.VCCSi"
+    "m.Status\0222\n\rSendDronePath\022\021.VCCSim.Drone"
+    "Path\032\016.VCCSim.Status2\237\001\n\nCarService\0221\n\nG"
+    "etCarOdom\022\021.VCCSim.RobotName\032\020.VCCSim.Od"
+    "ometry\022.\n\013SendCarPose\022\017.VCCSim.CarPose\032\016"
+    ".VCCSim.Status\022.\n\013SendCarPath\022\017.VCCSim.C"
+    "arPath\032\016.VCCSim.Status2;\n\013MeshService\022,\n"
+    "\010SendMesh\022\020.VCCSim.MeshData\032\016.VCCSim.Sta"
+    "tus2[\n\021PointCloudService\022F\n\027SendPointClo"
+    "udWithColor\022\033.VCCSim.PointCloudWithColor"
+    "\032\016.VCCSim.Statusb\006proto3"
 };
 static ::absl::once_flag descriptor_table_VCCSim_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_VCCSim_2eproto = {
     false,
     false,
-    2769,
+    2704,
     descriptor_table_protodef_VCCSim_2eproto,
     "VCCSim.proto",
     &descriptor_table_VCCSim_2eproto_once,
     nullptr,
     0,
-    23,
+    22,
     schemas,
     file_default_instances,
     TableStruct_VCCSim_2eproto::offsets,
@@ -4595,286 +4551,6 @@ void MeshDataWithOdom::InternalSwap(MeshDataWithOdom* PROTOBUF_RESTRICT other) {
 }
 // ===================================================================
 
-class LidarPoint::_Internal {
- public:
-};
-
-LidarPoint::LidarPoint(::google::protobuf::Arena* arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:VCCSim.LidarPoint)
-}
-LidarPoint::LidarPoint(
-    ::google::protobuf::Arena* arena, const LidarPoint& from)
-    : LidarPoint(arena) {
-  MergeFrom(from);
-}
-inline PROTOBUF_NDEBUG_INLINE LidarPoint::Impl_::Impl_(
-    ::google::protobuf::internal::InternalVisibility visibility,
-    ::google::protobuf::Arena* arena)
-      : _cached_size_{0} {}
-
-inline void LidarPoint::SharedCtor(::_pb::Arena* arena) {
-  new (&_impl_) Impl_(internal_visibility(), arena);
-  ::memset(reinterpret_cast<char *>(&_impl_) +
-               offsetof(Impl_, x_),
-           0,
-           offsetof(Impl_, hit_) -
-               offsetof(Impl_, x_) +
-               sizeof(Impl_::hit_));
-}
-LidarPoint::~LidarPoint() {
-  // @@protoc_insertion_point(destructor:VCCSim.LidarPoint)
-  SharedDtor(*this);
-}
-inline void LidarPoint::SharedDtor(MessageLite& self) {
-  LidarPoint& this_ = static_cast<LidarPoint&>(self);
-  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
-  ABSL_DCHECK(this_.GetArena() == nullptr);
-  this_._impl_.~Impl_();
-}
-
-inline void* LidarPoint::PlacementNew_(const void*, void* mem,
-                                        ::google::protobuf::Arena* arena) {
-  return ::new (mem) LidarPoint(arena);
-}
-constexpr auto LidarPoint::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(LidarPoint),
-                                            alignof(LidarPoint));
-}
-PROTOBUF_CONSTINIT
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::google::protobuf::internal::ClassDataFull LidarPoint::_class_data_ = {
-    ::google::protobuf::internal::ClassData{
-        &_LidarPoint_default_instance_._instance,
-        &_table_.header,
-        nullptr,  // OnDemandRegisterArenaDtor
-        nullptr,  // IsInitialized
-        &LidarPoint::MergeImpl,
-        ::google::protobuf::Message::GetNewImpl<LidarPoint>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        &LidarPoint::SharedDtor,
-        ::google::protobuf::Message::GetClearImpl<LidarPoint>(), &LidarPoint::ByteSizeLong,
-            &LidarPoint::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-        PROTOBUF_FIELD_OFFSET(LidarPoint, _impl_._cached_size_),
-        false,
-    },
-    &LidarPoint::kDescriptorMethods,
-    &descriptor_table_VCCSim_2eproto,
-    nullptr,  // tracker
-};
-const ::google::protobuf::internal::ClassData* LidarPoint::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
-  return _class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<2, 4, 0, 0, 2> LidarPoint::_table_ = {
-  {
-    0,  // no _has_bits_
-    0, // no _extensions_
-    4, 24,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967280,  // skipmap
-    offsetof(decltype(_table_), field_entries),
-    4,  // num_field_entries
-    0,  // num_aux_entries
-    offsetof(decltype(_table_), field_names),  // no aux_entries
-    _class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::VCCSim::LidarPoint>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    // int32 hit = 4;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(LidarPoint, _impl_.hit_), 63>(),
-     {32, 63, 0, PROTOBUF_FIELD_OFFSET(LidarPoint, _impl_.hit_)}},
-    // float x = 1;
-    {::_pbi::TcParser::FastF32S1,
-     {13, 63, 0, PROTOBUF_FIELD_OFFSET(LidarPoint, _impl_.x_)}},
-    // float y = 2;
-    {::_pbi::TcParser::FastF32S1,
-     {21, 63, 0, PROTOBUF_FIELD_OFFSET(LidarPoint, _impl_.y_)}},
-    // float z = 3;
-    {::_pbi::TcParser::FastF32S1,
-     {29, 63, 0, PROTOBUF_FIELD_OFFSET(LidarPoint, _impl_.z_)}},
-  }}, {{
-    65535, 65535
-  }}, {{
-    // float x = 1;
-    {PROTOBUF_FIELD_OFFSET(LidarPoint, _impl_.x_), 0, 0,
-    (0 | ::_fl::kFcSingular | ::_fl::kFloat)},
-    // float y = 2;
-    {PROTOBUF_FIELD_OFFSET(LidarPoint, _impl_.y_), 0, 0,
-    (0 | ::_fl::kFcSingular | ::_fl::kFloat)},
-    // float z = 3;
-    {PROTOBUF_FIELD_OFFSET(LidarPoint, _impl_.z_), 0, 0,
-    (0 | ::_fl::kFcSingular | ::_fl::kFloat)},
-    // int32 hit = 4;
-    {PROTOBUF_FIELD_OFFSET(LidarPoint, _impl_.hit_), 0, 0,
-    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
-  }},
-  // no aux_entries
-  {{
-  }},
-};
-
-PROTOBUF_NOINLINE void LidarPoint::Clear() {
-// @@protoc_insertion_point(message_clear_start:VCCSim.LidarPoint)
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  ::memset(&_impl_.x_, 0, static_cast<::size_t>(
-      reinterpret_cast<char*>(&_impl_.hit_) -
-      reinterpret_cast<char*>(&_impl_.x_)) + sizeof(_impl_.hit_));
-  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::uint8_t* LidarPoint::_InternalSerialize(
-            const MessageLite& base, ::uint8_t* target,
-            ::google::protobuf::io::EpsCopyOutputStream* stream) {
-          const LidarPoint& this_ = static_cast<const LidarPoint&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-        ::uint8_t* LidarPoint::_InternalSerialize(
-            ::uint8_t* target,
-            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-          const LidarPoint& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(serialize_to_array_start:VCCSim.LidarPoint)
-          ::uint32_t cached_has_bits = 0;
-          (void)cached_has_bits;
-
-          // float x = 1;
-          if (::absl::bit_cast<::uint32_t>(this_._internal_x()) != 0) {
-            target = stream->EnsureSpace(target);
-            target = ::_pbi::WireFormatLite::WriteFloatToArray(
-                1, this_._internal_x(), target);
-          }
-
-          // float y = 2;
-          if (::absl::bit_cast<::uint32_t>(this_._internal_y()) != 0) {
-            target = stream->EnsureSpace(target);
-            target = ::_pbi::WireFormatLite::WriteFloatToArray(
-                2, this_._internal_y(), target);
-          }
-
-          // float z = 3;
-          if (::absl::bit_cast<::uint32_t>(this_._internal_z()) != 0) {
-            target = stream->EnsureSpace(target);
-            target = ::_pbi::WireFormatLite::WriteFloatToArray(
-                3, this_._internal_z(), target);
-          }
-
-          // int32 hit = 4;
-          if (this_._internal_hit() != 0) {
-            target = ::google::protobuf::internal::WireFormatLite::
-                WriteInt32ToArrayWithField<4>(
-                    stream, this_._internal_hit(), target);
-          }
-
-          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
-            target =
-                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
-                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
-          }
-          // @@protoc_insertion_point(serialize_to_array_end:VCCSim.LidarPoint)
-          return target;
-        }
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::size_t LidarPoint::ByteSizeLong(const MessageLite& base) {
-          const LidarPoint& this_ = static_cast<const LidarPoint&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-        ::size_t LidarPoint::ByteSizeLong() const {
-          const LidarPoint& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(message_byte_size_start:VCCSim.LidarPoint)
-          ::size_t total_size = 0;
-
-          ::uint32_t cached_has_bits = 0;
-          // Prevent compiler warnings about cached_has_bits being unused
-          (void)cached_has_bits;
-
-          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-           {
-            // float x = 1;
-            if (::absl::bit_cast<::uint32_t>(this_._internal_x()) != 0) {
-              total_size += 5;
-            }
-            // float y = 2;
-            if (::absl::bit_cast<::uint32_t>(this_._internal_y()) != 0) {
-              total_size += 5;
-            }
-            // float z = 3;
-            if (::absl::bit_cast<::uint32_t>(this_._internal_z()) != 0) {
-              total_size += 5;
-            }
-            // int32 hit = 4;
-            if (this_._internal_hit() != 0) {
-              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
-                  this_._internal_hit());
-            }
-          }
-          return this_.MaybeComputeUnknownFieldsSize(total_size,
-                                                     &this_._impl_._cached_size_);
-        }
-
-void LidarPoint::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
-  auto* const _this = static_cast<LidarPoint*>(&to_msg);
-  auto& from = static_cast<const LidarPoint&>(from_msg);
-  // @@protoc_insertion_point(class_specific_merge_from_start:VCCSim.LidarPoint)
-  ABSL_DCHECK_NE(&from, _this);
-  ::uint32_t cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  if (::absl::bit_cast<::uint32_t>(from._internal_x()) != 0) {
-    _this->_impl_.x_ = from._impl_.x_;
-  }
-  if (::absl::bit_cast<::uint32_t>(from._internal_y()) != 0) {
-    _this->_impl_.y_ = from._impl_.y_;
-  }
-  if (::absl::bit_cast<::uint32_t>(from._internal_z()) != 0) {
-    _this->_impl_.z_ = from._impl_.z_;
-  }
-  if (from._internal_hit() != 0) {
-    _this->_impl_.hit_ = from._impl_.hit_;
-  }
-  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
-}
-
-void LidarPoint::CopyFrom(const LidarPoint& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:VCCSim.LidarPoint)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-
-void LidarPoint::InternalSwap(LidarPoint* PROTOBUF_RESTRICT other) {
-  using std::swap;
-  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(LidarPoint, _impl_.hit_)
-      + sizeof(LidarPoint::_impl_.hit_)
-      - PROTOBUF_FIELD_OFFSET(LidarPoint, _impl_.x_)>(
-          reinterpret_cast<char*>(&_impl_.x_),
-          reinterpret_cast<char*>(&other->_impl_.x_));
-}
-
-::google::protobuf::Metadata LidarPoint::GetMetadata() const {
-  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
 class LidarData::_Internal {
  public:
 };
@@ -4996,17 +4672,17 @@ const ::_pbi::TcParseTable<0, 1, 1, 0, 2> LidarData::_table_ = {
     ::_pbi::TcParser::GetTable<::VCCSim::LidarData>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // repeated .VCCSim.LidarPoint data = 1;
+    // repeated .VCCSim.Point data = 1;
     {::_pbi::TcParser::FastMtR1,
      {10, 63, 0, PROTOBUF_FIELD_OFFSET(LidarData, _impl_.data_)}},
   }}, {{
     65535, 65535
   }}, {{
-    // repeated .VCCSim.LidarPoint data = 1;
+    // repeated .VCCSim.Point data = 1;
     {PROTOBUF_FIELD_OFFSET(LidarData, _impl_.data_), 0, 0,
     (0 | ::_fl::kFcRepeated | ::_fl::kMessage | ::_fl::kTvTable)},
   }}, {{
-    {::_pbi::TcParser::GetTable<::VCCSim::LidarPoint>()},
+    {::_pbi::TcParser::GetTable<::VCCSim::Point>()},
   }}, {{
   }},
 };
@@ -5037,7 +4713,7 @@ PROTOBUF_NOINLINE void LidarData::Clear() {
           ::uint32_t cached_has_bits = 0;
           (void)cached_has_bits;
 
-          // repeated .VCCSim.LidarPoint data = 1;
+          // repeated .VCCSim.Point data = 1;
           for (unsigned i = 0, n = static_cast<unsigned>(
                                    this_._internal_data_size());
                i < n; i++) {
@@ -5073,7 +4749,7 @@ PROTOBUF_NOINLINE void LidarData::Clear() {
 
           ::_pbi::Prefetch5LinesFrom7Lines(&this_);
            {
-            // repeated .VCCSim.LidarPoint data = 1;
+            // repeated .VCCSim.Point data = 1;
             {
               total_size += 1UL * this_._internal_data_size();
               for (const auto& msg : this_._internal_data()) {

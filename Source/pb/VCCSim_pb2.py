@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cVCCSim.proto\x12\x06VCCSim\"(\n\x05Point\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\"=\n\x0ePointWithColor\x12\x1c\n\x05point\x18\x01 \x01(\x0b\x32\r.VCCSim.Point\x12\r\n\x05\x63olor\x18\x02 \x01(\r\";\n\x13PointCloudWithColor\x12$\n\x04\x64\x61ta\x18\x01 \x03(\x0b\x32\x16.VCCSim.PointWithColor\"\x0e\n\x0c\x45mptyRequest\"Q\n\x04Pose\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\x12\x0c\n\x04roll\x18\x04 \x01(\x02\x12\r\n\x05pitch\x18\x05 \x01(\x02\x12\x0b\n\x03yaw\x18\x06 \x01(\x02\";\n\x0bPoseOnlyYaw\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\x12\x0b\n\x03yaw\x18\x04 \x01(\x02\"v\n\x05twist\x12\x10\n\x08linear_x\x18\x01 \x01(\x02\x12\x10\n\x08linear_y\x18\x02 \x01(\x02\x12\x10\n\x08linear_z\x18\x03 \x01(\x02\x12\x11\n\tangular_x\x18\x04 \x01(\x02\x12\x11\n\tangular_y\x18\x05 \x01(\x02\x12\x11\n\tangular_z\x18\x06 \x01(\x02\"D\n\x08Odometry\x12\x1a\n\x04pose\x18\x01 \x01(\x0b\x32\x0c.VCCSim.Pose\x12\x1c\n\x05twist\x18\x02 \x01(\x0b\x32\r.VCCSim.twist\"\x18\n\x06Status\x12\x0e\n\x06status\x18\x01 \x01(\x08\"\x19\n\tRobotName\x12\x0c\n\x04name\x18\x01 \x01(\t\"E\n\rIndexedCamera\x12%\n\nrobot_name\x18\x01 \x01(\x0b\x32\x11.VCCSim.RobotName\x12\r\n\x05index\x18\x02 \x01(\r\"n\n\x08MeshData\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x12\x0e\n\x06\x66ormat\x18\x02 \x01(\r\x12\x0f\n\x07version\x18\x03 \x01(\r\x12\x12\n\nsimplified\x18\x04 \x01(\x08\x12\x1f\n\ttransform\x18\x05 \x01(\x0b\x32\x0c.VCCSim.Pose\"R\n\x10MeshDataWithOdom\x12\x1e\n\x04mesh\x18\x01 \x01(\x0b\x32\x10.VCCSim.MeshData\x12\x1e\n\x04odom\x18\x02 \x01(\x0b\x32\x10.VCCSim.Odometry\":\n\nLidarPoint\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\x12\x0b\n\x03hit\x18\x04 \x01(\x05\"-\n\tLidarData\x12 \n\x04\x64\x61ta\x18\x01 \x03(\x0b\x32\x12.VCCSim.LidarPoint\"S\n\x10LidarDataAndOdom\x12\x1f\n\x04\x64\x61ta\x18\x01 \x01(\x0b\x32\x11.VCCSim.LidarData\x12\x1e\n\x04odom\x18\x02 \x01(\x0b\x32\x10.VCCSim.Odometry\"3\n\x14\x44\x65pthCameraPointData\x12\x1b\n\x04\x64\x61ta\x18\x01 \x03(\x0b\x32\r.VCCSim.Point\"$\n\x14\x44\x65pthCameraImageData\x12\x0c\n\x04\x64\x61ta\x18\x01 \x03(\x02\"\xb6\x02\n\x12RGBCameraImageData\x12\r\n\x05width\x18\x01 \x01(\r\x12\x0e\n\x06height\x18\x02 \x01(\r\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\x12\x31\n\x06\x66ormat\x18\x04 \x01(\x0e\x32!.VCCSim.RGBCameraImageData.Format\x12\x11\n\ttimestamp\x18\x05 \x01(\r\x12\x1c\n\x0f\x62ytes_per_pixel\x18\x06 \x01(\rH\x00\x88\x01\x01\x12\x13\n\x06stride\x18\x07 \x01(\rH\x01\x88\x01\x01\x12\x1a\n\ris_compressed\x18\x08 \x01(\x08H\x02\x88\x01\x01\"-\n\x06\x46ormat\x12\x07\n\x03RGB\x10\x00\x12\x07\n\x03\x42GR\x10\x01\x12\x08\n\x04JPEG\x10\x02\x12\x07\n\x03PNG\x10\x03\x42\x12\n\x10_bytes_per_pixelB\t\n\x07_strideB\x10\n\x0e_is_compressed\"5\n\tDronePose\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1a\n\x04pose\x18\x02 \x01(\x0b\x32\x0c.VCCSim.Pose\"5\n\tDronePath\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1a\n\x04path\x18\x02 \x03(\x0b\x32\x0c.VCCSim.Pose\":\n\x07\x43\x61rPose\x12\x0c\n\x04name\x18\x01 \x01(\t\x12!\n\x04pose\x18\x02 \x01(\x0b\x32\x13.VCCSim.PoseOnlyYaw\":\n\x07\x43\x61rPath\x12\x0c\n\x04name\x18\x01 \x01(\t\x12!\n\x04path\x18\x02 \x03(\x0b\x32\x13.VCCSim.PoseOnlyYaw2\xbd\x01\n\x0cLidarService\x12\x34\n\x0cGetLiDARData\x12\x11.VCCSim.RobotName\x1a\x11.VCCSim.LidarData\x12\x33\n\x0cGetLiDAROdom\x12\x11.VCCSim.RobotName\x1a\x10.VCCSim.Odometry\x12\x42\n\x13GetLiDARDataAndOdom\x12\x11.VCCSim.RobotName\x1a\x18.VCCSim.LidarDataAndOdom2\xe7\x01\n\x12\x44\x65pthCameraService\x12J\n\x17GetDepthCameraPointData\x12\x11.VCCSim.RobotName\x1a\x1c.VCCSim.DepthCameraPointData\x12J\n\x17GetDepthCameraImageData\x12\x11.VCCSim.RobotName\x1a\x1c.VCCSim.DepthCameraImageData\x12\x39\n\x12GetDepthCameraOdom\x12\x11.VCCSim.RobotName\x1a\x10.VCCSim.Odometry2\x9e\x01\n\x10RGBCameraService\x12\x37\n\x10GetRGBCameraOdom\x12\x11.VCCSim.RobotName\x1a\x10.VCCSim.Odometry\x12Q\n\x1cGetRGBIndexedCameraImageData\x12\x15.VCCSim.IndexedCamera\x1a\x1a.VCCSim.RGBCameraImageData2\xab\x01\n\x0c\x44roneService\x12\x33\n\x0cGetDroneOdom\x12\x11.VCCSim.RobotName\x1a\x10.VCCSim.Odometry\x12\x32\n\rSendDronePose\x12\x11.VCCSim.DronePose\x1a\x0e.VCCSim.Status\x12\x32\n\rSendDronePath\x12\x11.VCCSim.DronePath\x1a\x0e.VCCSim.Status2\x9f\x01\n\nCarService\x12\x31\n\nGetCarOdom\x12\x11.VCCSim.RobotName\x1a\x10.VCCSim.Odometry\x12.\n\x0bSendCarPose\x12\x0f.VCCSim.CarPose\x1a\x0e.VCCSim.Status\x12.\n\x0bSendCarPath\x12\x0f.VCCSim.CarPath\x1a\x0e.VCCSim.Status2;\n\x0bMeshService\x12,\n\x08SendMesh\x12\x10.VCCSim.MeshData\x1a\x0e.VCCSim.Status2[\n\x11PointCloudService\x12\x46\n\x17SendPointCloudWithColor\x12\x1b.VCCSim.PointCloudWithColor\x1a\x0e.VCCSim.Statusb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0cVCCSim.proto\x12\x06VCCSim\"(\n\x05Point\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\"=\n\x0ePointWithColor\x12\x1c\n\x05point\x18\x01 \x01(\x0b\x32\r.VCCSim.Point\x12\r\n\x05\x63olor\x18\x02 \x01(\r\";\n\x13PointCloudWithColor\x12$\n\x04\x64\x61ta\x18\x01 \x03(\x0b\x32\x16.VCCSim.PointWithColor\"\x0e\n\x0c\x45mptyRequest\"Q\n\x04Pose\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\x12\x0c\n\x04roll\x18\x04 \x01(\x02\x12\r\n\x05pitch\x18\x05 \x01(\x02\x12\x0b\n\x03yaw\x18\x06 \x01(\x02\";\n\x0bPoseOnlyYaw\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\t\n\x01z\x18\x03 \x01(\x02\x12\x0b\n\x03yaw\x18\x04 \x01(\x02\"v\n\x05twist\x12\x10\n\x08linear_x\x18\x01 \x01(\x02\x12\x10\n\x08linear_y\x18\x02 \x01(\x02\x12\x10\n\x08linear_z\x18\x03 \x01(\x02\x12\x11\n\tangular_x\x18\x04 \x01(\x02\x12\x11\n\tangular_y\x18\x05 \x01(\x02\x12\x11\n\tangular_z\x18\x06 \x01(\x02\"D\n\x08Odometry\x12\x1a\n\x04pose\x18\x01 \x01(\x0b\x32\x0c.VCCSim.Pose\x12\x1c\n\x05twist\x18\x02 \x01(\x0b\x32\r.VCCSim.twist\"\x18\n\x06Status\x12\x0e\n\x06status\x18\x01 \x01(\x08\"\x19\n\tRobotName\x12\x0c\n\x04name\x18\x01 \x01(\t\"E\n\rIndexedCamera\x12%\n\nrobot_name\x18\x01 \x01(\x0b\x32\x11.VCCSim.RobotName\x12\r\n\x05index\x18\x02 \x01(\r\"n\n\x08MeshData\x12\x0c\n\x04\x64\x61ta\x18\x01 \x01(\x0c\x12\x0e\n\x06\x66ormat\x18\x02 \x01(\r\x12\x0f\n\x07version\x18\x03 \x01(\r\x12\x12\n\nsimplified\x18\x04 \x01(\x08\x12\x1f\n\ttransform\x18\x05 \x01(\x0b\x32\x0c.VCCSim.Pose\"R\n\x10MeshDataWithOdom\x12\x1e\n\x04mesh\x18\x01 \x01(\x0b\x32\x10.VCCSim.MeshData\x12\x1e\n\x04odom\x18\x02 \x01(\x0b\x32\x10.VCCSim.Odometry\"(\n\tLidarData\x12\x1b\n\x04\x64\x61ta\x18\x01 \x03(\x0b\x32\r.VCCSim.Point\"S\n\x10LidarDataAndOdom\x12\x1f\n\x04\x64\x61ta\x18\x01 \x01(\x0b\x32\x11.VCCSim.LidarData\x12\x1e\n\x04odom\x18\x02 \x01(\x0b\x32\x10.VCCSim.Odometry\"3\n\x14\x44\x65pthCameraPointData\x12\x1b\n\x04\x64\x61ta\x18\x01 \x03(\x0b\x32\r.VCCSim.Point\"$\n\x14\x44\x65pthCameraImageData\x12\x0c\n\x04\x64\x61ta\x18\x01 \x03(\x02\"\xb6\x02\n\x12RGBCameraImageData\x12\r\n\x05width\x18\x01 \x01(\r\x12\x0e\n\x06height\x18\x02 \x01(\r\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\x12\x31\n\x06\x66ormat\x18\x04 \x01(\x0e\x32!.VCCSim.RGBCameraImageData.Format\x12\x11\n\ttimestamp\x18\x05 \x01(\r\x12\x1c\n\x0f\x62ytes_per_pixel\x18\x06 \x01(\rH\x00\x88\x01\x01\x12\x13\n\x06stride\x18\x07 \x01(\rH\x01\x88\x01\x01\x12\x1a\n\ris_compressed\x18\x08 \x01(\x08H\x02\x88\x01\x01\"-\n\x06\x46ormat\x12\x07\n\x03RGB\x10\x00\x12\x07\n\x03\x42GR\x10\x01\x12\x08\n\x04JPEG\x10\x02\x12\x07\n\x03PNG\x10\x03\x42\x12\n\x10_bytes_per_pixelB\t\n\x07_strideB\x10\n\x0e_is_compressed\"5\n\tDronePose\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1a\n\x04pose\x18\x02 \x01(\x0b\x32\x0c.VCCSim.Pose\"5\n\tDronePath\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1a\n\x04path\x18\x02 \x03(\x0b\x32\x0c.VCCSim.Pose\":\n\x07\x43\x61rPose\x12\x0c\n\x04name\x18\x01 \x01(\t\x12!\n\x04pose\x18\x02 \x01(\x0b\x32\x13.VCCSim.PoseOnlyYaw\":\n\x07\x43\x61rPath\x12\x0c\n\x04name\x18\x01 \x01(\t\x12!\n\x04path\x18\x02 \x03(\x0b\x32\x13.VCCSim.PoseOnlyYaw2\xbd\x01\n\x0cLidarService\x12\x34\n\x0cGetLiDARData\x12\x11.VCCSim.RobotName\x1a\x11.VCCSim.LidarData\x12\x33\n\x0cGetLiDAROdom\x12\x11.VCCSim.RobotName\x1a\x10.VCCSim.Odometry\x12\x42\n\x13GetLiDARDataAndOdom\x12\x11.VCCSim.RobotName\x1a\x18.VCCSim.LidarDataAndOdom2\xe7\x01\n\x12\x44\x65pthCameraService\x12J\n\x17GetDepthCameraPointData\x12\x11.VCCSim.RobotName\x1a\x1c.VCCSim.DepthCameraPointData\x12J\n\x17GetDepthCameraImageData\x12\x11.VCCSim.RobotName\x1a\x1c.VCCSim.DepthCameraImageData\x12\x39\n\x12GetDepthCameraOdom\x12\x11.VCCSim.RobotName\x1a\x10.VCCSim.Odometry2\x9e\x01\n\x10RGBCameraService\x12\x37\n\x10GetRGBCameraOdom\x12\x11.VCCSim.RobotName\x1a\x10.VCCSim.Odometry\x12Q\n\x1cGetRGBIndexedCameraImageData\x12\x15.VCCSim.IndexedCamera\x1a\x1a.VCCSim.RGBCameraImageData2\xab\x01\n\x0c\x44roneService\x12\x33\n\x0cGetDroneOdom\x12\x11.VCCSim.RobotName\x1a\x10.VCCSim.Odometry\x12\x32\n\rSendDronePose\x12\x11.VCCSim.DronePose\x1a\x0e.VCCSim.Status\x12\x32\n\rSendDronePath\x12\x11.VCCSim.DronePath\x1a\x0e.VCCSim.Status2\x9f\x01\n\nCarService\x12\x31\n\nGetCarOdom\x12\x11.VCCSim.RobotName\x1a\x10.VCCSim.Odometry\x12.\n\x0bSendCarPose\x12\x0f.VCCSim.CarPose\x1a\x0e.VCCSim.Status\x12.\n\x0bSendCarPath\x12\x0f.VCCSim.CarPath\x1a\x0e.VCCSim.Status2;\n\x0bMeshService\x12,\n\x08SendMesh\x12\x10.VCCSim.MeshData\x1a\x0e.VCCSim.Status2[\n\x11PointCloudService\x12\x46\n\x17SendPointCloudWithColor\x12\x1b.VCCSim.PointCloudWithColor\x1a\x0e.VCCSim.Statusb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -57,40 +57,38 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_MESHDATA']._serialized_end=774
   _globals['_MESHDATAWITHODOM']._serialized_start=776
   _globals['_MESHDATAWITHODOM']._serialized_end=858
-  _globals['_LIDARPOINT']._serialized_start=860
-  _globals['_LIDARPOINT']._serialized_end=918
-  _globals['_LIDARDATA']._serialized_start=920
-  _globals['_LIDARDATA']._serialized_end=965
-  _globals['_LIDARDATAANDODOM']._serialized_start=967
-  _globals['_LIDARDATAANDODOM']._serialized_end=1050
-  _globals['_DEPTHCAMERAPOINTDATA']._serialized_start=1052
-  _globals['_DEPTHCAMERAPOINTDATA']._serialized_end=1103
-  _globals['_DEPTHCAMERAIMAGEDATA']._serialized_start=1105
-  _globals['_DEPTHCAMERAIMAGEDATA']._serialized_end=1141
-  _globals['_RGBCAMERAIMAGEDATA']._serialized_start=1144
-  _globals['_RGBCAMERAIMAGEDATA']._serialized_end=1454
-  _globals['_RGBCAMERAIMAGEDATA_FORMAT']._serialized_start=1360
-  _globals['_RGBCAMERAIMAGEDATA_FORMAT']._serialized_end=1405
-  _globals['_DRONEPOSE']._serialized_start=1456
-  _globals['_DRONEPOSE']._serialized_end=1509
-  _globals['_DRONEPATH']._serialized_start=1511
-  _globals['_DRONEPATH']._serialized_end=1564
-  _globals['_CARPOSE']._serialized_start=1566
-  _globals['_CARPOSE']._serialized_end=1624
-  _globals['_CARPATH']._serialized_start=1626
-  _globals['_CARPATH']._serialized_end=1684
-  _globals['_LIDARSERVICE']._serialized_start=1687
-  _globals['_LIDARSERVICE']._serialized_end=1876
-  _globals['_DEPTHCAMERASERVICE']._serialized_start=1879
-  _globals['_DEPTHCAMERASERVICE']._serialized_end=2110
-  _globals['_RGBCAMERASERVICE']._serialized_start=2113
-  _globals['_RGBCAMERASERVICE']._serialized_end=2271
-  _globals['_DRONESERVICE']._serialized_start=2274
-  _globals['_DRONESERVICE']._serialized_end=2445
-  _globals['_CARSERVICE']._serialized_start=2448
-  _globals['_CARSERVICE']._serialized_end=2607
-  _globals['_MESHSERVICE']._serialized_start=2609
-  _globals['_MESHSERVICE']._serialized_end=2668
-  _globals['_POINTCLOUDSERVICE']._serialized_start=2670
-  _globals['_POINTCLOUDSERVICE']._serialized_end=2761
+  _globals['_LIDARDATA']._serialized_start=860
+  _globals['_LIDARDATA']._serialized_end=900
+  _globals['_LIDARDATAANDODOM']._serialized_start=902
+  _globals['_LIDARDATAANDODOM']._serialized_end=985
+  _globals['_DEPTHCAMERAPOINTDATA']._serialized_start=987
+  _globals['_DEPTHCAMERAPOINTDATA']._serialized_end=1038
+  _globals['_DEPTHCAMERAIMAGEDATA']._serialized_start=1040
+  _globals['_DEPTHCAMERAIMAGEDATA']._serialized_end=1076
+  _globals['_RGBCAMERAIMAGEDATA']._serialized_start=1079
+  _globals['_RGBCAMERAIMAGEDATA']._serialized_end=1389
+  _globals['_RGBCAMERAIMAGEDATA_FORMAT']._serialized_start=1295
+  _globals['_RGBCAMERAIMAGEDATA_FORMAT']._serialized_end=1340
+  _globals['_DRONEPOSE']._serialized_start=1391
+  _globals['_DRONEPOSE']._serialized_end=1444
+  _globals['_DRONEPATH']._serialized_start=1446
+  _globals['_DRONEPATH']._serialized_end=1499
+  _globals['_CARPOSE']._serialized_start=1501
+  _globals['_CARPOSE']._serialized_end=1559
+  _globals['_CARPATH']._serialized_start=1561
+  _globals['_CARPATH']._serialized_end=1619
+  _globals['_LIDARSERVICE']._serialized_start=1622
+  _globals['_LIDARSERVICE']._serialized_end=1811
+  _globals['_DEPTHCAMERASERVICE']._serialized_start=1814
+  _globals['_DEPTHCAMERASERVICE']._serialized_end=2045
+  _globals['_RGBCAMERASERVICE']._serialized_start=2048
+  _globals['_RGBCAMERASERVICE']._serialized_end=2206
+  _globals['_DRONESERVICE']._serialized_start=2209
+  _globals['_DRONESERVICE']._serialized_end=2380
+  _globals['_CARSERVICE']._serialized_start=2383
+  _globals['_CARSERVICE']._serialized_end=2542
+  _globals['_MESHSERVICE']._serialized_start=2544
+  _globals['_MESHSERVICE']._serialized_end=2603
+  _globals['_POINTCLOUDSERVICE']._serialized_start=2605
+  _globals['_POINTCLOUDSERVICE']._serialized_end=2696
 # @@protoc_insertion_point(module_scope)

@@ -6,65 +6,81 @@
 #include "Utils/InsMeshHolder.h"
 #include "Pawns/DronePawn.h"
 
-LidarGetDataCall::LidarGetDataCall(VCCSim::LidarService::AsyncService* service,
-    grpc::ServerCompletionQueue* cq, ULidarComponent* lidar_component)
-    : AsyncCallTemplate(service, cq, lidar_component) {
+LidarGetDataCall::LidarGetDataCall(
+    VCCSim::LidarService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, ULidarComponent*> RLMap)
+    : AsyncCallTemplateM(service, cq, RLMap)
+{
     Proceed(true);
 }
 
-void LidarGetDataCall::PrepareNextCall() {
-    new LidarGetDataCall(service_, cq_, component_);
+void LidarGetDataCall::PrepareNextCall()
+{
+    new LidarGetDataCall(service_, cq_, RCMap_);
 }
 
-void LidarGetDataCall::InitializeRequest() {
+void LidarGetDataCall::InitializeRequest()
+{
     service_->RequestGetLiDARData(&ctx_, &request_, &responder_, cq_, cq_, this);
 }
 
-void LidarGetDataCall::ProcessRequest() {
-    if (component_) {
-        TArray<FLidarPoint> Data = component_->GetPointCloudData();
-        for (const auto& Point : Data) {
-            VCCSim::LidarPoint* LidarPoint = response_.add_data();
+void LidarGetDataCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        for (const auto& Point : RCMap_[request_.name()]->GetPointCloudData())
+        {
+            VCCSim::Point* LidarPoint = response_.add_data();
             LidarPoint->set_x(Point.Location.X);
             LidarPoint->set_y(Point.Location.Y);
             LidarPoint->set_z(Point.Location.Z);
-            LidarPoint->set_hit(Point.bHit);
         }
     }
-    else {
-        UE_LOG(LogTemp, Error, TEXT("Lidar component not found!"));
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("LidarGetDataCall: "
+                                      "Lidar component not found!"));
     }
 }
 
-LidarGetOdomCall::LidarGetOdomCall(VCCSim::LidarService::AsyncService* service,
-    grpc::ServerCompletionQueue* cq, ULidarComponent* lidar_component)
-    : AsyncCallTemplate(service, cq, lidar_component) {
+LidarGetOdomCall::LidarGetOdomCall(
+        VCCSim::LidarService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        std::map<std::string, ULidarComponent*> RLMap)
+    : AsyncCallTemplateM(service, cq, RLMap)
+{
     Proceed(true);
 }
 
-void LidarGetOdomCall::PrepareNextCall() {
-    new LidarGetOdomCall(service_, cq_, component_);
+void LidarGetOdomCall::PrepareNextCall()
+{
+    new LidarGetOdomCall(service_, cq_, RCMap_);
 }
 
-void LidarGetOdomCall::InitializeRequest() {
+void LidarGetOdomCall::InitializeRequest()
+{
     service_->RequestGetLiDAROdom(&ctx_, &request_, &responder_, cq_, cq_, this);
 }
 
-void LidarGetOdomCall::ProcessRequest() {
-    if (component_) {
-        const FVector Pose = component_->GetComponentLocation();
-        const FRotator Rot = component_->GetComponentRotation();
-        const FVector LinearVelocity = component_->GetPhysicsLinearVelocity();
-        const FVector AngularVelocity = component_->GetPhysicsAngularVelocityInDegrees();
-        
+void LidarGetOdomCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        const auto Lidar = RCMap_[request_.name()];
+        const FVector Location = Lidar->GetComponentLocation();
+        const FRotator Rotation = Lidar->GetComponentRotation();
+        const FVector LinearVelocity = Lidar->GetPhysicsLinearVelocity();
+        const FVector AngularVelocity = Lidar->GetPhysicsAngularVelocityInDegrees();
+
         VCCSim::Pose* PoseData = response_.mutable_pose();
-        PoseData->set_x(Pose.X);
-        PoseData->set_y(Pose.Y);
-        PoseData->set_z(Pose.Z);
-        PoseData->set_roll(Rot.Roll);
-        PoseData->set_pitch(Rot.Pitch);
-        PoseData->set_yaw(Rot.Yaw);
-        
+        PoseData->set_x(Location.X);
+        PoseData->set_y(Location.Y);
+        PoseData->set_z(Location.Z);
+        PoseData->set_roll(Rotation.Roll);
+        PoseData->set_pitch(Rotation.Pitch);
+        PoseData->set_yaw(Rotation.Yaw);
+
         VCCSim::twist* TwistData = response_.mutable_twist();
         TwistData->set_linear_x(LinearVelocity.X);
         TwistData->set_linear_y(LinearVelocity.Y);
@@ -73,8 +89,10 @@ void LidarGetOdomCall::ProcessRequest() {
         TwistData->set_angular_y(AngularVelocity.Y);
         TwistData->set_angular_z(AngularVelocity.Z);
     }
-    else {
-        UE_LOG(LogTemp, Error, TEXT("Lidar component not found!"));
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("LidarGetOdomCall: "
+                                      "Lidar component not found!"));
     }
 }
 
@@ -105,12 +123,12 @@ void LidarGetDataAndOdomCall::ProcessRequest()
             RCMap_[request_.name()]->GetPointCloudDataAndOdom();
         const auto& Odom = DataAndOdom.Value;
         
-        for (const auto& Point : DataAndOdom.Key) {
-            VCCSim::LidarPoint* LidarPoint = response_.mutable_data()->add_data();
+        for (const auto& Point : DataAndOdom.Key)
+        {
+            VCCSim::Point* LidarPoint = response_.mutable_data()->add_data();
             LidarPoint->set_x(Point.Location.X);
             LidarPoint->set_y(Point.Location.Y);
             LidarPoint->set_z(Point.Location.Z);
-            LidarPoint->set_hit(Point.bHit);
         }
         
         VCCSim::Pose* PoseData = response_.mutable_odom()->mutable_pose();
@@ -397,6 +415,8 @@ void RGBCameraGetOdomCall::ProcessRequest()
     }
 }
 
+IImageWrapperModule* RGBIndexedCameraImageDataCall::ImageWrapperModule = nullptr;
+
 RGBIndexedCameraImageDataCall::RGBIndexedCameraImageDataCall(
     VCCSim::RGBCameraService::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
@@ -404,6 +424,7 @@ RGBIndexedCameraImageDataCall::RGBIndexedCameraImageDataCall(
         : AsyncCallTemplateImage(service, cq, rrgbcmap)
 {
     Proceed(true);
+    ImageWrapper = ImageWrapperModule->CreateImageWrapper(EImageFormat::PNG);
 }
 
 void RGBIndexedCameraImageDataCall::PrepareNextCall()

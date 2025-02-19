@@ -43,7 +43,6 @@ class LidarService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::LidarData>> PrepareAsyncGetLiDARData(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::LidarData>>(PrepareAsyncGetLiDARDataRaw(context, request, cq));
     }
-    // todo
     virtual ::grpc::Status GetLiDAROdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Odometry* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>> AsyncGetLiDAROdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>>(AsyncGetLiDAROdomRaw(context, request, cq));
@@ -51,7 +50,6 @@ class LidarService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>> PrepareAsyncGetLiDAROdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>>(PrepareAsyncGetLiDAROdomRaw(context, request, cq));
     }
-    // todo
     virtual ::grpc::Status GetLiDARDataAndOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::LidarDataAndOdom* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::LidarDataAndOdom>> AsyncGetLiDARDataAndOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::LidarDataAndOdom>>(AsyncGetLiDARDataAndOdomRaw(context, request, cq));
@@ -64,10 +62,8 @@ class LidarService final {
       virtual ~async_interface() {}
       virtual void GetLiDARData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::LidarData* response, std::function<void(::grpc::Status)>) = 0;
       virtual void GetLiDARData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::LidarData* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      // todo
       virtual void GetLiDAROdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, std::function<void(::grpc::Status)>) = 0;
       virtual void GetLiDAROdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      // todo
       virtual void GetLiDARDataAndOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::LidarDataAndOdom* response, std::function<void(::grpc::Status)>) = 0;
       virtual void GetLiDARDataAndOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::LidarDataAndOdom* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
@@ -143,9 +139,7 @@ class LidarService final {
     Service();
     virtual ~Service();
     virtual ::grpc::Status GetLiDARData(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::LidarData* response);
-    // todo
     virtual ::grpc::Status GetLiDAROdom(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response);
-    // todo
     virtual ::grpc::Status GetLiDARDataAndOdom(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::LidarDataAndOdom* response);
   };
   template <class BaseClass>
