@@ -3,8 +3,8 @@ import os
 import time
 from PIL import Image
 import numpy as np
+import io
 
-# Add the parent directory of PyClient to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from VCCSim import VCCSimClient
@@ -12,21 +12,26 @@ from VCCSim import VCCSimClient
 def main():
     client = VCCSimClient(host="localhost", port=50996)
     
-    # test_poses = [(100, 200, 500, 0, 0, 90), (200, -300, 300, 0, 0, 180)]
-    # for pose in test_poses:
-    #     x, y, z, roll, pitch, yaw = pose
-    #     client.send_drone_pose("Mavic", x, y, z, roll, pitch, yaw)
-    #     print(f"Set drone pose to ({x}, {y}, {z}, {roll}, {pitch}, {yaw})")
-    #     time.sleep(5)
-    
+    # Get RGB camera image
     image_data = client.get_rgb_indexed_camera_image_data("Mavic", 0)
-    img_array = np.frombuffer(image_data.data, dtype=np.uint8)
-    img_array = img_array.reshape((image_data.height, image_data.width, 3))
-    img = Image.fromarray(img_array, 'RGB')
-    img.save('rgb_camera_image.png')
     
+    # Debug information
+    print(f"Received data length: {len(image_data.data)}")
+    print(f"Image format: {image_data.format}")
+    print(f"Image dimensions: {image_data.width}x{image_data.height}")
+    print(f"Is compressed: {image_data.is_compressed}")
+    
+    try:
+        img = Image.open(io.BytesIO(image_data.data))
+        img.save('rgb_camera_image.png')
+    except Exception as e:
+        print(f"Error opening image: {str(e)}")
         
-    client.close()
+        # Try to peek at the first few bytes
+        if len(image_data.data) > 8:
+            print(f"First 8 bytes: {[hex(b) for b in image_data.data[:8]]}")
     
+    client.close()
+
 if __name__ == "__main__":
     main()

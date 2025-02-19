@@ -401,7 +401,7 @@ RGBIndexedCameraImageDataCall::RGBIndexedCameraImageDataCall(
     VCCSim::RGBCameraService::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
     std::map<std::string, URGBCameraComponent*> rrgbcmap)
-        : AsyncCallTemplateM(service, cq, rrgbcmap)
+        : AsyncCallTemplateImage(service, cq, rrgbcmap)
 {
     Proceed(true);
 }
@@ -437,11 +437,26 @@ void RGBIndexedCameraImageDataCall::ProcessRequest()
         return;
     }
 
-    RGBCamera->AsyncGetRGBImageData();
+    // Use the callback version with PNG conversion
+    RGBCamera->AsyncGetRGBImageData([this, RGBCamera](const TArray<FColor>& ImageData)
+    {
+        // Convert to PNG in a background thread
+        AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [this, ImageData, RGBCamera]()
+        {
+            // Convert to PNG
+            TArray<uint8> PNGData = ConvertToPNG(ImageData, RGBCamera->Width, RGBCamera->Height);
+            
+            response_.set_width(RGBCamera->Width);
+            response_.set_height(RGBCamera->Height);
+            response_.set_format(VCCSim::RGBCameraImageData_Format_PNG);
+            response_.set_is_compressed(true);
+            response_.set_data(PNGData.GetData(), PNGData.Num());
+            response_.set_timestamp(FDateTime::UtcNow().ToUnixTimestamp());
 
-    response_.set_width(0);
-    response_.set_height(0);
-    response_.set_format(VCCSim::RGBCameraImageData::RGB);
+            status_ = FINISH;
+            responder_.Finish(response_, grpc::Status::OK, this);
+        });
+    });
 }
 
 SendMeshCall::SendMeshCall(VCCSim::MeshService::AsyncService* service,

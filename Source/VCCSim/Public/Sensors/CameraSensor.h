@@ -10,18 +10,6 @@
 #include "RHIResources.h"
 #include "CameraSensor.generated.h"
 
-USTRUCT()
-struct FRGBPixel
-{
-    GENERATED_BODY()
-    
-    uint8 R;
-    uint8 G;
-    uint8 B;
-    
-    FRGBPixel() : R(0), G(0), B(0) {}
-    FRGBPixel(uint8 InR, uint8 InG, uint8 InB) : R(InR), G(InG), B(InB) {}
-};
 
 class FRGBCameraConfig : public SensorConfig
 {
@@ -35,7 +23,7 @@ public:
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
-    FOnRGBImageCaptured, const TArray<FRGBPixel>&, ImageData);
+    FOnRGBImageCaptured, const TArray<FColor>&, ImageData);
 
 UCLASS(ClassGroup = (VCCSIM))
 class VCCSIM_API URGBCameraComponent : public UPrimitiveComponent
@@ -61,7 +49,7 @@ public:
     // TArray<FColor> 
     
     // For GRPC call
-    void AsyncGetRGBImageData();
+    void AsyncGetRGBImageData(TFunction<void(const TArray<FColor>&)> Callback);
 
 protected:
     virtual void BeginPlay() override;
@@ -115,5 +103,3 @@ private:
     float TimeSinceLastCapture;
     FCriticalSection DataLock;
 };
-
-TArray<FRGBPixel> TransformFColorToRGBPixel(const TArray<FColor>& Colors);

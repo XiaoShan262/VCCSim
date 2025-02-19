@@ -139,11 +139,21 @@ void URGBCameraComponent::CaptureRGBScene()
     CaptureComponent->CaptureScene();
 }
 
-void URGBCameraComponent::AsyncGetRGBImageData()
+void URGBCameraComponent::AsyncGetRGBImageData(TFunction<void(const TArray<FColor>&)> Callback)
 {
-    AsyncTask(ENamedThreads::GameThread, [this]()
+    AsyncTask(ENamedThreads::GameThread, [this, Callback = MoveTemp(Callback)]()
     {
-        CaptureRGBImageAsync();
+        if (CheckComponentAndRenderTarget())
+        {
+            return;
+        }
+        
+        CaptureComponent->CaptureScene();
+        
+        ProcessRGBTextureAsync([Callback](const TArray<FColor>& ColorData)
+        {
+            Callback(ColorData);
+        });
     });
 }
 
@@ -210,7 +220,8 @@ void URGBCameraComponent::ProcessRGBTextureAsync(
         FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX)
     };
 
-    auto SharedCallback = MakeShared<TFunction<void(const TArray<FColor>&)>>(MoveTemp(OnComplete));
+    auto SharedCallback = MakeShared<
+        TFunction<void(const TArray<FColor>&)>>(MoveTemp(OnComplete));
     // Capture the OnComplete callback in the render command
     ENQUEUE_RENDER_COMMAND(ReadSurfaceCommand)(
         [Context, SharedCallback](FRHICommandListImmediate& RHICmdList)
@@ -222,13 +233,7 @@ void URGBCameraComponent::ProcessRGBTextureAsync(
                 Context.Flags
             );
             
-            // Execute callback on game thread when render is complete
-            AsyncTask(ENamedThreads::GameThread,
-                [SharedCallback, OutData = Context.OutData]()
-                {
-                    (*SharedCallback)(*OutData);
-                }
-            );
+            (*SharedCallback)(*Context.OutData);
         });
 }
 
@@ -256,20 +261,6 @@ void URGBCameraComponent::CaptureRGBImageAsync()
     
     ProcessRGBTextureAsync([this](const TArray<FColor>& ColorData)
     {
-        TArray<FRGBPixel> RGBData = TransformFColorToRGBPixel(ColorData);
-        OnRGBImageCaptured.Broadcast(RGBData);
+        OnRGBImageCaptured.Broadcast(ColorData);
     });
-}
-
-TArray<FRGBPixel> TransformFColorToRGBPixel(const TArray<FColor>& Colors)
-{
-    TArray<FRGBPixel> RGBImage;
-    RGBImage.Init(FRGBPixel(), Colors.Num());
-    ParallelFor(Colors.Num(), [&](int32 i)
-        {
-            RGBImage[i].R = Colors[i].R;
-            RGBImage[i].G = Colors[i].G;
-            RGBImage[i].B = Colors[i].B;
-        });
-    return RGBImage;
 }

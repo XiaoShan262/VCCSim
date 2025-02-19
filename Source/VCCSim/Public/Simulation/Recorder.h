@@ -12,7 +12,6 @@ class ULidarComponent;
 class UDepthCameraComponent;
 class URGBCameraComponent;
 struct FLidarPoint;
-struct FRGBPixel;
 
 struct FRecordComponents
 {
@@ -46,7 +45,7 @@ struct FDepthCameraData
 struct FRGBCameraData
 {
     double Timestamp;
-    TArray<FRGBPixel> Data;
+    TArray<FColor> Data;
     int32 SensorIndex;
 };
 

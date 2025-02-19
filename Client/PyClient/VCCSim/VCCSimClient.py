@@ -89,11 +89,6 @@ class VCCSimClient:
         return self.depth_camera_service.GetDepthCameraOdom(request)
 
     # RGB Camera Service Methods
-    def get_rgb_camera_image_data(self, robot_name: str) -> VCCSim_pb2.RGBCameraImageData:
-        """Get RGB camera image data for a robot."""
-        request = self._create_robot_name(robot_name)
-        return self.rgb_camera_service.GetRGBCameraImageData(request)
-
     def get_rgb_camera_odom(self, robot_name: str) -> VCCSim_pb2.Odometry:
         """Get RGB camera odometry for a robot."""
         request = self._create_robot_name(robot_name)

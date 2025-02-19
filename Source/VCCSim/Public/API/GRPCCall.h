@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include <grpcpp/grpcpp.h>
+#include "IImageWrapper.h"
+#include "IImageWrapperModule.h"
 #include "API/VCCSim.grpc.pb.h"
 
 class ULidarComponent;
@@ -54,6 +56,37 @@ class AsyncCallTemplateM : public AsyncCall
 {
 public:
     AsyncCallTemplateM(ServiceType* service,
+        grpc::ServerCompletionQueue* cq, RobotComponentMap RCMap);
+
+    virtual void Proceed(bool ok) override final;
+    virtual void Shutdown() override final;
+
+protected:
+    virtual void PrepareNextCall() = 0;
+    virtual void InitializeRequest() = 0;
+    virtual void ProcessRequest() = 0;
+
+    grpc::ServerContext ctx_;
+    RequestType request_;
+    ResponseType response_;
+    grpc::ServerAsyncResponseWriter<ResponseType> responder_;
+    
+    enum CallStatus { CREATE, PROCESS, FINISH };
+    CallStatus status_;
+
+    ServiceType* service_;
+    grpc::ServerCompletionQueue* cq_;
+    RobotComponentMap RCMap_;
+};
+
+// Image calls need to wait for the image to be captured
+// So we need to let the async call to finish processing
+template <typename RequestType, typename ResponseType,
+          typename ServiceType, typename RobotComponentMap>
+class AsyncCallTemplateImage : public AsyncCall
+{
+public:
+    AsyncCallTemplateImage(ServiceType* service,
         grpc::ServerCompletionQueue* cq, RobotComponentMap RCMap);
 
     virtual void Proceed(bool ok) override final;
@@ -188,7 +221,7 @@ protected:
     virtual void ProcessRequest() override final;
 };
 
-class RGBIndexedCameraImageDataCall : public AsyncCallTemplateM<
+class RGBIndexedCameraImageDataCall : public AsyncCallTemplateImage<
     VCCSim::IndexedCamera, VCCSim::RGBCameraImageData,
     VCCSim::RGBCameraService::AsyncService,
     std::map<std::string, URGBCameraComponent*>>
@@ -202,6 +235,46 @@ protected:
     virtual void PrepareNextCall() override final;
     virtual void InitializeRequest() override final;
     virtual void ProcessRequest() override final;
+private:
+    TArray<uint8> ConvertToPNG(const TArray<FColor>& ImageData, int32 Width, int32 Height) 
+    {
+        TArray<uint8> PNGData;
+        
+        // Get ImageWrapper module
+        auto& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+        TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
+        
+        if (ImageWrapper.IsValid())
+        {
+            // Convert FColor array to raw BGRA
+            TArray<uint8> RawBGRA;
+            RawBGRA.SetNum(ImageData.Num() * 4);
+            for (int32 i = 0; i < ImageData.Num(); i++) 
+            {
+                RawBGRA[4*i] = ImageData[i].B;
+                RawBGRA[4*i + 1] = ImageData[i].G;
+                RawBGRA[4*i + 2] = ImageData[i].R;
+                RawBGRA[4*i + 3] = ImageData[i].A;
+            }
+            
+            // Compress to PNG
+            if (ImageWrapper->SetRaw(RawBGRA.GetData(), RawBGRA.Num(), Width, Height, ERGBFormat::BGRA, 8)) 
+            {
+                const TArray64<uint8>& CompressedData = ImageWrapper->GetCompressed();
+                PNGData.Append(CompressedData.GetData(), CompressedData.Num());
+            }
+            else
+            {
+                UE_LOG(LogTemp, Error, TEXT("Failed to set raw image data for PNG conversion"));
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to create PNG image wrapper"));
+        }
+        
+        return PNGData;
+    }
 };
 
     
@@ -324,3 +397,37 @@ RobotComponentMap>::Shutdown()
     delete this;
 }
 
+template <typename RequestType, typename ResponseType, typename ServiceType,
+    typename RobotComponentMap>
+AsyncCallTemplateImage<RequestType, ResponseType, ServiceType, RobotComponentMap>::
+AsyncCallTemplateImage(ServiceType* service, grpc::ServerCompletionQueue* cq,
+    RobotComponentMap RCMap)
+    : responder_(&ctx_), status_(CREATE), service_(service),
+      cq_(cq), RCMap_(RCMap) {}
+
+template <typename RequestType, typename ResponseType, typename ServiceType,
+    typename RobotComponentMap>
+void AsyncCallTemplateImage<RequestType, ResponseType, ServiceType,
+RobotComponentMap>::Proceed(bool ok)
+{
+    if (status_ == CREATE) {
+        status_ = PROCESS;
+        InitializeRequest();
+    }
+    else if (status_ == PROCESS) {
+        PrepareNextCall();
+        ProcessRequest();
+    }
+    else {
+        delete this;
+    }
+}
+
+template <typename RequestType, typename ResponseType, typename ServiceType,
+    typename RobotComponentMap>
+void AsyncCallTemplateImage<RequestType, ResponseType, ServiceType,
+RobotComponentMap>::Shutdown()
+{
+    status_ = FINISH;
+    delete this;
+}
