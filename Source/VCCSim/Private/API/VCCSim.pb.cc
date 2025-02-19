@@ -1030,32 +1030,30 @@ const char descriptor_table_protodef_VCCSim_2eproto[] ABSL_ATTRIBUTE_SECTION_VAR
     "CameraPointData\022J\n\027GetDepthCameraImageDa"
     "ta\022\021.VCCSim.RobotName\032\034.VCCSim.DepthCame"
     "raImageData\0229\n\022GetDepthCameraOdom\022\021.VCCS"
-    "im.RobotName\032\020.VCCSim.Odometry2\346\001\n\020RGBCa"
-    "meraService\022F\n\025GetRGBCameraImageData\022\021.V"
-    "CCSim.RobotName\032\032.VCCSim.RGBCameraImageD"
-    "ata\0227\n\020GetRGBCameraOdom\022\021.VCCSim.RobotNa"
-    "me\032\020.VCCSim.Odometry\022Q\n\034GetRGBIndexedCam"
-    "eraImageData\022\025.VCCSim.IndexedCamera\032\032.VC"
-    "CSim.RGBCameraImageData2\253\001\n\014DroneService"
-    "\0223\n\014GetDroneOdom\022\021.VCCSim.RobotName\032\020.VC"
-    "CSim.Odometry\0222\n\rSendDronePose\022\021.VCCSim."
-    "DronePose\032\016.VCCSim.Status\0222\n\rSendDronePa"
-    "th\022\021.VCCSim.DronePath\032\016.VCCSim.Status2\237\001"
-    "\n\nCarService\0221\n\nGetCarOdom\022\021.VCCSim.Robo"
-    "tName\032\020.VCCSim.Odometry\022.\n\013SendCarPose\022\017"
-    ".VCCSim.CarPose\032\016.VCCSim.Status\022.\n\013SendC"
-    "arPath\022\017.VCCSim.CarPath\032\016.VCCSim.Status2"
-    ";\n\013MeshService\022,\n\010SendMesh\022\020.VCCSim.Mesh"
-    "Data\032\016.VCCSim.Status2[\n\021PointCloudServic"
-    "e\022F\n\027SendPointCloudWithColor\022\033.VCCSim.Po"
-    "intCloudWithColor\032\016.VCCSim.Statusb\006proto"
-    "3"
+    "im.RobotName\032\020.VCCSim.Odometry2\236\001\n\020RGBCa"
+    "meraService\0227\n\020GetRGBCameraOdom\022\021.VCCSim"
+    ".RobotName\032\020.VCCSim.Odometry\022Q\n\034GetRGBIn"
+    "dexedCameraImageData\022\025.VCCSim.IndexedCam"
+    "era\032\032.VCCSim.RGBCameraImageData2\253\001\n\014Dron"
+    "eService\0223\n\014GetDroneOdom\022\021.VCCSim.RobotN"
+    "ame\032\020.VCCSim.Odometry\0222\n\rSendDronePose\022\021"
+    ".VCCSim.DronePose\032\016.VCCSim.Status\0222\n\rSen"
+    "dDronePath\022\021.VCCSim.DronePath\032\016.VCCSim.S"
+    "tatus2\237\001\n\nCarService\0221\n\nGetCarOdom\022\021.VCC"
+    "Sim.RobotName\032\020.VCCSim.Odometry\022.\n\013SendC"
+    "arPose\022\017.VCCSim.CarPose\032\016.VCCSim.Status\022"
+    ".\n\013SendCarPath\022\017.VCCSim.CarPath\032\016.VCCSim"
+    ".Status2;\n\013MeshService\022,\n\010SendMesh\022\020.VCC"
+    "Sim.MeshData\032\016.VCCSim.Status2[\n\021PointClo"
+    "udService\022F\n\027SendPointCloudWithColor\022\033.V"
+    "CCSim.PointCloudWithColor\032\016.VCCSim.Statu"
+    "sb\006proto3"
 };
 static ::absl::once_flag descriptor_table_VCCSim_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_VCCSim_2eproto = {
     false,
     false,
-    2841,
+    2769,
     descriptor_table_protodef_VCCSim_2eproto,
     "VCCSim.proto",
     &descriptor_table_VCCSim_2eproto_once,

@@ -82,8 +82,6 @@ public:
 			new DepthCameraGetOdomCall(&DepthCameraService,
 				CompletionQueue.get(), RGrpcMaps.RCMaps.RDCMap);
 
-        	new RGBCameraGetImageDataCall(&RGBCameraService,
-				CompletionQueue.get(), RGrpcMaps.RCMaps.RRGBCMap);
         	new RGBCameraGetOdomCall(&RGBCameraService,
         		CompletionQueue.get(), RGrpcMaps.RCMaps.RRGBCMap);
         	new RGBIndexedCameraImageDataCall(&RGBCameraService,

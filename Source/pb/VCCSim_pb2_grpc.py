@@ -356,11 +356,6 @@ class RGBCameraServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetRGBCameraImageData = channel.unary_unary(
-                '/VCCSim.RGBCameraService/GetRGBCameraImageData',
-                request_serializer=VCCSim__pb2.RobotName.SerializeToString,
-                response_deserializer=VCCSim__pb2.RGBCameraImageData.FromString,
-                _registered_method=True)
         self.GetRGBCameraOdom = channel.unary_unary(
                 '/VCCSim.RGBCameraService/GetRGBCameraOdom',
                 request_serializer=VCCSim__pb2.RobotName.SerializeToString,
@@ -375,12 +370,6 @@ class RGBCameraServiceStub(object):
 
 class RGBCameraServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
-
-    def GetRGBCameraImageData(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
 
     def GetRGBCameraOdom(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -397,11 +386,6 @@ class RGBCameraServiceServicer(object):
 
 def add_RGBCameraServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetRGBCameraImageData': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetRGBCameraImageData,
-                    request_deserializer=VCCSim__pb2.RobotName.FromString,
-                    response_serializer=VCCSim__pb2.RGBCameraImageData.SerializeToString,
-            ),
             'GetRGBCameraOdom': grpc.unary_unary_rpc_method_handler(
                     servicer.GetRGBCameraOdom,
                     request_deserializer=VCCSim__pb2.RobotName.FromString,
@@ -422,33 +406,6 @@ def add_RGBCameraServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class RGBCameraService(object):
     """Missing associated documentation comment in .proto file."""
-
-    @staticmethod
-    def GetRGBCameraImageData(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/VCCSim.RGBCameraService/GetRGBCameraImageData',
-            VCCSim__pb2.RobotName.SerializeToString,
-            VCCSim__pb2.RGBCameraImageData.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
 
     @staticmethod
     def GetRGBCameraOdom(request,

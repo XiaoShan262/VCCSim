@@ -163,7 +163,6 @@ service DepthCameraService {
 }
 
 service RGBCameraService {
-  rpc GetRGBCameraImageData (RobotName) returns (RGBCameraImageData);
   rpc GetRGBCameraOdom (RobotName) returns (Odometry);
   rpc GetRGBIndexedCameraImageData (IndexedCamera) returns (RGBCameraImageData);
 }

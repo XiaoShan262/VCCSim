@@ -172,23 +172,6 @@ protected:
 };
 
 /* --------------------------RGB Camera---------------------------------- */
-class RGBCameraGetImageDataCall : public AsyncCallTemplateM<
-    VCCSim::RobotName, VCCSim::RGBCameraImageData,
-    VCCSim::RGBCameraService::AsyncService,
-    std::map<std::string, URGBCameraComponent*>>
-{
-public:
-    RGBCameraGetImageDataCall(
-        VCCSim::RGBCameraService::AsyncService* service,
-        grpc::ServerCompletionQueue* cq,
-        std::map<std::string, URGBCameraComponent*> rrgbcmap);
-protected:
-    virtual void PrepareNextCall() override final;
-    virtual void InitializeRequest() override final;
-    virtual void ProcessRequest() override final;
-private:
-    TSharedPtr<TPromise<void>> Promise;
-};
 
 class RGBCameraGetOdomCall : public AsyncCallTemplateM<
     VCCSim::RobotName, VCCSim::Odometry, VCCSim::RGBCameraService::AsyncService,
@@ -219,8 +202,6 @@ protected:
     virtual void PrepareNextCall() override final;
     virtual void InitializeRequest() override final;
     virtual void ProcessRequest() override final;
-private:
-    TSharedPtr<TPromise<void>> Promise;
 };
 
     

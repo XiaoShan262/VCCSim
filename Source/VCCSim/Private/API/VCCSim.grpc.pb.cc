@@ -312,7 +312,6 @@ DepthCameraService::Service::~Service() {
 
 
 static const char* RGBCameraService_method_names[] = {
-  "/VCCSim.RGBCameraService/GetRGBCameraImageData",
   "/VCCSim.RGBCameraService/GetRGBCameraOdom",
   "/VCCSim.RGBCameraService/GetRGBIndexedCameraImageData",
 };
@@ -324,33 +323,9 @@ std::unique_ptr< RGBCameraService::Stub> RGBCameraService::NewStub(const std::sh
 }
 
 RGBCameraService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
-  : channel_(channel), rpcmethod_GetRGBCameraImageData_(RGBCameraService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_GetRGBCameraOdom_(RGBCameraService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_GetRGBIndexedCameraImageData_(RGBCameraService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  : channel_(channel), rpcmethod_GetRGBCameraOdom_(RGBCameraService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_GetRGBIndexedCameraImageData_(RGBCameraService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
-
-::grpc::Status RGBCameraService::Stub::GetRGBCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::RGBCameraImageData* response) {
-  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::RobotName, ::VCCSim::RGBCameraImageData, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_GetRGBCameraImageData_, context, request, response);
-}
-
-void RGBCameraService::Stub::async::GetRGBCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::RGBCameraImageData* response, std::function<void(::grpc::Status)> f) {
-  ::grpc::internal::CallbackUnaryCall< ::VCCSim::RobotName, ::VCCSim::RGBCameraImageData, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetRGBCameraImageData_, context, request, response, std::move(f));
-}
-
-void RGBCameraService::Stub::async::GetRGBCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::RGBCameraImageData* response, ::grpc::ClientUnaryReactor* reactor) {
-  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetRGBCameraImageData_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>* RGBCameraService::Stub::PrepareAsyncGetRGBCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::RGBCameraImageData, ::VCCSim::RobotName, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_GetRGBCameraImageData_, context, request);
-}
-
-::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>* RGBCameraService::Stub::AsyncGetRGBCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
-  auto* result =
-    this->PrepareAsyncGetRGBCameraImageDataRaw(context, request, cq);
-  result->StartCall();
-  return result;
-}
 
 ::grpc::Status RGBCameraService::Stub::GetRGBCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Odometry* response) {
   return ::grpc::internal::BlockingUnaryCall< ::VCCSim::RobotName, ::VCCSim::Odometry, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_GetRGBCameraOdom_, context, request, response);
@@ -402,16 +377,6 @@ RGBCameraService::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       RGBCameraService_method_names[0],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< RGBCameraService::Service, ::VCCSim::RobotName, ::VCCSim::RGBCameraImageData, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
-          [](RGBCameraService::Service* service,
-             ::grpc::ServerContext* ctx,
-             const ::VCCSim::RobotName* req,
-             ::VCCSim::RGBCameraImageData* resp) {
-               return service->GetRGBCameraImageData(ctx, req, resp);
-             }, this)));
-  AddMethod(new ::grpc::internal::RpcServiceMethod(
-      RGBCameraService_method_names[1],
-      ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< RGBCameraService::Service, ::VCCSim::RobotName, ::VCCSim::Odometry, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](RGBCameraService::Service* service,
              ::grpc::ServerContext* ctx,
@@ -420,7 +385,7 @@ RGBCameraService::Service::Service() {
                return service->GetRGBCameraOdom(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      RGBCameraService_method_names[2],
+      RGBCameraService_method_names[1],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< RGBCameraService::Service, ::VCCSim::IndexedCamera, ::VCCSim::RGBCameraImageData, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](RGBCameraService::Service* service,
@@ -432,13 +397,6 @@ RGBCameraService::Service::Service() {
 }
 
 RGBCameraService::Service::~Service() {
-}
-
-::grpc::Status RGBCameraService::Service::GetRGBCameraImageData(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::RGBCameraImageData* response) {
-  (void) context;
-  (void) request;
-  (void) response;
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 
 ::grpc::Status RGBCameraService::Service::GetRGBCameraOdom(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response) {

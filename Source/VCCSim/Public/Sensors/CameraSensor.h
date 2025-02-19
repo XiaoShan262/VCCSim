@@ -10,9 +10,11 @@
 #include "RHIResources.h"
 #include "CameraSensor.generated.h"
 
-
+USTRUCT()
 struct FRGBPixel
 {
+    GENERATED_BODY()
+    
     uint8 R;
     uint8 G;
     uint8 B;
@@ -32,6 +34,9 @@ public:
     float CaptureRate = 30.f;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+    FOnRGBImageCaptured, const TArray<FRGBPixel>&, ImageData);
+
 UCLASS(ClassGroup = (VCCSIM))
 class VCCSIM_API URGBCameraComponent : public UPrimitiveComponent
 {
@@ -41,8 +46,13 @@ public:
     URGBCameraComponent();
     void RGBConfigure(const FRGBCameraConfig& Config);
     bool IsConfigured() const { return bBPConfigured; }
+    
     int32 GetCameraIndex() const { return CameraIndex; }
+    
     void SetCaptureComponent() const;
+    void InitializeRenderTargets();
+    void ProcessRGBTextureAsyncRaw();
+    void ProcessRGBTextureAsync(TFunction<void(const TArray<FColor>&)> OnComplete);
 
     UFUNCTION(BlueprintCallable, Category = "RGBCamera")
     void CaptureRGBScene();
@@ -51,15 +61,13 @@ public:
     // TArray<FColor> 
     
     // For GRPC call
-    void AsyncGetRGBImageData(TFunction<void(TArray<FRGBPixel>)> Callback);
+    void AsyncGetRGBImageData();
 
 protected:
     virtual void BeginPlay() override;
     virtual void OnComponentCreated() override;
     virtual void TickComponent(float DeltaTime, ELevelTick TickType,
         FActorComponentTickFunction* ThisTickFunction) override;
-    void ProcessRGBTextureAsync(TFunction<void(const TArray<FColor>&)> OnComplete);
-    void InitializeRenderTargets();
 
 public:
     // Configuration Properties
@@ -83,10 +91,16 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RGBCamera|Performance")
     float CaptureRate;
 
+    UPROPERTY(BlueprintAssignable, Category = "Camera")
+    FOnRGBImageCaptured OnRGBImageCaptured;
+    
     UPROPERTY()
     UTextureRenderTarget2D* RGBRenderTarget = nullptr;
     
 private:
+    bool CheckComponentAndRenderTarget() const;
+    void CaptureRGBImageAsync();
+
     struct FReadSurfaceContext
     {
         TArray<FColor>* OutData;
@@ -94,9 +108,6 @@ private:
         FIntRect Rect;
         FReadSurfaceDataFlags Flags;
     };
-    
-    bool CheckComponentAndRenderTarget() const;
-    TArray<FRGBPixel> GetRGBImageDataGameThread();
     
     UPROPERTY()
     USceneCaptureComponent2D* CaptureComponent = nullptr;

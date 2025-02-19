@@ -344,107 +344,6 @@ void DepthCameraGetOdomCall::ProcessRequest()
     }
 }
 
-RGBCameraGetImageDataCall::RGBCameraGetImageDataCall(
-    VCCSim::RGBCameraService::AsyncService* service,
-    grpc::ServerCompletionQueue* cq,
-    std::map<std::string, URGBCameraComponent*> rrgbcmap)
-        : AsyncCallTemplateM(service, cq, rrgbcmap)
-{
-    Proceed(true);
-}
-
-void RGBCameraGetImageDataCall::PrepareNextCall()
-{
-    new RGBCameraGetImageDataCall(service_, cq_, RCMap_);
-}
-
-void RGBCameraGetImageDataCall::InitializeRequest()
-{
-    service_->RequestGetRGBCameraImageData(
-        &ctx_, &request_, &responder_, cq_, cq_, this);
-}
-
-void RGBCameraGetImageDataCall::ProcessRequest()
-{
-    Promise = MakeShared<TPromise<void>>();
-    auto Future = Promise->GetFuture();
-
-    if (!RCMap_.contains(request_.name()))
-    {
-        UE_LOG(LogTemp, Warning, TEXT("RGBCameraGetImageDataCall: "
-                                    "RGB Camera component not found!"));
-        Promise->SetValue();
-        return;
-    }
-
-    auto* RGBCamera = RCMap_[request_.name()];
-    if (!RGBCamera)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("RGBCameraGetImageDataCall: "
-                                    "Invalid RGB Camera reference!"));
-        Promise->SetValue();
-        return;
-    }
-
-    // Capture both WeakPtr to Promise and RGBCamera
-    TWeakPtr<TPromise<void>> WeakPromise = Promise;
-    TWeakObjectPtr<URGBCameraComponent> WeakRGBCamera(RGBCamera);
-
-    RGBCamera->AsyncGetRGBImageData([this, WeakPromise, WeakRGBCamera](
-        TArray<FRGBPixel> RGBImage) {
-        auto StrongPromise = WeakPromise.Pin();
-        auto StrongRGBCamera = WeakRGBCamera.Get();
-        
-        if (!StrongPromise)
-        {
-            UE_LOG(LogTemp, Error, TEXT("Promise was destroyed before completion"));
-            return;
-        }
-
-        if (!StrongRGBCamera)
-        {
-            UE_LOG(LogTemp, Error, TEXT("RGB Camera was destroyed before completion"));
-            StrongPromise->SetValue();
-            return;
-        }
-
-        // Pack RGB data into bytes
-        const int32 NumPixels = RGBImage.Num();
-        const int32 BytesPerPixel = 3; // RGB
-        TArray<uint8> PackedData;
-        PackedData.SetNum(NumPixels * BytesPerPixel);
-
-        for (int32 i = 0; i < NumPixels; ++i)
-        {
-            const FRGBPixel& Pixel = RGBImage[i];
-            const int32 BaseIndex = i * BytesPerPixel;
-            PackedData[BaseIndex] = Pixel.R;
-            PackedData[BaseIndex + 1] = Pixel.G;
-            PackedData[BaseIndex + 2] = Pixel.B;
-        }
-
-        response_.set_width(StrongRGBCamera->Width);
-        response_.set_height(StrongRGBCamera->Height);
-        response_.set_format(VCCSim::RGBCameraImageData::RGB);
-        response_.set_data(PackedData.GetData(), PackedData.Num());
-        
-        StrongPromise->SetValue();
-    }
-    );
-
-    // Wait with timeout
-    const float TimeoutSeconds = 5.0f;
-    if (!Future.WaitFor(FTimespan::FromSeconds(TimeoutSeconds)))
-    {
-        UE_LOG(LogTemp, Error, TEXT("GetRGBImageData timed out after "
-                                   "%f seconds"), TimeoutSeconds);
-        if (Promise.IsValid())
-        {
-            Promise->SetValue();  // Ensure promise is completed
-        }
-    }
-}
-
 RGBCameraGetOdomCall::RGBCameraGetOdomCall(
     VCCSim::RGBCameraService::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
@@ -520,8 +419,6 @@ void RGBIndexedCameraImageDataCall::InitializeRequest()
 
 void RGBIndexedCameraImageDataCall::ProcessRequest()
 {
-    Promise = MakeShared<TPromise<void>>();
-    auto Future = Promise->GetFuture();
     std::string CameraName = request_.robot_name().name() + "^" +
                              std::to_string(request_.index());
 
@@ -529,7 +426,6 @@ void RGBIndexedCameraImageDataCall::ProcessRequest()
     {
         UE_LOG(LogTemp, Warning, TEXT("RGBCameraGetImageDataCall: "
                                     "RGB Camera component not found!"));
-        Promise->SetValue();
         return;
     }
 
@@ -538,71 +434,15 @@ void RGBIndexedCameraImageDataCall::ProcessRequest()
     {
         UE_LOG(LogTemp, Warning, TEXT("RGBCameraGetImageDataCall: "
                                     "Invalid RGB Camera reference!"));
-        Promise->SetValue();
         return;
     }
 
-    // Capture both WeakPtr to Promise and RGBCamera
-    TWeakPtr<TPromise<void>> WeakPromise = Promise;
-    TWeakObjectPtr<URGBCameraComponent> WeakRGBCamera(RGBCamera);
+    RGBCamera->AsyncGetRGBImageData();
 
-    RGBCamera->AsyncGetRGBImageData([this, WeakPromise, WeakRGBCamera](
-        TArray<FRGBPixel> RGBImage) {
-        auto StrongPromise = WeakPromise.Pin();
-        auto StrongRGBCamera = WeakRGBCamera.Get();
-        
-        if (!StrongPromise)
-        {
-            UE_LOG(LogTemp, Error, TEXT(
-                "Promise was destroyed before completion"));
-            return;
-        }
-
-        if (!StrongRGBCamera)
-        {
-            UE_LOG(LogTemp, Error, TEXT(
-                "RGB Camera was destroyed before completion"));
-            StrongPromise->SetValue();
-            return;
-        }
-
-        // Pack RGB data into bytes
-        const int32 NumPixels = RGBImage.Num();
-        const int32 BytesPerPixel = 3; // RGB
-        TArray<uint8> PackedData;
-        PackedData.SetNum(NumPixels * BytesPerPixel);
-
-        for (int32 i = 0; i < NumPixels; ++i)
-        {
-            const FRGBPixel& Pixel = RGBImage[i];
-            const int32 BaseIndex = i * BytesPerPixel;
-            PackedData[BaseIndex] = Pixel.R;
-            PackedData[BaseIndex + 1] = Pixel.G;
-            PackedData[BaseIndex + 2] = Pixel.B;
-        }
-
-        response_.set_width(StrongRGBCamera->Width);
-        response_.set_height(StrongRGBCamera->Height);
-        response_.set_format(VCCSim::RGBCameraImageData::RGB);
-        response_.set_data(PackedData.GetData(), PackedData.Num());
-        
-        StrongPromise->SetValue();
-    }
-    );
-
-    // Wait with timeout
-    const float TimeoutSeconds = 5.0f;
-    if (!Future.WaitFor(FTimespan::FromSeconds(TimeoutSeconds)))
-    {
-        UE_LOG(LogTemp, Error, TEXT("GetRGBImageData timed out after "
-                                   "%f seconds"), TimeoutSeconds);
-        if (Promise.IsValid())
-        {
-            Promise->SetValue();  // Ensure promise is completed
-        }
-    }
+    response_.set_width(0);
+    response_.set_height(0);
+    response_.set_format(VCCSim::RGBCameraImageData::RGB);
 }
-
 
 SendMeshCall::SendMeshCall(VCCSim::MeshService::AsyncService* service,
                            grpc::ServerCompletionQueue* cq,
