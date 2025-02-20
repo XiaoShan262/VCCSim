@@ -8,6 +8,21 @@
 #include "Containers/StringConv.h"
 #include "HAL/PlatformFileManager.h"
 
+IImageWrapper* FImageWrapperCache::GetPNGWrapper()
+{
+    FScopeLock Lock(&CacheLock);
+    if (!PNGWrapper)
+    {
+        if (!ImageWrapperModule)
+        {
+            ImageWrapperModule = &FModuleManager::LoadModuleChecked<
+                IImageWrapperModule>(FName("ImageWrapper"));
+        }
+        PNGWrapper = ImageWrapperModule->CreateImageWrapper(EImageFormat::PNG);
+    }
+    return PNGWrapper.Get();
+}
+
 // BufferPool implementation
 TArray<uint8>* FBufferPool::AcquireBuffer(int32 Size)
 {
@@ -247,21 +262,10 @@ bool FRecorderWorker::SaveDepthData(const FDepthCameraData& DepthData, const FSt
     
     const FString FilePath = FPaths::Combine(Directory, TEXT("Depth"), Filename);
     
-    // Save metadata
-    const FString MetaPath = FPaths::ChangeExtension(FilePath, TEXT(".meta"));
-    const FString MetaContent = FString::Printf(
-        TEXT("Timestamp: %.9f\nWidth: %d\nHeight: %d\nSensorIndex: %d\n"),
-        DepthData.Timestamp,
-        DepthData.Width,
-        DepthData.Height,
-        DepthData.SensorIndex
-    );
-    
-    FFileHelper::SaveStringToFile(MetaContent, *MetaPath);
-    
     auto* ImageBuffer = BufferPool.AcquireBuffer(DepthData.Width * DepthData.Height);
+    if (!ImageBuffer) return false;
     
-    // Find depth range
+    // Find depth range and convert to grayscale in single pass
     float MinDepth = FLT_MAX;
     float MaxDepth = -FLT_MAX;
     
@@ -271,23 +275,20 @@ bool FRecorderWorker::SaveDepthData(const FDepthCameraData& DepthData, const FSt
         MaxDepth = FMath::Max(MaxDepth, Depth);
     }
     
-    // Convert to grayscale
     const float Range = MaxDepth - MinDepth;
-    if (Range > 0.0f)
+    const float Scale = Range > 0.0f ? 255.0f / Range : 0.0f;
+    
+    ImageBuffer->SetNum(DepthData.Data.Num());
+    
+    // Vectorizable loop
+    for (int32 i = 0; i < DepthData.Data.Num(); ++i)
     {
-        const float Scale = 255.0f / Range;
-        for (int32 i = 0; i < DepthData.Data.Num(); ++i)
-        {
-            (*ImageBuffer)[i] = FMath::RoundToInt((DepthData.Data[i] - MinDepth) * Scale);
-        }
+        (*ImageBuffer)[i] = FMath::RoundToInt((DepthData.Data[i] - MinDepth) * Scale);
     }
     
-    // Save as PNG
-    auto& ImageWrapper = FModuleManager::LoadModuleChecked<IImageWrapperModule>
-        (FName("ImageWrapper"));
-    
-    auto PNGWrapper = ImageWrapper.CreateImageWrapper(EImageFormat::PNG);
+    // Use cached wrapper
     bool bSuccess = false;
+    auto* PNGWrapper = FImageWrapperCache::Get().GetPNGWrapper();
     
     if (PNGWrapper && PNGWrapper->SetRaw(
         ImageBuffer->GetData(),
@@ -307,11 +308,9 @@ bool FRecorderWorker::SaveDepthData(const FDepthCameraData& DepthData, const FSt
 
 bool FRecorderWorker::SaveRGBData(const FRGBCameraData& RGBData, const FString& Directory)
 {
-    // Early validation of data
-    if (RGBData.Data.Num() == 0 || RGBData.Width <= 0 || RGBData.Height <= 0)
+    if (RGBData.Data.Num() == 0 || RGBData.Width <= 0 || RGBData.Height <= 0 ||
+        RGBData.Data.Num() != RGBData.Width * RGBData.Height)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Invalid RGB data dimensions: W=%d H=%d DataSize=%d"), 
-            RGBData.Width, RGBData.Height, RGBData.Data.Num());
         return false;
     }
 
@@ -323,49 +322,30 @@ bool FRecorderWorker::SaveRGBData(const FRGBCameraData& RGBData, const FString& 
     
     const FString FilePath = FPaths::Combine(Directory, TEXT("RGB"), Filename);
     
-    // Save metadata
-    const FString MetaPath = FPaths::ChangeExtension(FilePath, TEXT(".meta"));
-    const FString MetaContent = FString::Printf(
-        TEXT("Timestamp: %.9f\nWidth: %d\nHeight: %d\nSensorIndex: %d\n"),
-        RGBData.Timestamp,
-        RGBData.Width,
-        RGBData.Height,
-        RGBData.SensorIndex
-    );
-    
-    FFileHelper::SaveStringToFile(MetaContent, *MetaPath);
-    
-    // Validate expected buffer size
     const int32 ExpectedSize = RGBData.Width * RGBData.Height * 4;
     auto* ImageBuffer = BufferPool.AcquireBuffer(ExpectedSize);
-    if (!ImageBuffer)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to acquire image buffer"));
-        return false;
-    }
+    if (!ImageBuffer) return false;
     
-    // Ensure buffer has correct size
     ImageBuffer->SetNum(ExpectedSize, false);
     
-    // Convert to RGBA format with bounds checking
-    const int32 NumPixels = FMath::Min(RGBData.Data.Num(), RGBData.Width * RGBData.Height);
+    // Optimized memory copy using raw pointers
+    uint8* Dest = ImageBuffer->GetData();
+    const int32 NumPixels = RGBData.Data.Num();
+    
+    // Vectorizable loop
     for (int32 i = 0; i < NumPixels; ++i)
     {
+        const auto& Color = RGBData.Data[i];
         const int32 Base = i * 4;
-        if (Base + 3 < ImageBuffer->Num())  // Bounds check
-        {
-            const auto& Color = RGBData.Data[i];
-            (*ImageBuffer)[Base] = Color.R;
-            (*ImageBuffer)[Base + 1] = Color.G;
-            (*ImageBuffer)[Base + 2] = Color.B;
-            (*ImageBuffer)[Base + 3] = Color.A;
-        }
+        Dest[Base] = Color.R;
+        Dest[Base + 1] = Color.G;
+        Dest[Base + 2] = Color.B;
+        Dest[Base + 3] = Color.A;
     }
     
-    // Save as PNG
+    // Use cached wrapper
     bool bSuccess = false;
-    auto& ImageWrapper = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
-    auto PNGWrapper = ImageWrapper.CreateImageWrapper(EImageFormat::PNG);
+    auto* PNGWrapper = FImageWrapperCache::Get().GetPNGWrapper();
     
     if (PNGWrapper && PNGWrapper->SetRaw(
         ImageBuffer->GetData(),

@@ -23,6 +23,28 @@ struct FRecorderConfig
     static constexpr int32 MaxPendingTasks = 1000;         // Maximum pending async tasks
 };
 
+class IImageWrapper;
+
+class FImageWrapperCache
+{
+public:
+    static FImageWrapperCache& Get()
+    {
+        static FImageWrapperCache Instance;
+        return Instance;
+    }
+
+    IImageWrapper* GetPNGWrapper();
+
+private:
+    FImageWrapperCache() : ImageWrapperModule(nullptr) {}
+    ~FImageWrapperCache() = default;
+    
+    FCriticalSection CacheLock;
+    IImageWrapperModule* ImageWrapperModule;
+    TSharedPtr<IImageWrapper> PNGWrapper;
+};
+
 // Sensor data structures
 struct FSensorData
 {
