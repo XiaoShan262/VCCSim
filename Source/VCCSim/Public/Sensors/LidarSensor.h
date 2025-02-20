@@ -4,8 +4,10 @@
 #include "GameFramework/Actor.h"
 #include "SensorBase.h"
 #include "Utils/InsMeshHolder.h"
+
 #include "LidarSensor.generated.h"
 
+class ARecorder;
 
 struct FLidarPoint
 {
@@ -13,7 +15,7 @@ struct FLidarPoint
     bool bHit = false;
 };
 
-class LiDARConfig : public SensorConfig
+class FLiDarConfig : public FSensorConfig
 {
 public:
     int32 NumRays = 32;
@@ -33,7 +35,7 @@ class VCCSIM_API ULidarComponent : public UPrimitiveComponent
 public:
     
     ULidarComponent();
-    void LCConfigure(const LiDARConfig& Config);
+    void RConfigure(const FLiDarConfig& Config, ARecorder* Recorder);
 
     UFUNCTION(BlueprintCallable, Category = "Lidar")
     void FirstCall();
@@ -43,14 +45,16 @@ public:
     void VisualizePointCloud();
 
     // For grpc server
-    TArray<FLidarPoint> GetPointCloudData();
-    TPair<TArray<FLidarPoint>, FVCCSimOdom> GetPointCloudDataAndOdom();
+    TArray<FVector3f> GetPointCloudData();
+    TPair<TArray<FVector3f>, FVCCSimOdom> GetPointCloudDataAndOdom();
 
 protected:
     
     virtual void BeginPlay() override;
     virtual void OnComponentCreated() override;
-    TArray<FLidarPoint> PerformLineTraces(FVCCSimOdom* Odom = nullptr);
+    virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+        FActorComponentTickFunction* ThisTickFunction) override;
+    TArray<FVector3f> PerformLineTraces(FVCCSimOdom* Odom = nullptr);
 
 public:
 
@@ -73,14 +77,15 @@ public:
     // Constructor properties
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lidar|Debug")
     int ActualNumPoints = -1;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lidar|Config")
-    bool bReturnUnHitPoints = false;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LiDAR|Performance")
     float UpdateThresholdDistance = 1.f;  // In centimeters
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LiDAR|Performance")
     float UpdateThresholdAngle = 0.5; // In degrees
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "LiDAR|Performance")
     int32 ChunkSize = 256;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lidar|Debug")
+    bool bRecorded = false;
 
     UPROPERTY()
     UInsMeshHolder* MeshHolder;
@@ -109,4 +114,11 @@ private:
     bool ShouldUpdateCache(const FVector& NewLocation,
         const FRotator& NewRotation) const;
     TArray<FTransform> GetHitTransforms() const;
+
+    UPROPERTY()
+    AActor* ParentActor = nullptr;
+    UPROPERTY()
+    ARecorder* RecorderPtr = nullptr;
+    float RecordInterval = -1.f;
+    float TimeSinceLastCapture = 0.f;
 };

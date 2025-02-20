@@ -7,8 +7,10 @@ enum class ESensorType : uint8
 	RGBCamera
 };
 
-class SensorConfig
+class FSensorConfig
 {
+public:
+	float RecordInterval = 0.2f;
 };
 
 struct FVCCSimOdom

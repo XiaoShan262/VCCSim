@@ -38,7 +38,6 @@ FVCCSimConfig ParseConfig()
             TCHAR_TO_UTF8(FPlatformProcess::UserDir()));
         Config.VCCSim.DefaultDronePawn = (*VCCSim)["DefaultDronePawn"].value_or("");
         Config.VCCSim.DefaultCarPawn = (*VCCSim)["DefaultCarPawn"].value_or("");
-        Config.VCCSim.RecordInterval = (*VCCSim)["RecordInterval"].value_or(0.2);
         Config.VCCSim.BufferSize = (*VCCSim)["BufferSize"].value_or(100);
         
         if (auto staticMeshActors = (*VCCSim)["StaticMeshActor"].as_array())
@@ -74,111 +73,92 @@ FVCCSimConfig ParseConfig()
         }
     }
 
-    if (auto robots = Tbl["Robots"].as_array())
+    if (auto Robots = Tbl["Robots"].as_array())
     {
-        for (const auto& robot : *robots)
+        for (const auto& Robot : *Robots)
         {
             FRobot r;
-            auto robotDetails = *robot.as_table();
+            auto RobotDetails = *Robot.as_table();
 
-            r.UETag = robotDetails["UETag"].value_or("None"sv);
+            r.UETag = RobotDetails["UETag"].value_or("None"sv);
             if (r.UETag == "None")
             {
                 UE_LOG(LogTemp, Error, TEXT("ParseConfig: Robot name not found!"));
                 continue;
             }
 
-            r.Type = robotDetails["Type"].value_or("None"sv) == "Drone" ?
+            r.Type = RobotDetails["Type"].value_or("None"sv) == "Drone" ?
                 EPawnType::Drone : EPawnType::Car;
-            
-            if (auto recordComps = robotDetails["RecordComponents"].as_array())
-            {
-                for (const auto& comp : *recordComps)
-                {
-                    if (auto compName = comp.value<std::string>())
-                    {
-                        if (*compName == "Lidar")
-                        {
-                            r.RecordComponents.insert(ESensorType::Lidar);
-                        }
-                        else if (*compName == "DepthCamera")
-                        {
-                            r.RecordComponents.insert(ESensorType::DepthCamera);
-                        }
-                        else if (*compName == "RGBCamera")
-                        {
-                            r.RecordComponents.insert(ESensorType::RGBCamera);
-                        }
-                        else
-                        {
-                            UE_LOG(LogTemp, Warning, TEXT("ParseConfig: Component %s not found!"),
-                                *FString{UTF8_TO_TCHAR((*compName).c_str())});
-                        }
-                    }
-                }
-            }
 
-            if (auto ComponentConfigs = robotDetails["ComponentConfigs"].as_table())
+            r.RecordInterval = RobotDetails["RecordInterval"].value_or(-1.0);
+
+            if (auto ComponentConfigs = RobotDetails["ComponentConfigs"].as_table())
             {
                 for (const auto& [comp_name, comp_config] : *ComponentConfigs)
                 {
                     if (comp_name == "Lidar")
                     {
-                        auto lidarConfig = std::make_shared<LiDARConfig>();
-                        if (auto table = comp_config.as_table())
+                        auto LiDarConfig = std::make_shared<FLiDarConfig>();
+                        if (auto Table = comp_config.as_table())
                         {
-                            lidarConfig->NumRays =
-                                (*table)["NumRays"].value_or(lidarConfig->NumRays);
-                            lidarConfig->NumPoints =
-                                (*table)["NumPoints"].value_or(lidarConfig->NumPoints);
-                            lidarConfig->ScannerRangeInner =
-                                (*table)["ScannerRangeInner"].value_or(lidarConfig->ScannerRangeInner);
-                            lidarConfig->ScannerRangeOuter =
-                                (*table)["ScannerRangeOuter"].value_or(lidarConfig->ScannerRangeOuter);
-                            lidarConfig->ScannerAngleUp =
-                                (*table)["ScannerAngle"].value_or(lidarConfig->ScannerAngleUp);
-                            lidarConfig->ScannerAngleDown =
-                                (*table)["ScannerAngleDown"].value_or(lidarConfig->ScannerAngleDown);
-                            lidarConfig->bVisualizePoints =
-                                (*table)["bVisualizePoints"].value_or(lidarConfig->bVisualizePoints);
+                            LiDarConfig->RecordInterval =
+                                (*Table)["RecordInterval"].value_or(LiDarConfig->RecordInterval);
+                            LiDarConfig->NumRays =
+                                (*Table)["NumRays"].value_or(LiDarConfig->NumRays);
+                            LiDarConfig->NumPoints =
+                                (*Table)["NumPoints"].value_or(LiDarConfig->NumPoints);
+                            LiDarConfig->ScannerRangeInner =
+                                (*Table)["ScannerRangeInner"].value_or(LiDarConfig->ScannerRangeInner);
+                            LiDarConfig->ScannerRangeOuter =
+                                (*Table)["ScannerRangeOuter"].value_or(LiDarConfig->ScannerRangeOuter);
+                            LiDarConfig->ScannerAngleUp =
+                                (*Table)["ScannerAngle"].value_or(LiDarConfig->ScannerAngleUp);
+                            LiDarConfig->ScannerAngleDown =
+                                (*Table)["ScannerAngleDown"].value_or(LiDarConfig->ScannerAngleDown);
+                            LiDarConfig->bVisualizePoints =
+                                (*Table)["bVisualizePoints"].value_or(LiDarConfig->bVisualizePoints);
                         }
-                        r.ComponentConfigs.push_back({ESensorType::Lidar, lidarConfig});
+                        r.ComponentConfigs.push_back({ESensorType::Lidar, LiDarConfig});
                     }
                     else if (comp_name == "DepthCamera")
                     {
-                        auto depthConfig = std::make_shared<DepthCameraConfig>();
-                        if (auto table = comp_config.as_table())
+                        auto DepthConfig = std::make_shared<FDepthCameraConfig>();
+                        if (auto Table = comp_config.as_table())
                         {
-                            depthConfig->FOV = (*table)["FOV"].value_or(depthConfig->FOV);
-                            depthConfig->MaxRange = (*table)["MaxRange"].value_or(depthConfig->MaxRange);
-                            depthConfig->MinRange = (*table)["MinRange"].value_or(depthConfig->MinRange);
-                            depthConfig->Width = (*table)["Width"].value_or(depthConfig->Width);
-                            depthConfig->Height = (*table)["Height"].value_or(depthConfig->Height);
-                            depthConfig->bOrthographic =
-                                (*table)["bOrthographic"].value_or(depthConfig->bOrthographic);
-                            depthConfig->OrthoWidth =
-                                (*table)["OrthoWidth"].value_or(depthConfig->OrthoWidth);
-                            depthConfig->CaptureRate =
-                                (*table)["CaptureRate"].value_or(depthConfig->CaptureRate);
+                            DepthConfig->RecordInterval =
+                                (*Table)["RecordInterval"].value_or(DepthConfig->RecordInterval);
+                            DepthConfig->FOV = (*Table)["FOV"].value_or(DepthConfig->FOV);
+                            DepthConfig->MaxRange = (*Table)["MaxRange"].value_or(DepthConfig->MaxRange);
+                            DepthConfig->MinRange = (*Table)["MinRange"].value_or(DepthConfig->MinRange);
+                            DepthConfig->Width = (*Table)["Width"].value_or(DepthConfig->Width);
+                            DepthConfig->Height = (*Table)["Height"].value_or(DepthConfig->Height);
+                            DepthConfig->bOrthographic =
+                                (*Table)["bOrthographic"].value_or(DepthConfig->bOrthographic);
+                            DepthConfig->OrthoWidth =
+                                (*Table)["OrthoWidth"].value_or(DepthConfig->OrthoWidth);
+                            DepthConfig->CaptureRate =
+                                (*Table)["CaptureRate"].value_or(DepthConfig->CaptureRate);
                         }
-                        r.ComponentConfigs.push_back({ESensorType::DepthCamera, depthConfig});
+                        r.ComponentConfigs.push_back({ESensorType::DepthCamera, DepthConfig});
                     }
                     else if (comp_name == "RGBCamera")
                     {
-                        auto rgbConfig = std::make_shared<FRGBCameraConfig>();
-                        if (auto table = comp_config.as_table())
+                        auto RGBConfig = std::make_shared<FRGBCameraConfig>();
+                        if (auto Table = comp_config.as_table())
                         {
-                            rgbConfig->FOV = (*table)["FOV"].value_or(rgbConfig->FOV);
-                            rgbConfig->Width = (*table)["Width"].value_or(rgbConfig->Width);
-                            rgbConfig->Height = (*table)["Height"].value_or(rgbConfig->Height);
-                            rgbConfig->bOrthographic =
-                                (*table)["bOrthographic"].value_or(rgbConfig->bOrthographic);
-                            rgbConfig->OrthoWidth =
-                                (*table)["OrthoWidth"].value_or(rgbConfig->OrthoWidth);
-                            rgbConfig->CaptureRate =
-                                (*table)["CaptureRate"].value_or(rgbConfig->CaptureRate);
+                            RGBConfig->RecordInterval =
+                                (*Table)["RecordInterval"].value_or(RGBConfig->RecordInterval);
+                            RGBConfig->FOV = (*Table)["FOV"].value_or(RGBConfig->FOV);
+                            RGBConfig->Width = (*Table)["Width"].value_or(RGBConfig->Width);
+                            RGBConfig->Height = (*Table)["Height"].value_or(RGBConfig->Height);
+                            RGBConfig->bOrthographic =
+                                (*Table)["bOrthographic"].value_or(RGBConfig->bOrthographic);
+                            RGBConfig->OrthoWidth =
+                                (*Table)["OrthoWidth"].value_or(RGBConfig->OrthoWidth);
+                            RGBConfig->CaptureRate =
+                                (*Table)["CaptureRate"].value_or(RGBConfig->CaptureRate);
                         }
-                        r.ComponentConfigs.push_back({ESensorType::RGBCamera, rgbConfig});
+                        r.ComponentConfigs.push_back({ESensorType::RGBCamera, RGBConfig});
                     }
                     else
                     {

@@ -32,8 +32,9 @@
 #include "RHIResources.h"
 #include "CameraSensor.generated.h"
 
+class ARecorder;
 
-class FRGBCameraConfig : public SensorConfig
+class FRGBCameraConfig : public FSensorConfig
 {
 public:
     float FOV = 90.0f;
@@ -54,21 +55,19 @@ class VCCSIM_API URGBCameraComponent : public UPrimitiveComponent
 
 public:
     URGBCameraComponent();
-    void RGBConfigure(const FRGBCameraConfig& Config);
+    void RConfigure(const FRGBCameraConfig& Config, ARecorder* Recorder);
     bool IsConfigured() const { return bBPConfigured; }
     
     int32 GetCameraIndex() const { return CameraIndex; }
     
     void SetCaptureComponent() const;
     void InitializeRenderTargets();
+    
     void ProcessRGBTextureAsyncRaw();
     void ProcessRGBTextureAsync(TFunction<void(const TArray<FColor>&)> OnComplete);
 
     UFUNCTION(BlueprintCallable, Category = "RGBCamera")
     void CaptureRGBScene();
-
-    // For Recorder
-    // TArray<FColor> 
     
     // For GRPC call
     void AsyncGetRGBImageData(TFunction<void(const TArray<FColor>&)> Callback);
@@ -103,6 +102,9 @@ public:
 
     UPROPERTY(BlueprintAssignable, Category = "Camera")
     FOnRGBImageCaptured OnRGBImageCaptured;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RGBCamera|Debug")
+    bool bRecorded = false;
     
     UPROPERTY()
     UTextureRenderTarget2D* RGBRenderTarget = nullptr;
@@ -122,6 +124,12 @@ private:
     UPROPERTY()
     USceneCaptureComponent2D* CaptureComponent = nullptr;
     TArray<FColor> RGBData;
-    float TimeSinceLastCapture;
     FCriticalSection DataLock;
+
+    UPROPERTY()
+    AActor* ParentActor = nullptr;
+    UPROPERTY()
+    ARecorder* RecorderPtr = nullptr;
+    float RecordInterval = -1.f;
+    float TimeSinceLastCapture;
 };

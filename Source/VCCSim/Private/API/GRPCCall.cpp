@@ -32,9 +32,9 @@ void LidarGetDataCall::ProcessRequest()
         for (const auto& Point : RCMap_[request_.name()]->GetPointCloudData())
         {
             VCCSim::Point* LidarPoint = response_.add_data();
-            LidarPoint->set_x(Point.Location.X);
-            LidarPoint->set_y(Point.Location.Y);
-            LidarPoint->set_z(Point.Location.Z);
+            LidarPoint->set_x(Point.X);
+            LidarPoint->set_y(Point.Y);
+            LidarPoint->set_z(Point.Z);
         }
     }
     else
@@ -126,9 +126,9 @@ void LidarGetDataAndOdomCall::ProcessRequest()
         for (const auto& Point : DataAndOdom.Key)
         {
             VCCSim::Point* LidarPoint = response_.mutable_data()->add_data();
-            LidarPoint->set_x(Point.Location.X);
-            LidarPoint->set_y(Point.Location.Y);
-            LidarPoint->set_z(Point.Location.Z);
+            LidarPoint->set_x(Point.X);
+            LidarPoint->set_y(Point.Y);
+            LidarPoint->set_z(Point.Z);
         }
         
         VCCSim::Pose* PoseData = response_.mutable_odom()->mutable_pose();

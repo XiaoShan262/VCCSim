@@ -1,5 +1,5 @@
 ﻿#include "Sensors/DepthCamera.h"
-
+#include "Simulation/Recorder.h"
 #include "RenderingThread.h"
 #include "Async/AsyncWork.h"
 #include "Windows/WindowsHWrapper.h"
@@ -20,7 +20,8 @@ UDepthCameraComponent::UDepthCameraComponent()
     PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UDepthCameraComponent::DCConfigure(const DepthCameraConfig& Config)
+void UDepthCameraComponent::RConfigure(
+    const FDepthCameraConfig& Config, ARecorder* Recorder)
 {  
     FOV = Config.FOV;
     MaxRange = Config.MaxRange;
@@ -31,7 +32,19 @@ void UDepthCameraComponent::DCConfigure(const DepthCameraConfig& Config)
     OrthoWidth = Config.OrthoWidth;
     CaptureRate = 1.f / Config.CaptureRate;
     SetCaptureComponent();
-    PrimaryComponentTick.bCanEverTick = false;
+
+    if (Config.RecordInterval > 0)
+    {
+        ParentActor = GetOwner();
+        RecorderPtr = Recorder;
+        RecordInterval = Config.RecordInterval;
+        PrimaryComponentTick.bCanEverTick = true;
+        bRecorded = true;
+    }
+    else
+    {
+        PrimaryComponentTick.bCanEverTick = false;
+    }
 
     bBPConfigured = true;
 }

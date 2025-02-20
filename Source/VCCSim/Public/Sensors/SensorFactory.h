@@ -10,5 +10,5 @@ public:
 	// Attention: This function is not responsible for configure the sensor.
 	static UPrimitiveComponent* CreateSensor(
 		ESensorType SensorType, AActor* Owner, FName Name,
-		const SensorConfig& Config);
+		const FSensorConfig& Config);
 };

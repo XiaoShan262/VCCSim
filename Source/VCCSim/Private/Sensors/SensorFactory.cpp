@@ -4,7 +4,7 @@
 #include "Sensors/CameraSensor.h"
 
 UPrimitiveComponent* FSensorFactory::CreateSensor(
-	ESensorType SensorType, AActor* Owner, FName Name, const SensorConfig& Config)
+	ESensorType SensorType, AActor* Owner, FName Name, const FSensorConfig& Config)
 {
 	if (!Owner)
 	{
@@ -18,8 +18,8 @@ UPrimitiveComponent* FSensorFactory::CreateSensor(
 	{
 	case ESensorType::Lidar:
 		{
-			const LiDARConfig* LidarConfig =
-				static_cast<const LiDARConfig*>(&Config);
+			const FLiDarConfig* LidarConfig =
+				static_cast<const FLiDarConfig*>(&Config);
 			if (!LidarConfig)
 			{
 				UE_LOG(LogTemp, Error, TEXT("FSensorFactory::CreateSensor: "
@@ -40,8 +40,8 @@ UPrimitiveComponent* FSensorFactory::CreateSensor(
 		}
 	case ESensorType::DepthCamera:
 		{
-			const DepthCameraConfig* DepthConfig =
-				static_cast<const DepthCameraConfig*>(&Config);
+			const FDepthCameraConfig* DepthConfig =
+				static_cast<const FDepthCameraConfig*>(&Config);
 			if (!DepthConfig)
 			{
 				UE_LOG(LogTemp, Error, TEXT("FSensorFactory::CreateSensor: "

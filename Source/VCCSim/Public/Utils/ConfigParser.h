@@ -6,14 +6,14 @@
 #include "Sensors/SensorBase.h"
 #include "Pawns/PawnBase.h"
 
-using FComponentConfig = std::pair<ESensorType, std::shared_ptr<SensorConfig>>;
+using FComponentConfig = std::pair<ESensorType, std::shared_ptr<FSensorConfig>>;
 
 struct FRobot
 {
 	std::string UETag;
 	EPawnType Type;
 	std::vector<FComponentConfig> ComponentConfigs;
-	std::set<ESensorType> RecordComponents;
+	float RecordInterval;
 };
 
 struct FVCCSimPresets
@@ -27,7 +27,6 @@ struct FVCCSimPresets
 	std::string LogSavePath;
 	std::string DefaultDronePawn;
 	std::string DefaultCarPawn;
-	float RecordInterval;
 	int BufferSize;
 };
 

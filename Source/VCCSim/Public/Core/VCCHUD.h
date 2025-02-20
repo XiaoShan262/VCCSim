@@ -77,5 +77,5 @@ private:
 	UPROPERTY()
 	AActor* Holder = nullptr;
 	UPROPERTY()
-	ARecorder* Recorder = nullptr;
+	ARecorder* Recorder;
 };

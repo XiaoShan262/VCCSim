@@ -10,6 +10,7 @@
 #include "RHIResources.h"
 #include "DepthCamera.generated.h"
 
+class ARecorder;
 
 struct FDCPoint
 {
@@ -17,7 +18,7 @@ struct FDCPoint
     FDCPoint() : Location(FVector::ZeroVector){}
 };
 
-class DepthCameraConfig: public SensorConfig
+class FDepthCameraConfig: public FSensorConfig
 {
 public:
     float FOV = 90.0f;
@@ -37,9 +38,11 @@ class VCCSIM_API UDepthCameraComponent : public UPrimitiveComponent
 
 public:
     UDepthCameraComponent();
-    void DCConfigure(const DepthCameraConfig& Config);
+    void RConfigure(const FDepthCameraConfig& Config, ARecorder* Recorder);
     bool IsConfigured() const { return bBPConfigured; }
+    
     int32 GetCameraIndex() const { return CameraIndex; }
+    
     void SetCaptureComponent() const;
 
     UFUNCTION(BlueprintCallable, Category = "DepthCamera")
@@ -90,6 +93,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DepthCamera|Performance")
     float CaptureRate;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lidar|Debug")
+    bool bRecorded = false;
+
     UPROPERTY()
     UTextureRenderTarget2D* DepthRenderTarget = nullptr;
     
@@ -100,6 +106,12 @@ private:
     USceneCaptureComponent2D* CaptureComponent = nullptr;
     TArray<FDCPoint> PointCloudData;
     TArray<FFloat16Color> DepthData;
-    float TimeSinceLastCapture;
     FCriticalSection DataLock;
+    
+    UPROPERTY()
+    AActor* ParentActor = nullptr;
+    UPROPERTY()
+    ARecorder* RecorderPtr = nullptr;
+    float RecordInterval = -1.f;
+    float TimeSinceLastCapture;
 };

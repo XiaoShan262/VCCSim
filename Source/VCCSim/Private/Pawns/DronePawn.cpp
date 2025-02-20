@@ -1,5 +1,6 @@
 ﻿#include "Pawns/DronePawn.h"
 #include "Components/BoxComponent.h"
+#include "Simulation/Recorder.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
@@ -61,9 +62,33 @@ void AQuadcopterDrone::BeginPlay()
     AddMapContext();
 }
 
+void AQuadcopterDrone::SetRecorder(ARecorder* InRecorder)
+{
+    Recorder = InRecorder;
+}
+
+void AQuadcopterDrone::SetRecordInterval(const float& Interval)
+{
+    RecordInterval = Interval;
+    bRecorded = true;
+}
+
 void AQuadcopterDrone::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
+    if (bRecorded)
+    {
+        TimeSinceLastCapture += DeltaTime;
+        if (TimeSinceLastCapture >= RecordInterval)
+        {
+            TimeSinceLastCapture = 0.0f;
+            FPoseData PoseData;
+            PoseData.Location = GetActorLocation();
+            PoseData.Rotation = GetActorRotation();
+            Recorder->SubmitPoseData(this, MoveTemp(PoseData));
+        }
+    }
 
     DealWithTarget(DeltaTime);
     ApplyThrust(DeltaTime);

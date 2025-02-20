@@ -5,6 +5,8 @@
 #include "InputActionValue.h"
 #include "DronePawn.generated.h"
 
+class ARecorder;
+
 UCLASS()
 class VCCSIM_API AQuadcopterDrone : public APawn
 {
@@ -12,6 +14,10 @@ class VCCSIM_API AQuadcopterDrone : public APawn
 
 public:
     AQuadcopterDrone();
+    UFUNCTION()
+    void SetRecorder(ARecorder* InRecorder);
+    UFUNCTION()
+    void SetRecordInterval(const float& Interval);
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(
         class UInputComponent* PlayerInputComponent) override;
@@ -33,6 +39,9 @@ public:
     float PositionThreshold = 0.5f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RatSim|Target")
     float RotationThreshold = 0.5f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RatSim|Debug")
+    bool bRecorded = false;
     
 protected:
     virtual void BeginPlay() override;
@@ -128,4 +137,9 @@ private:
     void ApplyThrust(float DeltaTime);
     void ApplyRotation(float DeltaTime);
     void StabilizeDrone(float DeltaTime);
+
+    UPROPERTY()
+    ARecorder* Recorder;
+    float RecordInterval = -1.f;
+    float TimeSinceLastCapture = 0.f;
 };

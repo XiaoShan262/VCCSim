@@ -21,7 +21,7 @@
 // SOFTWARE.
 
 #include "Sensors/CameraSensor.h"
-
+#include "Simulation/Recorder.h"
 #include "RenderingThread.h"
 #include "Async/AsyncWork.h"
 #include "Windows/WindowsHWrapper.h"
@@ -42,6 +42,7 @@ URGBCameraComponent::URGBCameraComponent()
 void URGBCameraComponent::BeginPlay()
 {
     Super::BeginPlay();
+    
     InitializeRenderTargets();
     SetCaptureComponent();
     
@@ -66,18 +67,40 @@ void URGBCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
     
-    if (bAutoCapture)
+    // if (bAutoCapture)
+    // {
+    //     TimeSinceLastCapture += DeltaTime;
+    //     if (TimeSinceLastCapture >= CaptureRate)
+    //     {
+    //         CaptureRGBScene();
+    //         TimeSinceLastCapture = 0.0f;
+    //     }
+    // }
+    if (bRecorded)
     {
         TimeSinceLastCapture += DeltaTime;
-        if (TimeSinceLastCapture >= CaptureRate)
+        if (TimeSinceLastCapture >= RecordInterval)
         {
-            CaptureRGBScene();
             TimeSinceLastCapture = 0.0f;
+            CaptureRGBScene();
+            ProcessRGBTextureAsyncRaw();
+            if (RecorderPtr)
+            {
+                FRGBCameraData DepthData;
+                DepthData.Timestamp = FPlatformTime::Seconds();
+                DepthData.SensorIndex = CameraIndex;
+                DepthData.Width = Width;
+                DepthData.Height = Height;
+                DepthData.Data = RGBData;
+                RecorderPtr->SubmitRGBData(ParentActor, MoveTemp(DepthData));
+                UE_LOG(LogTemp, Warning, TEXT("Submitted RGB data"));
+            }
         }
     }
 }
 
-void URGBCameraComponent::RGBConfigure(const FRGBCameraConfig& Config)
+void URGBCameraComponent::RConfigure(
+    const FRGBCameraConfig& Config, ARecorder* Recorder)
 { 
     FOV = Config.FOV;
     Width = Config.Width;
@@ -89,8 +112,20 @@ void URGBCameraComponent::RGBConfigure(const FRGBCameraConfig& Config)
         PF_B8G8R8A8, false);
     RGBRenderTarget->UpdateResource();
     SetCaptureComponent();
-    PrimaryComponentTick.bCanEverTick = false;
-
+    
+    if (Config.RecordInterval > 0)
+    {
+        ParentActor = GetOwner();
+        RecorderPtr = Recorder;
+        RecordInterval = Config.RecordInterval;
+        SetComponentTickEnabled(true);
+        bRecorded = true;
+    }
+    else
+    {
+        SetComponentTickEnabled(false);
+    }
+    
     bBPConfigured = true;
 }
 

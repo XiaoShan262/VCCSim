@@ -1,4 +1,5 @@
 #include "Sensors/LidarSensor.h"
+#include "Simulation/Recorder.h"
 #include "DrawDebugHelpers.h"
 #include "Async/Async.h"
 #include "Misc/FileHelper.h"
@@ -9,7 +10,7 @@
 
 ULidarComponent::ULidarComponent()
 {
-    PrimaryComponentTick.bCanEverTick = true;
+    PrimaryComponentTick.bCanEverTick = false;
     MeshHolder = nullptr;
 
 	QueryParams.bTraceComplex = true;
@@ -17,7 +18,8 @@ ULidarComponent::ULidarComponent()
 	QueryParams.bReturnFaceIndex = false;
 }
 
-void ULidarComponent::LCConfigure(const LiDARConfig& Config)
+void ULidarComponent::RConfigure(
+	const FLiDarConfig& Config, ARecorder* Recorder)
 {
 	NumPoints = Config.NumPoints;
 	NumRays = Config.NumRays;
@@ -26,7 +28,19 @@ void ULidarComponent::LCConfigure(const LiDARConfig& Config)
 	ScannerAngleUp = Config.ScannerAngleUp;
 	ScannerAngleDown = Config.ScannerAngleDown;
 	bVisualizePoints = Config.bVisualizePoints;
-	PrimaryComponentTick.bCanEverTick = false;
+	
+	if (Config.RecordInterval > 0)
+	{
+		ParentActor = GetOwner();
+		RecorderPtr = Recorder;
+		RecordInterval = Config.RecordInterval;
+		PrimaryComponentTick.bCanEverTick = true;
+		bRecorded = true;
+	}
+	else
+	{
+		PrimaryComponentTick.bCanEverTick = false;
+	}
 }
 
 void ULidarComponent::BeginPlay()
@@ -58,7 +72,31 @@ void ULidarComponent::OnComponentCreated()
 	InitSensor();
 }
 
-TArray<FLidarPoint> ULidarComponent::PerformLineTraces(FVCCSimOdom* Odom)
+void ULidarComponent::TickComponent(
+	float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+
+	if (bRecorded)
+	{
+		TimeSinceLastCapture += DeltaTime;
+		if (TimeSinceLastCapture >= RecordInterval)
+		{
+			FLidarData LidarData;
+			LidarData.Timestamp = FPlatformTime::Seconds();
+			LidarData.Data = PerformLineTraces(nullptr);
+			TimeSinceLastCapture = 0.0f;
+			if (RecorderPtr)
+			{
+				RecorderPtr->SubmitLidarData(ParentActor, MoveTemp(LidarData));
+				UE_LOG(LogTemp, Warning, TEXT("Submitted Lidar data"));
+			}
+		}
+	}
+}
+
+TArray<FVector3f> ULidarComponent::PerformLineTraces(FVCCSimOdom* Odom)
 {
     if (!GetWorld())
     {
@@ -92,43 +130,41 @@ TArray<FLidarPoint> ULidarComponent::PerformLineTraces(FVCCSimOdom* Odom)
 	});
 
 	// Collect valid points
-	TArray<FLidarPoint> ValidPoints;
-	if (bReturnUnHitPoints)
-	{
-		ValidPoints = PointPool;
-	}
-	else
-	{
-		ValidPoints.Reserve(ActualNumPoints);
-		FCriticalSection CriticalSection;  // For thread-safe array access
+	TArray<FVector3f> ValidPoints;
+	
+	ValidPoints.Reserve(ActualNumPoints);
+	FCriticalSection CriticalSection;  // For thread-safe array access
 
-		// Process chunks in parallel
-		ParallelFor(NumChunks, [&](int32 ChunkIndex)
+	// Process chunks in parallel
+	ParallelFor(NumChunks, [&](int32 ChunkIndex)
+	{
+		// Create local array for this chunk's valid points
+		TArray<FVector3f> ChunkValidPoints;
+		ChunkValidPoints.Reserve(ChunkSize);
+
+		const int32 StartIdx = ChunkStartIndices[ChunkIndex];
+		const int32 EndIdx = ChunkEndIndices[ChunkIndex];
+
+		// Collect hit points for this chunk
+		for (int32 Index = StartIdx; Index < EndIdx; ++Index)
 		{
-			// Create local array for this chunk's valid points
-			TArray<FLidarPoint> ChunkValidPoints;
-			ChunkValidPoints.Reserve(ChunkSize);
-
-			const int32 StartIdx = ChunkStartIndices[ChunkIndex];
-			const int32 EndIdx = ChunkEndIndices[ChunkIndex];
-
-			// Collect hit points for this chunk
-			for (int32 Index = StartIdx; Index < EndIdx; ++Index)
+			if (PointPool[Index].bHit)
 			{
-				if (PointPool[Index].bHit)
-				{
-					ChunkValidPoints.Add(PointPool[Index]);
-				}
+				ChunkValidPoints.Add({
+					static_cast<float>(PointPool[Index].Location.X),
+					static_cast<float>(PointPool[Index].Location.Y),
+					static_cast<float>(PointPool[Index].Location.Z)
+				});
 			}
+		}
 
-			// Add chunk results to main array
-			if (ChunkValidPoints.Num() > 0)
-			{
-				FScopeLock Lock(&CriticalSection);
-				ValidPoints.Append(ChunkValidPoints);
-			}
-		});
-	}
+		// Add chunk results to main array
+		if (ChunkValidPoints.Num() > 0)
+		{
+			FScopeLock Lock(&CriticalSection);
+			ValidPoints.Append(ChunkValidPoints);
+		}
+	});
 	
 	return ValidPoints;
 }
@@ -250,7 +286,7 @@ void ULidarComponent::InitSensor()
 	}
 }
 
-TArray<FLidarPoint> ULidarComponent::GetPointCloudData()
+TArray<FVector3f> ULidarComponent::GetPointCloudData()
 {
 	const auto ans = PerformLineTraces();
 	
@@ -266,7 +302,7 @@ TArray<FLidarPoint> ULidarComponent::GetPointCloudData()
 	return ans;
 }
 
-TPair<TArray<FLidarPoint>, FVCCSimOdom> ULidarComponent::GetPointCloudDataAndOdom()
+TPair<TArray<FVector3f>, FVCCSimOdom> ULidarComponent::GetPointCloudDataAndOdom()
 {
 	FVCCSimOdom Pose;
 	const auto ans = PerformLineTraces(&Pose);

@@ -1,66 +1,477 @@
 #include "Simulation/Recorder.h"
-#include "Sensors/LidarSensor.h"
-#include "Kismet/GameplayStatics.h"
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "Async/AsyncWork.h"
-#include "Serialization/BufferArchive.h"
-#include "Serialization/MemoryWriter.h"
-#include "Serialization/MemoryReader.h"
+#include "IImageWrapper.h"
+#include "IImageWrapperModule.h"
+#include "Modules/ModuleManager.h"
+#include "Containers/StringConv.h"
+#include "HAL/PlatformFileManager.h"
 
-ARecorder::ARecorder()
+// BufferPool implementation
+TArray<uint8>* FBufferPool::AcquireBuffer(int32 Size)
 {
-    // No need for Tick anymore as we're using event-driven approach
+    FScopeLock Lock(&PoolLock);
+    if (Buffers.Num() > 0)
+    {
+        auto* Buffer = Buffers.Pop();
+        Buffer->SetNum(Size, false);
+        return Buffer;
+    }
+    return new TArray<uint8>();
+}
+
+void FBufferPool::ReleaseBuffer(TArray<uint8>* Buffer)
+{
+    if (!Buffer) return;
+    FScopeLock Lock(&PoolLock);
+    if (Buffers.Num() < FRecorderConfig::MaxPoolSize)
+    {
+        Buffer->Empty();
+        Buffers.Push(Buffer);
+    }
+    else
+    {
+        delete Buffer;
+    }
+}
+
+// AdaptiveSleeper implementation
+void FAdaptiveSleeper::Sleep()
+{
+    if (EmptyCount++ > 10)
+    {
+        CurrentInterval = FMath::Min(
+            CurrentInterval * FRecorderConfig::SleepMultiplier,
+            FRecorderConfig::MaxSleepInterval
+        );
+    }
+    else
+    {
+        CurrentInterval = FRecorderConfig::MinSleepInterval;
+    }
+    FPlatformProcess::Sleep(CurrentInterval);
+}
+
+void FAdaptiveSleeper::Reset()
+{
+    CurrentInterval = FRecorderConfig::MinSleepInterval;
+    EmptyCount = 0;
+}
+
+// RecorderWorker implementation
+FRecorderWorker::FRecorderWorker(const FString& InBasePath, int32 InBufferSize)
+    : BasePath(InBasePath)
+    , BufferSize(InBufferSize)
+    , Thread(nullptr)
+    , bStopRequested(false)
+{
+    Thread = FRunnableThread::Create(this,
+        TEXT("RecorderWorker"), 0, TPri_Normal);
+}
+
+FRecorderWorker::~FRecorderWorker()
+{
+    Stop();
+    if (Thread)
+    {
+        Thread->WaitForCompletion();
+        delete Thread;
+        Thread = nullptr;
+    }
+}
+
+bool FRecorderWorker::Init()
+{
+    return true;
+}
+
+void FRecorderWorker::Stop()
+{
+    bStopRequested = true;
+}
+
+void FRecorderWorker::Exit()
+{
+    FScopeLock Lock(&QueueLock);
+    DataQueue.Empty();
+}
+
+uint32 FRecorderWorker::Run()
+{
+    TArray<FPawnBuffers> BatchBuffers;
+    BatchBuffers.Reserve(FRecorderConfig::BatchSize);
+    
+    while (!bStopRequested)
+    {
+        const int32 ProcessedCount = ProcessBatch(BatchBuffers);
+        
+        if (ProcessedCount == 0)
+        {
+            Sleeper.Sleep();
+        }
+        else
+        {
+            Sleeper.Reset();
+        }
+    }
+    
+    return 0;
+}
+
+int32 FRecorderWorker::ProcessBatch(TArray<FPawnBuffers>& BatchBuffers)
+{
+    BatchBuffers.Reset();
+    int32 ProcessedCount = 0;
+    
+    {
+        FScopeLock Lock(&QueueLock);
+        while (BatchBuffers.Num() < FRecorderConfig::BatchSize && !DataQueue.IsEmpty())
+        {
+            FPawnBuffers Buffer(BufferSize);
+            if (DataQueue.Dequeue(Buffer))
+            {
+                BatchBuffers.Add(MoveTemp(Buffer));
+                ProcessedCount++;
+            }
+        }
+    }
+    
+    for (auto& Buffer : BatchBuffers)
+    {
+        ProcessBuffer(Buffer);
+    }
+    
+    return ProcessedCount;
+}
+
+void FRecorderWorker::ProcessBuffer(FPawnBuffers& Buffer)
+{
+    // Process Pose data
+    {
+        FPoseData PoseData;
+        while (Buffer.Pose.Dequeue(PoseData))
+        {
+            const FString PoseContent = FString::Printf(
+                TEXT("%.9f %.6f %.6f %.6f %.6f %.6f %.6f\n"),
+                PoseData.Timestamp,
+                PoseData.Location.X, PoseData.Location.Y, PoseData.Location.Z,
+                PoseData.Rotation.Roll, PoseData.Rotation.Pitch, PoseData.Rotation.Yaw
+            );
+            
+            FFileHelper::SaveStringToFile(
+                PoseContent,
+                *FPaths::Combine(BasePath, TEXT("pose.txt")),
+                FFileHelper::EEncodingOptions::AutoDetect,
+                &IFileManager::Get(),
+                FILEWRITE_Append
+            );
+        }
+    }
+    
+    // Process LiDAR data
+    {
+        FLidarData LidarData;
+        while (Buffer.Lidar.Dequeue(LidarData))
+        {
+            SaveLidarData(LidarData, BasePath);
+        }
+    }
+    
+    // Process Depth data
+    {
+        FDepthCameraData DepthData;
+        while (Buffer.DepthC.Dequeue(DepthData))
+        {
+            SaveDepthData(DepthData, BasePath);
+        }
+    }
+    
+    // Process RGB data
+    {
+        FRGBCameraData RGBData;
+        while (Buffer.RGBC.Dequeue(RGBData))
+        {
+            SaveRGBData(RGBData, BasePath);
+        }
+    }
+}
+
+bool FRecorderWorker::SaveLidarData(const FLidarData& LidarData, const FString& Directory)
+{
+    const FString Filename = FString::Printf(
+        TEXT("%s.ply"),
+        *FString::Printf(TEXT("%.9f"), LidarData.Timestamp)
+    );
+    
+    const FString FilePath = FPaths::Combine(Directory, TEXT("Lidar"), Filename);
+    
+    TStringBuilder<FRecorderConfig::StringReserveSize> PlyContent;
+    
+    // Write PLY header
+    PlyContent.Append(
+        TEXT("ply\nformat ascii 1.0\n")
+        TEXT("comment Timestamp: ")
+    ).Appendf(TEXT("%.9f\n"), LidarData.Timestamp);
+    
+    PlyContent.Appendf(
+        TEXT("element vertex %d\n")
+        TEXT("property float x\nproperty float y\nproperty float z\n")
+        TEXT("property int hit\nend_header\n"),
+        LidarData.Data.Num()
+    );
+    
+    // Write points
+    for (const auto& Point : LidarData.Data)
+    {
+        PlyContent.Appendf(
+            TEXT("%f %f %f %d\n"),
+            Point.X,
+            Point.Y,
+            Point.Z,
+            1
+        );
+    }
+    
+    return FFileHelper::SaveStringToFile(PlyContent.ToString(), *FilePath);
+}
+
+bool FRecorderWorker::SaveDepthData(const FDepthCameraData& DepthData, const FString& Directory)
+{
+    const FString Filename = FString::Printf(
+        TEXT("%s_%d.png"),
+        *FString::Printf(TEXT("%.9f"), DepthData.Timestamp),
+        DepthData.SensorIndex
+    );
+    
+    const FString FilePath = FPaths::Combine(Directory, TEXT("Depth"), Filename);
+    
+    // Save metadata
+    const FString MetaPath = FPaths::ChangeExtension(FilePath, TEXT(".meta"));
+    const FString MetaContent = FString::Printf(
+        TEXT("Timestamp: %.9f\nWidth: %d\nHeight: %d\nSensorIndex: %d\n"),
+        DepthData.Timestamp,
+        DepthData.Width,
+        DepthData.Height,
+        DepthData.SensorIndex
+    );
+    
+    FFileHelper::SaveStringToFile(MetaContent, *MetaPath);
+    
+    auto* ImageBuffer = BufferPool.AcquireBuffer(DepthData.Width * DepthData.Height);
+    
+    // Find depth range
+    float MinDepth = FLT_MAX;
+    float MaxDepth = -FLT_MAX;
+    
+    for (float Depth : DepthData.Data)
+    {
+        MinDepth = FMath::Min(MinDepth, Depth);
+        MaxDepth = FMath::Max(MaxDepth, Depth);
+    }
+    
+    // Convert to grayscale
+    const float Range = MaxDepth - MinDepth;
+    if (Range > 0.0f)
+    {
+        const float Scale = 255.0f / Range;
+        for (int32 i = 0; i < DepthData.Data.Num(); ++i)
+        {
+            (*ImageBuffer)[i] = FMath::RoundToInt((DepthData.Data[i] - MinDepth) * Scale);
+        }
+    }
+    
+    // Save as PNG
+    auto& ImageWrapper = FModuleManager::LoadModuleChecked<IImageWrapperModule>
+        (FName("ImageWrapper"));
+    
+    auto PNGWrapper = ImageWrapper.CreateImageWrapper(EImageFormat::PNG);
+    bool bSuccess = false;
+    
+    if (PNGWrapper && PNGWrapper->SetRaw(
+        ImageBuffer->GetData(),
+        ImageBuffer->Num(),
+        DepthData.Width,
+        DepthData.Height,
+        ERGBFormat::Gray,
+        8))
+    {
+        const TArray64<uint8>& PNGData = PNGWrapper->GetCompressed();
+        bSuccess = FFileHelper::SaveArrayToFile(PNGData, *FilePath);
+    }
+    
+    BufferPool.ReleaseBuffer(ImageBuffer);
+    return bSuccess;
+}
+
+bool FRecorderWorker::SaveRGBData(const FRGBCameraData& RGBData, const FString& Directory)
+{
+    const FString Filename = FString::Printf(
+        TEXT("%s_%d.png"),
+        *FString::Printf(TEXT("%.9f"), RGBData.Timestamp),
+        RGBData.SensorIndex
+    );
+    
+    const FString FilePath = FPaths::Combine(Directory, TEXT("RGB"), Filename);
+    
+    // Save metadata
+    const FString MetaPath = FPaths::ChangeExtension(FilePath, TEXT(".meta"));
+    const FString MetaContent = FString::Printf(
+        TEXT("Timestamp: %.9f\nWidth: %d\nHeight: %d\nSensorIndex: %d\n"),
+        RGBData.Timestamp,
+        RGBData.Width,
+        RGBData.Height,
+        RGBData.SensorIndex
+    );
+    
+    FFileHelper::SaveStringToFile(MetaContent, *MetaPath);
+    
+    auto* ImageBuffer = BufferPool.AcquireBuffer(RGBData.Width * RGBData.Height * 4);
+    
+    // Convert to RGBA format
+    for (int32 i = 0; i < RGBData.Data.Num(); ++i)
+    {
+        const int32 Base = i * 4;
+        const auto& Color = RGBData.Data[i];
+        (*ImageBuffer)[Base] = Color.R;
+        (*ImageBuffer)[Base + 1] = Color.G;
+        (*ImageBuffer)[Base + 2] = Color.B;
+        (*ImageBuffer)[Base + 3] = Color.A;
+    }
+    
+    // Save as PNG
+    auto& ImageWrapper = FModuleManager::LoadModuleChecked<IImageWrapperModule>
+        (FName("ImageWrapper"));
+    
+    auto PNGWrapper = ImageWrapper.CreateImageWrapper(EImageFormat::PNG);
+    bool bSuccess = false;
+    
+    if (PNGWrapper && PNGWrapper->SetRaw(
+        ImageBuffer->GetData(),
+        ImageBuffer->Num(),
+        RGBData.Width,
+        RGBData.Height,
+        ERGBFormat::RGBA,
+        8))
+    {
+        const TArray64<uint8>& PNGData = PNGWrapper->GetCompressed();
+        bSuccess = FFileHelper::SaveArrayToFile(PNGData, *FilePath);
+    }
+    
+    BufferPool.ReleaseBuffer(ImageBuffer);
+    return bSuccess;
+}
+
+void FRecorderWorker::EnqueueBuffer(FPawnBuffers&& Buffer)
+{
+    if (bStopRequested) return;
+    
+    FScopeLock Lock(&QueueLock);
+    DataQueue.Enqueue(MoveTemp(Buffer));
+}
+
+bool FRecorderWorker::IsQueueEmpty() const
+{
+    FScopeLock Lock(&QueueLock);
+    return DataQueue.IsEmpty();
+}
+
+// AsyncSubmitTask implementation
+FAsyncSubmitTask::FAsyncSubmitTask(ARecorder* InRecorder, FSubmissionData&& InData)
+    : Recorder(InRecorder)
+    , SubmissionData(MoveTemp(InData))
+{
+}
+
+void FAsyncSubmitTask::DoWork()
+{
+    if (!ensureMsgf(Recorder && SubmissionData.Pawn,
+        TEXT("Invalid recorder or pawn in AsyncSubmitTask")))
+    {
+        return;
+    }
+    
+    FScopeLock Lock(&Recorder->BufferLock);
+    
+    auto& PawnBuffers = Recorder->ActiveBuffers.FindOrAdd(
+        SubmissionData.Pawn,
+        FPawnBuffers(Recorder->BufferSize)
+    );
+    
+    auto EnqueueDataWithRetry = [this, &PawnBuffers](auto& Buffer, auto&& Data)
+    {
+        if (!Buffer.Enqueue(MoveTemp(Data)))
+        {
+            Recorder->SwapAndProcessBuffers();
+            Buffer.Enqueue(MoveTemp(Data));
+        }
+    };
+    
+    switch (SubmissionData.Type)
+    {
+        case EDataType::Pose:
+            EnqueueDataWithRetry(PawnBuffers.Pose,
+                *static_cast<FPoseData*>(SubmissionData.Data.Get()));
+            break;
+        case EDataType::Lidar:
+            EnqueueDataWithRetry(PawnBuffers.Lidar,
+                *static_cast<FLidarData*>(SubmissionData.Data.Get()));
+            break;
+        case EDataType::DepthC:
+            EnqueueDataWithRetry(PawnBuffers.DepthC,
+                *static_cast<FDepthCameraData*>(SubmissionData.Data.Get()));
+            break;
+        case EDataType::RGBC:
+            EnqueueDataWithRetry(PawnBuffers.RGBC,
+                *static_cast<FRGBCameraData*>(SubmissionData.Data.Get()));
+            break;
+    }
+    
+    --Recorder->PendingTasks;
+}
+
+// ARecorder implementation
+ARecorder::ARecorder()
+    : bRecording(false)
+    , PendingTasks(0)
+{
     PrimaryActorTick.bCanEverTick = false;
+}
+
+void ARecorder::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    Super::EndPlay(EndPlayReason);
+    StopRecording();
 }
 
 void ARecorder::StartRecording()
 {
     if (bRecording) return;
     
-    // Create base directory with timestamp
-    FDateTime Now = FDateTime::Now();
     CurrentRecordingPath = FPaths::Combine(
         LogBasePath,
-        Now.ToString(TEXT("%Y%m%d_%H%M%S"))
+        FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S"))
     );
     
-    // Create directories
     IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-    PlatformFile.CreateDirectoryTree(*CurrentRecordingPath);
-    
-    // Initialize directories for each pawn
-    for (auto& Pair : RecordComponents)
+    if (!PlatformFile.CreateDirectoryTree(*CurrentRecordingPath))
     {
-        auto Pawn = Pair.Key;
-        const FRecordComponents& Components = Pair.Value;
-        
-        FString PawnDir = FPaths::Combine(CurrentRecordingPath, 
-            FString::Printf(TEXT("Pawn_%d"), Pawn->GetUniqueID()));
-        PlatformFile.CreateDirectoryTree(*PawnDir);
-        
-        // Create sensor subdirectories if needed
-        if (Components.LidarComponents.Num() > 0)
-        {
-            PlatformFile.CreateDirectoryTree(*FPaths::Combine(PawnDir, TEXT("Lidar")));
-        }
-        if (Components.DepthCameraComponents.Num() > 0)
-        {
-            PlatformFile.CreateDirectoryTree(*FPaths::Combine(PawnDir, TEXT("Depth")));
-        }
-        if (Components.RGBCameraComponents.Num() > 0)
-        {
-            PlatformFile.CreateDirectoryTree(*FPaths::Combine(PawnDir, TEXT("RGB")));
-        }
-        
-        // Initialize ring buffers for this pawn
-        PoseBuffers.Add(Pawn, TRingBuffer<FPoseData>(BufferSize));
-        LidarBuffers.Add(Pawn, TRingBuffer<FLidarData>(BufferSize));
-        DepthBuffers.Add(Pawn, TRingBuffer<FDepthCameraData>(BufferSize));
-        RGBBuffers.Add(Pawn, TRingBuffer<FRGBCameraData>(BufferSize));
+        UE_LOG(LogTemp, Error, TEXT("Failed to create recording directory: %s"),
+            *CurrentRecordingPath);
+        return;
     }
     
-    // Start the recorder worker
+    // Create directories for each registered pawn
+    for (const auto& PawnEntry : PawnDirectories)
+    {
+        if (!CreatePawnDirectories(PawnEntry.Key, PawnEntry.Value))
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to create pawn directories"));
+            return;
+        }
+    }
+    
+    // Initialize worker
     RecorderWorker = MakeUnique<FRecorderWorker>(CurrentRecordingPath, BufferSize);
     bRecording = true;
 }
@@ -71,246 +482,196 @@ void ARecorder::StopRecording()
     
     bRecording = false;
     
-    // Process any remaining data
+    // Wait for pending tasks with timeout
+    const double StartTime = FPlatformTime::Seconds();
+    constexpr double TimeoutSeconds = 5.0;
+    
+    while (PendingTasks > 0)
+    {
+        FPlatformProcess::Sleep(0.01f);
+        if (FPlatformTime::Seconds() - StartTime > TimeoutSeconds)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Timeout waiting for pending tasks. Remaining: %d"),
+                PendingTasks.Load());
+            break;
+        }
+    }
+    
+    // Process remaining buffers
     SwapAndProcessBuffers();
     
-    // Stop and clean up the worker
+    // Wait for worker to finish
     if (RecorderWorker)
     {
-        RecorderWorker->Stop();
+        const double WorkerStartTime = FPlatformTime::Seconds();
+        while (!RecorderWorker->IsQueueEmpty())
+        {
+            FPlatformProcess::Sleep(0.01f);
+            if (FPlatformTime::Seconds() - WorkerStartTime > TimeoutSeconds)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Timeout waiting for worker queue to empty"));
+                break;
+            }
+        }
         RecorderWorker.Reset();
     }
     
-    // Clear all buffers
-    PoseBuffers.Empty();
-    LidarBuffers.Empty();
-    DepthBuffers.Empty();
-    RGBBuffers.Empty();
-}
-
-void ARecorder::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-    Super::EndPlay(EndPlayReason);
-    StopRecording();
-}
-
-void ARecorder::SubmitPoseData(TSharedPtr<APawn> Pawn, const FPoseData& Data)
-{
-    if (!bRecording || !Pawn.IsValid()) return;
-    
-    FScopeLock Lock(&DataLock);
-    if (!PoseBuffers.Contains(Pawn))
+    // Clear buffers
     {
-        PoseBuffers.Add(Pawn, TRingBuffer<FPoseData>(BufferSize));
-    }
-    
-    if (!PoseBuffers[Pawn].Enqueue(Data))
-    {
-        // Buffer full, trigger processing
-        SwapAndProcessBuffers();
-        // Try again after processing
-        PoseBuffers[Pawn].Enqueue(Data);
+        FScopeLock Lock(&BufferLock);
+        ActiveBuffers.Empty();
+        ProcessingBuffers.Empty();
     }
 }
 
-void ARecorder::SubmitLidarData(TSharedPtr<APawn> Pawn, const FLidarData& Data)
+void ARecorder::RegisterPawn(
+    AActor* Pawn, bool bHasLidar, bool bHasDepth, bool bHasRGB)
 {
-    if (!bRecording || !Pawn.IsValid()) return;
+    if (!Pawn) return;
     
-    FScopeLock Lock(&DataLock);
-    if (!LidarBuffers.Contains(Pawn))
+    FPawnDirectoryInfo DirInfo;
+    DirInfo.bHasLidar = bHasLidar;
+    DirInfo.bHasDepth = bHasDepth;
+    DirInfo.bHasRGB = bHasRGB;
+    
+    if (bRecording)
     {
-        LidarBuffers.Add(Pawn, TRingBuffer<FLidarData>(BufferSize));
+        if (!CreatePawnDirectories(Pawn, DirInfo))
+        {
+            UE_LOG(LogTemp, Error, TEXT("Failed to create directories for new pawn"));
+            return;
+        }
     }
     
-    if (!LidarBuffers[Pawn].Enqueue(Data))
-    {
-        SwapAndProcessBuffers();
-        LidarBuffers[Pawn].Enqueue(Data);
-    }
+    PawnDirectories.Add(Pawn, DirInfo);
 }
 
-void ARecorder::SubmitDepthData(TSharedPtr<APawn> Pawn, const FDepthCameraData& Data)
+bool ARecorder::CreatePawnDirectories(
+    AActor* Pawn, const FPawnDirectoryInfo& DirInfo)
 {
-    if (!bRecording || !Pawn.IsValid()) return;
+    if (!Pawn) return false;
     
-    FScopeLock Lock(&DataLock);
-    if (!DepthBuffers.Contains(Pawn))
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    
+    // Create pawn base directory
+    const FString PawnName = Pawn->GetName();
+    const FString PawnDirectory = FPaths::Combine(CurrentRecordingPath, PawnName);
+    
+    if (!PlatformFile.CreateDirectoryTree(*PawnDirectory))
     {
-        DepthBuffers.Add(Pawn, TRingBuffer<FDepthCameraData>(BufferSize));
+        return false;
     }
     
-    if (!DepthBuffers[Pawn].Enqueue(Data))
-    {
-        SwapAndProcessBuffers();
-        DepthBuffers[Pawn].Enqueue(Data);
-    }
-}
-
-void ARecorder::SubmitRGBData(TSharedPtr<APawn> Pawn, const FRGBCameraData& Data)
-{
-    if (!bRecording || !Pawn.IsValid()) return;
+    // Create sensor-specific directories
+    TArray<TPair<bool, FString>> DirectoriesToCreate = {
+        {DirInfo.bHasLidar, TEXT("Lidar")},
+        {DirInfo.bHasDepth, TEXT("Depth")},
+        {DirInfo.bHasRGB, TEXT("RGB")}
+    };
     
-    FScopeLock Lock(&DataLock);
-    if (!RGBBuffers.Contains(Pawn))
+    for (const auto& DirPair : DirectoriesToCreate)
     {
-        RGBBuffers.Add(Pawn, TRingBuffer<FRGBCameraData>(BufferSize));
+        if (DirPair.Key)
+        {
+            const FString SensorPath = FPaths::Combine(PawnDirectory, DirPair.Value);
+            if (!PlatformFile.CreateDirectoryTree(*SensorPath))
+            {
+                return false;
+            }
+        }
     }
     
-    if (!RGBBuffers[Pawn].Enqueue(Data))
+    // Create and initialize pose file
+    const FString PoseFilePath = FPaths::Combine(PawnDirectory, TEXT("pose.txt"));
+    if (!FFileHelper::SaveStringToFile(
+        TEXT("# Timestamp X Y Z Roll Pitch Yaw\n"),
+        *PoseFilePath,
+        FFileHelper::EEncodingOptions::AutoDetect))
     {
-        SwapAndProcessBuffers();
-        RGBBuffers[Pawn].Enqueue(Data);
+        return false;
     }
+    
+    return true;
 }
 
 void ARecorder::SwapAndProcessBuffers()
 {
-    // Create buffers with accumulated data for each pawn
-    for (auto& PawnPair : RecordComponents)
+    FScopeLock Lock(&BufferLock);
+    
+    // Swap active and processing buffers
+    ProcessingBuffers.Empty();
+    for (auto& PawnBuffer : ActiveBuffers)
     {
-        auto Pawn = PawnPair.Key;
-        if (!Pawn.IsValid()) continue;
-        
-        FPawnBuffer Buffer;
-        Buffer.PawnDirectory = FPaths::Combine(CurrentRecordingPath, 
-            FString::Printf(TEXT("Pawn_%d"), Pawn->GetUniqueID()));
-        Buffer.PoseFilePath = FPaths::Combine(Buffer.PawnDirectory, TEXT("pose.txt"));
-        
-        // Collect pose data
-        if (PoseBuffers.Contains(Pawn))
+        ProcessingBuffers.Add(PawnBuffer.Key, MoveTemp(PawnBuffer.Value));
+        PawnBuffer.Value = FPawnBuffers(BufferSize);
+    }
+    
+    // Submit processing buffers to worker
+    if (RecorderWorker && !ProcessingBuffers.IsEmpty())
+    {
+        for (auto& PawnBuffer : ProcessingBuffers)
         {
-            FPoseData Data;
-            while (PoseBuffers[Pawn].Dequeue(Data))
-            {
-                Buffer.PoseBuffer.Add(Data);
-            }
-        }
-        
-        // Collect Lidar data
-        if (LidarBuffers.Contains(Pawn))
-        {
-            FLidarData Data;
-            while (LidarBuffers[Pawn].Dequeue(Data))
-            {
-                Buffer.LidarBuffer.Add(Data);
-            }
-        }
-        
-        // Collect Depth Camera data
-        if (DepthBuffers.Contains(Pawn))
-        {
-            FDepthCameraData Data;
-            while (DepthBuffers[Pawn].Dequeue(Data))
-            {
-                Buffer.DepthCameraBuffer.Add(Data);
-            }
-        }
-        
-        // Collect RGB Camera data
-        if (RGBBuffers.Contains(Pawn))
-        {
-            FRGBCameraData Data;
-            while (RGBBuffers[Pawn].Dequeue(Data))
-            {
-                Buffer.RGBCameraBuffer.Add(Data);
-            }
-        }
-        
-        // Submit to worker if we have any data
-        if (Buffer.PoseBuffer.Num() > 0 || 
-            Buffer.LidarBuffer.Num() > 0 ||
-            Buffer.DepthCameraBuffer.Num() > 0 ||
-            Buffer.RGBCameraBuffer.Num() > 0)
-        {
-            if (RecorderWorker)
-            {
-                RecorderWorker->EnqueueData(Buffer);
-            }
+            RecorderWorker->EnqueueBuffer(MoveTemp(PawnBuffer.Value));
         }
     }
 }
 
-uint32 FRecorderWorker::Run()
+template<typename T>
+void ARecorder::SubmitData(AActor* Pawn, T&& Data, EDataType Type)
 {
-    while (!bStopRequested)
+    if (!bRecording || !Pawn || PendingTasks >= FRecorderConfig::MaxPendingTasks)
     {
-        FPawnBuffer Data;
-        bool HasData = false;
-        
-        {
-            FScopeLock Lock(&QueueLock);
-            HasData = DataQueue.Dequeue(Data);
-        }
-        
-        if (HasData)
-        {
-            // Save pose data
-            if (Data.PoseBuffer.Num() > 0)
-            {
-                FString PoseContent;
-                for (const FPoseData& Pose : Data.PoseBuffer)
-                {
-                    PoseContent += FString::Printf(TEXT("%.6f %.3f %.3f %.3f %.3f %.3f %.3f\n"),
-                        Pose.Timestamp,
-                        Pose.Location.X, Pose.Location.Y, Pose.Location.Z,
-                        Pose.Rotation.Roll, Pose.Rotation.Pitch, Pose.Rotation.Yaw);
-                }
-                
-                FFileHelper::SaveStringToFile(PoseContent, *Data.PoseFilePath, 
-                    FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), 
-                    FILEWRITE_Append);
-            }
-            
-            // Save Lidar data
-            for (const FLidarData& LidarData : Data.LidarBuffer)
-            {
-                FString Filename = FString::Printf(TEXT("%.6f.dat"), LidarData.Timestamp);
-                FString FilePath = FPaths::Combine(Data.PawnDirectory, TEXT("Lidar"), Filename);
-                
-                // Serialize Lidar data to binary
-                TArray<uint8> SerializedData;
-                FMemoryWriter MemWriter(SerializedData);
-                // MemWriter << LidarData.Data.Num();  // Write array size first
-                // for (const FLidarPoint& Point : LidarData.Data)
-                // {
-                //     // MemWriter << Point;
-                // }
-                FFileHelper::SaveArrayToFile(SerializedData, *FilePath);
-            }
-            
-            // Save Depth Camera data
-            for (const FDepthCameraData& DepthData : Data.DepthCameraBuffer)
-            {
-                FString Filename = FString::Printf(TEXT("%.6f_%d.dat"), 
-                    DepthData.Timestamp, DepthData.SensorIndex);
-                FString FilePath = FPaths::Combine(Data.PawnDirectory, TEXT("Depth"), Filename);
-                
-                TArray<uint8> SerializedData;
-                FMemoryWriter MemWriter(SerializedData);
-                // MemWriter << DepthData.Data;  // TArray<float> can be serialized directly
-                FFileHelper::SaveArrayToFile(SerializedData, *FilePath);
-            }
-            
-            // Save RGB Camera data
-            for (const FRGBCameraData& RGBData : Data.RGBCameraBuffer)
-            {
-                FString Filename = FString::Printf(TEXT("%.6f_%d.dat"), 
-                    RGBData.Timestamp, RGBData.SensorIndex);
-                FString FilePath = FPaths::Combine(Data.PawnDirectory, TEXT("RGB"), Filename);
-                
-                TArray<uint8> SerializedData;
-                FMemoryWriter MemWriter(SerializedData);
-                // MemWriter << RGBData.Data;  // TArray<FColor> can be serialized directly
-                FFileHelper::SaveArrayToFile(SerializedData, *FilePath);
-            }
-        }
-        else
-        {
-            // Sleep briefly if no data to process
-            FPlatformProcess::Sleep(0.001f);
-        }
+        return;
     }
     
-    return 0;
+    const auto* DirInfo = PawnDirectories.Find(Pawn);
+    if (!DirInfo)
+    {
+        return;
+    }
+    
+    // Type-specific validation
+    switch (Type)
+    {
+    case EDataType::Lidar:
+        if (!DirInfo->bHasLidar) return;
+        break;
+    case EDataType::DepthC:
+        if (!DirInfo->bHasDepth) return;
+        break;
+    case EDataType::RGBC:
+        if (!DirInfo->bHasRGB) return;
+        break;
+    default:
+        break;
+    }
+    
+    ++PendingTasks;
+    
+    FSubmissionData SubmissionData;
+    SubmissionData.Type = Type;
+    SubmissionData.Pawn = Pawn;
+    SubmissionData.Data = MakeShared<T>(MoveTemp(Data));
+    
+    (new FAsyncTask<FAsyncSubmitTask>(this, MoveTemp(SubmissionData)))->StartBackgroundTask();
+}
+
+void ARecorder::SubmitPoseData(AActor* Pawn, FPoseData&& Data)
+{
+    SubmitData<FPoseData>(Pawn, MoveTemp(Data), EDataType::Pose);
+}
+
+void ARecorder::SubmitLidarData(AActor* Pawn, FLidarData&& Data)
+{
+    SubmitData<FLidarData>(Pawn, MoveTemp(Data), EDataType::Lidar);
+}
+
+void ARecorder::SubmitDepthData(AActor* Pawn, FDepthCameraData&& Data)
+{
+    SubmitData<FDepthCameraData>(Pawn, MoveTemp(Data), EDataType::DepthC);
+}
+
+void ARecorder::SubmitRGBData(AActor* Pawn, FRGBCameraData&& Data)
+{
+    SubmitData<FRGBCameraData>(Pawn, MoveTemp(Data), EDataType::RGBC);
 }
