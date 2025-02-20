@@ -187,6 +187,7 @@ struct FPawnBuffers
     TRingBuffer<FLidarData> Lidar;
     TRingBuffer<FDepthCameraData> DepthC;
     TRingBuffer<FRGBCameraData> RGBC;
+    FString PawnDirectory;
 
     FPawnBuffers()
         : Pose(DefaultSize)
@@ -195,11 +196,12 @@ struct FPawnBuffers
         , RGBC(DefaultSize)
     {}
     
-    explicit FPawnBuffers(int32 Size) 
+    explicit FPawnBuffers(int32 Size, const FString& InPawnDirectory = TEXT("")) 
         : Pose(Size)
         , Lidar(Size)
         , DepthC(Size)
-        , RGBC(Size) 
+        , RGBC(Size)
+        , PawnDirectory(InPawnDirectory)
     {}
 
     // Delete copy constructor and assignment
@@ -212,6 +214,7 @@ struct FPawnBuffers
         , Lidar(MoveTemp(Other.Lidar))
         , DepthC(MoveTemp(Other.DepthC))
         , RGBC(MoveTemp(Other.RGBC))
+        , PawnDirectory(MoveTemp(Other.PawnDirectory))  // Add this line
     {}
 
     FPawnBuffers& operator=(FPawnBuffers&& Other) noexcept
@@ -222,6 +225,7 @@ struct FPawnBuffers
             Lidar = MoveTemp(Other.Lidar);
             DepthC = MoveTemp(Other.DepthC);
             RGBC = MoveTemp(Other.RGBC);
+            PawnDirectory = MoveTemp(Other.PawnDirectory);  // Add this line
         }
         return *this;
     }

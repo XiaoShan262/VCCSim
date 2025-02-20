@@ -38,12 +38,12 @@ void UDepthCameraComponent::RConfigure(
         ParentActor = GetOwner();
         RecorderPtr = Recorder;
         RecordInterval = Config.RecordInterval;
-        PrimaryComponentTick.bCanEverTick = true;
+        SetComponentTickEnabled(true);
         bRecorded = true;
     }
     else
     {
-        PrimaryComponentTick.bCanEverTick = false;
+        SetComponentTickEnabled(false);
     }
 
     bBPConfigured = true;

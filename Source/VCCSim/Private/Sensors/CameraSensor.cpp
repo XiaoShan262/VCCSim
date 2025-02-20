@@ -93,7 +93,6 @@ void URGBCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                 DepthData.Height = Height;
                 DepthData.Data = RGBData;
                 RecorderPtr->SubmitRGBData(ParentActor, MoveTemp(DepthData));
-                UE_LOG(LogTemp, Warning, TEXT("Submitted RGB data"));
             }
         }
     }

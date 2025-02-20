@@ -44,11 +44,11 @@ void AVCCHUD::BeginPlay()
     Recorder = GetWorld()->SpawnActor<ARecorder>(ARecorder::StaticClass(), FTransform::Identity);
     Recorder->LogBasePath = Config.VCCSim.LogSavePath.c_str();
     Recorder->BufferSize = Config.VCCSim.BufferSize;
+    Recorder->StartRecording();
     
     SetupWidgetsAndLS(Config);
     auto RCMaps = SetupActors(Config);
     RunServer(Config, Holder, RCMaps);
-    Recorder->StartRecording();
 }
 
 void AVCCHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)

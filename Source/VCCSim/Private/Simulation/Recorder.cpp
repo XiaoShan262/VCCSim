@@ -98,7 +98,7 @@ void FRecorderWorker::Exit()
 }
 
 uint32 FRecorderWorker::Run()
-{
+{    
     TArray<FPawnBuffers> BatchBuffers;
     BatchBuffers.Reserve(FRecorderConfig::BatchSize);
     
@@ -161,7 +161,7 @@ void FRecorderWorker::ProcessBuffer(FPawnBuffers& Buffer)
             
             FFileHelper::SaveStringToFile(
                 PoseContent,
-                *FPaths::Combine(BasePath, TEXT("pose.txt")),
+                *FPaths::Combine(Buffer.PawnDirectory, TEXT("pose.txt")),
                 FFileHelper::EEncodingOptions::AutoDetect,
                 &IFileManager::Get(),
                 FILEWRITE_Append
@@ -174,7 +174,7 @@ void FRecorderWorker::ProcessBuffer(FPawnBuffers& Buffer)
         FLidarData LidarData;
         while (Buffer.Lidar.Dequeue(LidarData))
         {
-            SaveLidarData(LidarData, BasePath);
+            SaveLidarData(LidarData, Buffer.PawnDirectory);
         }
     }
     
@@ -183,7 +183,7 @@ void FRecorderWorker::ProcessBuffer(FPawnBuffers& Buffer)
         FDepthCameraData DepthData;
         while (Buffer.DepthC.Dequeue(DepthData))
         {
-            SaveDepthData(DepthData, BasePath);
+            SaveDepthData(DepthData, Buffer.PawnDirectory);
         }
     }
     
@@ -192,7 +192,7 @@ void FRecorderWorker::ProcessBuffer(FPawnBuffers& Buffer)
         FRGBCameraData RGBData;
         while (Buffer.RGBC.Dequeue(RGBData))
         {
-            SaveRGBData(RGBData, BasePath);
+            SaveRGBData(RGBData, Buffer.PawnDirectory);
         }
     }
 }
@@ -203,8 +203,9 @@ bool FRecorderWorker::SaveLidarData(const FLidarData& LidarData, const FString& 
         TEXT("%s.ply"),
         *FString::Printf(TEXT("%.9f"), LidarData.Timestamp)
     );
-    
-    const FString FilePath = FPaths::Combine(Directory, TEXT("Lidar"), Filename);
+
+    const FString FilePath = FPaths::Combine(
+        FPaths::ConvertRelativePathToFull(Directory), TEXT("Lidar"), Filename);
     
     TStringBuilder<FRecorderConfig::StringReserveSize> PlyContent;
     
@@ -306,6 +307,14 @@ bool FRecorderWorker::SaveDepthData(const FDepthCameraData& DepthData, const FSt
 
 bool FRecorderWorker::SaveRGBData(const FRGBCameraData& RGBData, const FString& Directory)
 {
+    // Early validation of data
+    if (RGBData.Data.Num() == 0 || RGBData.Width <= 0 || RGBData.Height <= 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Invalid RGB data dimensions: W=%d H=%d DataSize=%d"), 
+            RGBData.Width, RGBData.Height, RGBData.Data.Num());
+        return false;
+    }
+
     const FString Filename = FString::Printf(
         TEXT("%s_%d.png"),
         *FString::Printf(TEXT("%.9f"), RGBData.Timestamp),
@@ -326,25 +335,37 @@ bool FRecorderWorker::SaveRGBData(const FRGBCameraData& RGBData, const FString& 
     
     FFileHelper::SaveStringToFile(MetaContent, *MetaPath);
     
-    auto* ImageBuffer = BufferPool.AcquireBuffer(RGBData.Width * RGBData.Height * 4);
+    // Validate expected buffer size
+    const int32 ExpectedSize = RGBData.Width * RGBData.Height * 4;
+    auto* ImageBuffer = BufferPool.AcquireBuffer(ExpectedSize);
+    if (!ImageBuffer)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to acquire image buffer"));
+        return false;
+    }
     
-    // Convert to RGBA format
-    for (int32 i = 0; i < RGBData.Data.Num(); ++i)
+    // Ensure buffer has correct size
+    ImageBuffer->SetNum(ExpectedSize, false);
+    
+    // Convert to RGBA format with bounds checking
+    const int32 NumPixels = FMath::Min(RGBData.Data.Num(), RGBData.Width * RGBData.Height);
+    for (int32 i = 0; i < NumPixels; ++i)
     {
         const int32 Base = i * 4;
-        const auto& Color = RGBData.Data[i];
-        (*ImageBuffer)[Base] = Color.R;
-        (*ImageBuffer)[Base + 1] = Color.G;
-        (*ImageBuffer)[Base + 2] = Color.B;
-        (*ImageBuffer)[Base + 3] = Color.A;
+        if (Base + 3 < ImageBuffer->Num())  // Bounds check
+        {
+            const auto& Color = RGBData.Data[i];
+            (*ImageBuffer)[Base] = Color.R;
+            (*ImageBuffer)[Base + 1] = Color.G;
+            (*ImageBuffer)[Base + 2] = Color.B;
+            (*ImageBuffer)[Base + 3] = Color.A;
+        }
     }
     
     // Save as PNG
-    auto& ImageWrapper = FModuleManager::LoadModuleChecked<IImageWrapperModule>
-        (FName("ImageWrapper"));
-    
-    auto PNGWrapper = ImageWrapper.CreateImageWrapper(EImageFormat::PNG);
     bool bSuccess = false;
+    auto& ImageWrapper = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+    auto PNGWrapper = ImageWrapper.CreateImageWrapper(EImageFormat::PNG);
     
     if (PNGWrapper && PNGWrapper->SetRaw(
         ImageBuffer->GetData(),
@@ -524,8 +545,7 @@ void ARecorder::StopRecording()
     }
 }
 
-void ARecorder::RegisterPawn(
-    AActor* Pawn, bool bHasLidar, bool bHasDepth, bool bHasRGB)
+void ARecorder::RegisterPawn(AActor* Pawn, bool bHasLidar, bool bHasDepth, bool bHasRGB)
 {
     if (!Pawn) return;
     
@@ -534,16 +554,29 @@ void ARecorder::RegisterPawn(
     DirInfo.bHasDepth = bHasDepth;
     DirInfo.bHasRGB = bHasRGB;
     
+    // Store the full directory path
+    DirInfo.PawnDirectory = FPaths::Combine(
+        CurrentRecordingPath.IsEmpty() ? LogBasePath : CurrentRecordingPath,
+        Pawn->GetName()
+    );
+    
     if (bRecording)
     {
         if (!CreatePawnDirectories(Pawn, DirInfo))
         {
-            UE_LOG(LogTemp, Error, TEXT("Failed to create directories for new pawn"));
+            UE_LOG(LogTemp, Error, TEXT("Failed to create directories for pawn: %s"), *Pawn->GetName());
             return;
         }
     }
     
     PawnDirectories.Add(Pawn, DirInfo);
+    
+    // Initialize buffers with the correct directory
+    FScopeLock Lock(&BufferLock);
+    if (!ActiveBuffers.Contains(Pawn))
+    {
+        ActiveBuffers.Add(Pawn, FPawnBuffers(BufferSize, DirInfo.PawnDirectory));
+    }
 }
 
 bool ARecorder::CreatePawnDirectories(
@@ -602,8 +635,14 @@ void ARecorder::SwapAndProcessBuffers()
     ProcessingBuffers.Empty();
     for (auto& PawnBuffer : ActiveBuffers)
     {
+        const FPawnDirectoryInfo* DirInfo = PawnDirectories.Find(PawnBuffer.Key);
+        if (!DirInfo)
+        {
+            continue;
+        }
+        
         ProcessingBuffers.Add(PawnBuffer.Key, MoveTemp(PawnBuffer.Value));
-        PawnBuffer.Value = FPawnBuffers(BufferSize);
+        PawnBuffer.Value = FPawnBuffers(BufferSize, DirInfo->PawnDirectory);
     }
     
     // Submit processing buffers to worker
@@ -619,6 +658,19 @@ void ARecorder::SwapAndProcessBuffers()
 template<typename T>
 void ARecorder::SubmitData(AActor* Pawn, T&& Data, EDataType Type)
 {
+    if (!bRecording)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Data submitted while not recording"));
+        return;
+    }
+    
+    if (!PawnDirectories.Contains(Pawn))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Pawn not registered: %s"), 
+            *Pawn->GetName());
+        return;
+    }
+    
     if (!bRecording || !Pawn || PendingTasks >= FRecorderConfig::MaxPendingTasks)
     {
         return;
@@ -673,5 +725,20 @@ void ARecorder::SubmitDepthData(AActor* Pawn, FDepthCameraData&& Data)
 
 void ARecorder::SubmitRGBData(AActor* Pawn, FRGBCameraData&& Data)
 {
+    // Validate data before submission
+    if (Data.Width <= 0 || Data.Height <= 0 || Data.Data.Num() == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Invalid RGB data submitted: W=%d H=%d DataSize=%d"), 
+            Data.Width, Data.Height, Data.Data.Num());
+        return;
+    }
+    
+    if (Data.Data.Num() != Data.Width * Data.Height)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("RGB data size mismatch: Expected %d, Got %d"), 
+            Data.Width * Data.Height, Data.Data.Num());
+        return;
+    }
+    
     SubmitData<FRGBCameraData>(Pawn, MoveTemp(Data), EDataType::RGBC);
 }

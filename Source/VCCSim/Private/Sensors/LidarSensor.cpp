@@ -10,7 +10,8 @@
 
 ULidarComponent::ULidarComponent()
 {
-    PrimaryComponentTick.bCanEverTick = false;
+    PrimaryComponentTick.bCanEverTick = true;
+	
     MeshHolder = nullptr;
 
 	QueryParams.bTraceComplex = true;
@@ -34,12 +35,12 @@ void ULidarComponent::RConfigure(
 		ParentActor = GetOwner();
 		RecorderPtr = Recorder;
 		RecordInterval = Config.RecordInterval;
-		PrimaryComponentTick.bCanEverTick = true;
+		SetComponentTickEnabled(true);
 		bRecorded = true;
 	}
 	else
 	{
-		PrimaryComponentTick.bCanEverTick = false;
+		SetComponentTickEnabled(false);
 	}
 }
 
@@ -90,7 +91,6 @@ void ULidarComponent::TickComponent(
 			if (RecorderPtr)
 			{
 				RecorderPtr->SubmitLidarData(ParentActor, MoveTemp(LidarData));
-				UE_LOG(LogTemp, Warning, TEXT("Submitted Lidar data"));
 			}
 		}
 	}
