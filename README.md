@@ -1,12 +1,12 @@
 # VCCSim
 
-VCCSim is a plugin for simulating robots(Drone and Car) in Unreal Engine 5.
+VCCSim is an advanced research-oriented simulation framework built on Unreal Engine 5, designed to push the boundaries of robotic simulation for academic and industrial applications. Leveraging UE5's cutting-edge rendering capabilities, VCCSim delivers photorealistic environments that significantly reduce the Sim2Real gap while providing a highly optimized computational backbone for multi-agent, distributed simulations. The framework features sophisticated parallel processing and asynchronous execution patterns specifically engineered for multi-machine deployments, enabling researchers to conduct complex experiments with unprecedented efficiency and accuracy. VCCSim currently supports drone and autonomous vehicle simulations with plans for expanding to additional robotic platforms, offering a comprehensive toolkit for robotics researchers developing and validating perception, control, and AI algorithms in visually faithful and physically accurate virtual environments.
 
 *Attention: This work is still in early development and may not be stable. Please use it with caution.*
 
 ## Development Environment
 
-For now, we are using the following development environment.
+I am using the following development environment.
 
 We recommend using the same environment to avoid compatibility issues.
 
@@ -27,6 +27,7 @@ We recommend using the same environment to avoid compatibility issues.
    ```bash
     git clone --recurse-submodules https://github.com/Marmiya/VCCSim
    ```
+
    If you have already cloned the repository without the `--recurse-submodules` option, you can clone the submodules with the command below.
 
    ```bash
@@ -69,8 +70,56 @@ We recommend using the same environment to avoid compatibility issues.
 
    The default place of 'RSConfig.toml' file is `/Plugins/VCCSim/Source/VCCSim`. But you can change the path in the `YourUser/VCCSim` directory.
 
+## Keyboard Controls Reference
+
+### General Pawn Controls
+
+| Key | Function | Description |
+|-----|----------|-------------|
+| W | Move Forward | Move vehicle forward |
+| A | Move Left | Move drone to the left / Let the car turn left |
+| S | Move Backward | Move vehicle backward |
+| D | Move Right | Move drone to the right / Let the car turn right|
+| Space | Ascend | Drone ascends |
+| Left Shift (*TODO*)| Sprint/Boost | Increase movement speed |
+| Left Ctrl | Descend | Drone descends |
+| M | Pause Game | Pause the game and show pause menu |
+
+### Camera Controls
+
+| Key | Function | Description |
+|-----|----------|-------------|
+| Mouse Movement | Look Around | Control camera direction |
+| Mouse Wheel (*TODO*) | Zoom | Zoom camera in/out |
+| C (*TODO*) | Free Camera | Toggle free camera mode |
+
+### Simulation Controls
+
+| Key | Function | Description |
+|-----|----------|-------------|
+| R | Toggle Recording | Start/stop recording simulation data |
+| 6 | RGB Subwindow | Show/hide Subwindow |
+| 7 | Static Mesh Subwindow | Show/hide Subwindow |
+| 8 | Dynamic Mesh Subwindow | Show/hide Subwindow |
+| 9 | PointCloud Subwindow | Show/hide Subwindow |
+| 0 | Depth Subwindow | Show/hide Subwindow |
+| Y | Save RGB Subwindow | Save Subwindow content |
+| U | Save Static Mesh Subwindow | Save Subwindow content |
+| I | Save Dynamic Mesh Subwindow | Save Subwindow content |
+| O | Save PointCloud Subwindow | Save Subwindow content |
+| P | Save Depth Subwindow | Save Subwindow content |
+
+### Notes
+
+- You can customize these key bindings as needed
+- Some functions may only be available in specific simulation modes
+
 ### Client
 
 #### Python
 
+Wait for the update.
 
+#### C++
+
+Wait for the update.
