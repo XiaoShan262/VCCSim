@@ -28,7 +28,6 @@ public:
     int32 Height = 512;
     bool bOrthographic = false;
     float OrthoWidth = 512.0f;
-    float CaptureRate = 30.f;
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -88,10 +87,6 @@ public:
     bool bBPConfigured = false;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DepthCamera|Config")
     int32 CameraIndex = 0;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DepthCamera|Performance")
-    bool bAutoCapture;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DepthCamera|Performance")
-    float CaptureRate;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lidar|Debug")
     bool bRecorded = false;

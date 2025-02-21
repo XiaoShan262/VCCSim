@@ -13,8 +13,6 @@ UDepthCameraComponent::UDepthCameraComponent()
     , Height(512)
     , bOrthographic(false)
     , OrthoWidth(512.0f)
-    , bAutoCapture(false)
-    , CaptureRate(1.f / 30.f)
     , TimeSinceLastCapture(0.0f)
 {
     PrimaryComponentTick.bCanEverTick = true;
@@ -30,7 +28,6 @@ void UDepthCameraComponent::RConfigure(
     Height = Config.Height;
     bOrthographic = Config.bOrthographic;
     OrthoWidth = Config.OrthoWidth;
-    CaptureRate = 1.f / Config.CaptureRate;
     SetCaptureComponent();
 
     if (Config.RecordInterval > 0)
@@ -96,14 +93,24 @@ void UDepthCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
     FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-    
-    if (bAutoCapture)
+
+    if (bRecorded)
     {
         TimeSinceLastCapture += DeltaTime;
-        if (TimeSinceLastCapture >= CaptureRate)
+        if (TimeSinceLastCapture >= RecordInterval)
         {
-            CaptureDepthScene();
             TimeSinceLastCapture = 0.0f;
+            CaptureDepthScene();
+            if (RecorderPtr)
+            {
+                FDepthCameraData DepthCameraData;
+                DepthCameraData.Timestamp = FPlatformTime::Seconds();
+                DepthCameraData.SensorIndex = CameraIndex;
+                DepthCameraData.Width = Width;
+                DepthCameraData.Height = Height;
+                DepthCameraData.Data = GetDepthImage();
+                RecorderPtr->SubmitDepthData(ParentActor, MoveTemp(DepthCameraData));
+            }
         }
     }
 }

@@ -136,8 +136,6 @@ FVCCSimConfig ParseConfig()
                                 (*Table)["bOrthographic"].value_or(DepthConfig->bOrthographic);
                             DepthConfig->OrthoWidth =
                                 (*Table)["OrthoWidth"].value_or(DepthConfig->OrthoWidth);
-                            DepthConfig->CaptureRate =
-                                (*Table)["CaptureRate"].value_or(DepthConfig->CaptureRate);
                         }
                         r.ComponentConfigs.push_back({ESensorType::DepthCamera, DepthConfig});
                     }
@@ -155,8 +153,6 @@ FVCCSimConfig ParseConfig()
                                 (*Table)["bOrthographic"].value_or(RGBConfig->bOrthographic);
                             RGBConfig->OrthoWidth =
                                 (*Table)["OrthoWidth"].value_or(RGBConfig->OrthoWidth);
-                            RGBConfig->CaptureRate =
-                                (*Table)["CaptureRate"].value_or(RGBConfig->CaptureRate);
                         }
                         r.ComponentConfigs.push_back({ESensorType::RGBCamera, RGBConfig});
                     }

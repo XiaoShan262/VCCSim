@@ -42,7 +42,6 @@ public:
     int32 Height = 512;
     bool bOrthographic = false;
     float OrthoWidth = 512.0f;
-    float CaptureRate = 30.f;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
@@ -95,10 +94,6 @@ public:
     bool bBPConfigured = false;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RGBCamera|Config")
     int32 CameraIndex = 0;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RGBCamera|Performance")
-    bool bAutoCapture;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RGBCamera|Performance")
-    float CaptureRate;
 
     UPROPERTY(BlueprintAssignable, Category = "Camera")
     FOnRGBImageCaptured OnRGBImageCaptured;

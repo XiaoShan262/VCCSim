@@ -1,3 +1,25 @@
+// MIT License
+// 
+// Copyright (c) 2025 Mingyang Wang
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -6,6 +28,7 @@
 #include "Containers/Queue.h"
 #include "Recorder.generated.h"
 
+
 // Configuration struct for tunable parameters
 struct FRecorderConfig
 {
@@ -13,7 +36,7 @@ struct FRecorderConfig
     static constexpr int32 StringReserveSize = 16 * 1024;   // 16KB for string builders
     static constexpr int32 InitialPoolSize = 8;             // Pre-allocated buffers
     static constexpr int32 MaxPoolSize = 32;                // Maximum buffer pool size
-    
+
     // Threading and processing settings
     static constexpr float MinSleepInterval = 0.0001f;      // 0.1ms minimum sleep
     static constexpr float MaxSleepInterval = 0.016f;       // Never sleep longer than one frame
@@ -34,12 +57,12 @@ public:
         return Instance;
     }
 
-    IImageWrapper* GetPNGWrapper();
+    ::IImageWrapper* GetPNGWrapper();
 
 private:
     FImageWrapperCache() : ImageWrapperModule(nullptr) {}
     ~FImageWrapperCache() = default;
-    
+
     FCriticalSection CacheLock;
     IImageWrapperModule* ImageWrapperModule;
     TSharedPtr<IImageWrapper> PNGWrapper;
@@ -108,7 +131,7 @@ template<typename T>
 class TRingBuffer
 {
 public:
-    
+
     explicit TRingBuffer(int32 Size) 
         : MaxSize(Size)
         , Head(0)
@@ -157,7 +180,7 @@ public:
     {
         FScopeLock Lock(&BufferLock);
         if (ItemCount >= MaxSize) return false;
-        
+    
         Buffer[Tail] = MoveTemp(Item);
         Tail = (Tail + 1) % MaxSize;
         ++ItemCount;
@@ -168,7 +191,7 @@ public:
     {
         FScopeLock Lock(&BufferLock);
         if (ItemCount == 0) return false;
-        
+    
         OutItem = MoveTemp(Buffer[Head]);
         Head = (Head + 1) % MaxSize;
         --ItemCount;
@@ -180,12 +203,12 @@ public:
         FScopeLock Lock(&BufferLock);
         Head = Tail = ItemCount = 0; 
     }
-    
+
     bool IsEmpty() const 
     { 
         return ItemCount == 0; 
     }
-    
+
     int32 Count() const 
     { 
         return ItemCount; 
@@ -204,7 +227,7 @@ private:
 struct FPawnBuffers
 {
     static constexpr int32 DefaultSize = 10;
-    
+
     TRingBuffer<FPoseData> Pose;
     TRingBuffer<FLidarData> Lidar;
     TRingBuffer<FDepthCameraData> DepthC;
@@ -217,7 +240,7 @@ struct FPawnBuffers
         , DepthC(DefaultSize)
         , RGBC(DefaultSize)
     {}
-    
+
     explicit FPawnBuffers(int32 Size, const FString& InPawnDirectory = TEXT("")) 
         : Pose(Size)
         , Lidar(Size)
@@ -299,14 +322,14 @@ public:
 private:
     FString BasePath;
     int32 BufferSize;
-    
+
     FRunnableThread* Thread;
-    
+
     mutable FCriticalSection QueueLock;
     TQueue<FPawnBuffers> DataQueue;
-    
+
     TAtomic<bool> bStopRequested;
-    
+
     FBufferPool BufferPool;
     FAdaptiveSleeper Sleeper;
 
@@ -327,7 +350,8 @@ public:
 
     FORCEINLINE TStatId GetStatId() const
     {
-        RETURN_QUICK_DECLARE_CYCLE_STAT(FAsyncSubmitTask, STATGROUP_ThreadPoolAsyncTasks);
+        RETURN_QUICK_DECLARE_CYCLE_STAT(FAsyncSubmitTask,
+            STATGROUP_ThreadPoolAsyncTasks);
     }
 
 private:
@@ -340,16 +364,17 @@ UCLASS()
 class VCCSIM_API ARecorder : public AActor
 {
     GENERATED_BODY()
+    
     friend class FAsyncSubmitTask;
 
 public:
     ARecorder();
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-    
+
     // Recording control
     void StartRecording();
     void StopRecording();
-    
+
     // Pawn registration
     void RegisterPawn(AActor* Pawn,  bool bHasLidar, bool bHasDepth, bool bHasRGB);
 
@@ -358,11 +383,11 @@ public:
     void SubmitLidarData(AActor* Pawn, FLidarData&& Data);
     void SubmitDepthData(AActor* Pawn, FDepthCameraData&& Data);
     void SubmitRGBData(AActor* Pawn, FRGBCameraData&& Data);
-    
+
     // Configuration properties
     UPROPERTY(EditAnywhere, Category = "Recording")
     int32 BufferSize = 100;
-    
+
     UPROPERTY(EditAnywhere, Category = "Recording")
     FString LogBasePath = FPaths::ProjectSavedDir() / TEXT("Recordings");
 
@@ -374,7 +399,7 @@ private:
     TMap<AActor*, FPawnDirectoryInfo> PawnDirectories;
     TMap<AActor*, FPawnBuffers> ActiveBuffers;
     TMap<AActor*, FPawnBuffers> ProcessingBuffers;
-    
+
     FCriticalSection BufferLock;
     TUniquePtr<FRecorderWorker> RecorderWorker;
     FBufferPool BufferPool;

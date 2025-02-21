@@ -32,8 +32,6 @@ URGBCameraComponent::URGBCameraComponent()
     , Height(512)
     , bOrthographic(false)
     , OrthoWidth(512.0f)
-    , bAutoCapture(false)
-    , CaptureRate(1.f / 30.f)
     , TimeSinceLastCapture(0.0f)
 {
     PrimaryComponentTick.bCanEverTick = true;
@@ -67,15 +65,6 @@ void URGBCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
     
-    // if (bAutoCapture)
-    // {
-    //     TimeSinceLastCapture += DeltaTime;
-    //     if (TimeSinceLastCapture >= CaptureRate)
-    //     {
-    //         CaptureRGBScene();
-    //         TimeSinceLastCapture = 0.0f;
-    //     }
-    // }
     if (bRecorded)
     {
         TimeSinceLastCapture += DeltaTime;
@@ -106,7 +95,6 @@ void URGBCameraComponent::RConfigure(
     Height = Config.Height;
     bOrthographic = Config.bOrthographic;
     OrthoWidth = Config.OrthoWidth;
-    CaptureRate = 1.f / Config.CaptureRate;
     RGBRenderTarget->InitCustomFormat(Width, Height,
         PF_B8G8R8A8, false);
     RGBRenderTarget->UpdateResource();
