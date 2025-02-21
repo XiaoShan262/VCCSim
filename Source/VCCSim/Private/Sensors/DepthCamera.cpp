@@ -35,6 +35,9 @@ void UDepthCameraComponent::RConfigure(
         ParentActor = GetOwner();
         RecorderPtr = Recorder;
         RecordInterval = Config.RecordInterval;
+        RecordState = Recorder->RecordState;
+        Recorder->OnRecordStateChanged.AddDynamic(this,
+            &UDepthCameraComponent::SetRecordState);
         SetComponentTickEnabled(true);
         bRecorded = true;
     }
@@ -94,7 +97,7 @@ void UDepthCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-    if (bRecorded)
+    if (bRecorded && RecordState)
     {
         TimeSinceLastCapture += DeltaTime;
         if (TimeSinceLastCapture >= RecordInterval)

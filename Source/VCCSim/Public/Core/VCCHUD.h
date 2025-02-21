@@ -41,6 +41,7 @@ class VCCSIM_API AVCCHUD : public AHUD
 	GENERATED_BODY()
 
 public:
+	void SetupRecorder(const FVCCSimConfig& Config);
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     
@@ -56,6 +57,8 @@ public:
     
 	UPROPERTY(EditAnywhere, Category = "IA")
 	TObjectPtr<UInputAction> PauseAction;
+	UPROPERTY(EditAnywhere, Category = "IA")
+	TObjectPtr<UInputAction> ToggleRecordingAction;
 
 	UPROPERTY(EditAnywhere, Category = "IA")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
@@ -63,6 +66,8 @@ public:
 protected:
 	UFUNCTION()
 	void OnPauseActionTriggered();
+	UFUNCTION()
+	void OnToggleRecordingTriggered();
 	void SetupEnhancedInput();
 	void SetupWidgetsAndLS(const FVCCSimConfig& Config);
 	void SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> FoundPawns);

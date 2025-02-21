@@ -456,8 +456,7 @@ void FAsyncSubmitTask::DoWork()
 
 // ARecorder implementation
 ARecorder::ARecorder()
-    : bRecording(false)
-    , PendingTasks(0)
+    : PendingTasks(0)
 {
     PrimaryActorTick.bCanEverTick = false;
 }
@@ -549,6 +548,16 @@ void ARecorder::StopRecording()
     }
 }
 
+void ARecorder::ToggleRecording()
+{
+    RecordState = !RecordState;
+    
+    UE_LOG(LogTemp, Warning, TEXT("Recording state: "
+                                  "%s"), RecordState ? TEXT("ON") : TEXT("OFF"));
+    
+    OnRecordStateChanged.Broadcast(RecordState);
+}
+
 void ARecorder::RegisterPawn(AActor* Pawn, bool bHasLidar, bool bHasDepth, bool bHasRGB)
 {
     if (!Pawn) return;
@@ -568,7 +577,8 @@ void ARecorder::RegisterPawn(AActor* Pawn, bool bHasLidar, bool bHasDepth, bool 
     {
         if (!CreatePawnDirectories(Pawn, DirInfo))
         {
-            UE_LOG(LogTemp, Error, TEXT("Failed to create directories for pawn: %s"), *Pawn->GetName());
+            UE_LOG(LogTemp, Error, TEXT("Failed to create directories for pawn:"
+                                        " %s"), *Pawn->GetName());
             return;
         }
     }
@@ -675,8 +685,9 @@ void ARecorder::SubmitData(AActor* Pawn, T&& Data, EDataType Type)
         return;
     }
 
-    if (!bRecording || !Pawn || PendingTasks >= FRecorderConfig::MaxPendingTasks)
+    if (PendingTasks >= FRecorderConfig::MaxPendingTasks)
     {
+        UE_LOG(LogTemp, Warning, TEXT("Max pending tasks reached"));
         return;
     }
 

@@ -21,9 +21,12 @@ public:
 	void SetRecorder(ARecorder* InRecorder);
 	UFUNCTION()
 	void SetRecordInterval(const float& Interval);
+	UFUNCTION()
+	void SetRecordState(bool RState){ RecordState = RState; }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RatSim|Debug")
 	bool bRecorded = false;
+	bool RecordState = false;
 
 	UPROPERTY()
 	ARecorder* Recorder;

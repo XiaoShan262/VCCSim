@@ -58,6 +58,8 @@ public:
     
     ULidarComponent();
     void RConfigure(const FLiDarConfig& Config, ARecorder* Recorder);
+    UFUNCTION()
+    void SetRecordState(bool RState){ RecordState = RState; }
 
     UFUNCTION(BlueprintCallable, Category = "Lidar")
     void FirstCall();
@@ -142,5 +144,6 @@ private:
     UPROPERTY()
     ARecorder* RecorderPtr = nullptr;
     float RecordInterval = -1.f;
+    bool RecordState = false;
     float TimeSinceLastCapture = 0.f;
 };

@@ -41,10 +41,7 @@ void AVCCHUD::BeginPlay()
     Super::BeginPlay();
     
     const FVCCSimConfig Config = ParseConfig();
-    Recorder = GetWorld()->SpawnActor<ARecorder>(ARecorder::StaticClass(), FTransform::Identity);
-    Recorder->LogBasePath = Config.VCCSim.LogSavePath.c_str();
-    Recorder->BufferSize = Config.VCCSim.BufferSize;
-    Recorder->StartRecording();
+    SetupRecorder(Config);
     
     SetupWidgetsAndLS(Config);
     auto RCMaps = SetupActors(Config);
@@ -95,7 +92,7 @@ void AVCCHUD::SetupEnhancedInput()
     if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
         ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
     {
-        Subsystem->AddMappingContext(DefaultMappingContext, 0);
+        Subsystem->AddMappingContext(DefaultMappingContext, 1);
     }
 
     if (UEnhancedInputComponent* EnhancedInputComponent =
@@ -104,6 +101,11 @@ void AVCCHUD::SetupEnhancedInput()
         // Bind the pause action
         EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Triggered,
             this, &AVCCHUD::OnPauseActionTriggered);
+        if (ToggleRecordingAction)
+        {
+            EnhancedInputComponent->BindAction(ToggleRecordingAction, ETriggerEvent::Started,
+                this, &AVCCHUD::OnToggleRecordingTriggered);
+        }
     }
 
     PC->SetInputMode(FInputModeGameOnly());
@@ -135,6 +137,27 @@ void AVCCHUD::OnPauseActionTriggered()
     {
         UE_LOG(LogTemp, Warning, TEXT("PauseWidgetClass not set"));
     }
+}
+
+void AVCCHUD::OnToggleRecordingTriggered()
+{
+    if (Recorder)
+    {
+        Recorder->ToggleRecording();
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Recorder not found!"));
+    }
+}
+
+void AVCCHUD::SetupRecorder(const FVCCSimConfig& Config)
+{
+    Recorder = GetWorld()->SpawnActor<ARecorder>(ARecorder::StaticClass(), FTransform::Identity);
+    Recorder->LogBasePath = Config.VCCSim.LogSavePath.c_str();
+    Recorder->BufferSize = Config.VCCSim.BufferSize;
+    Recorder->RecordState = Config.VCCSim.StartWithRecording;
+    Recorder->StartRecording();
 }
 
 void AVCCHUD::SetupWidgetsAndLS(const FVCCSimConfig& Config)

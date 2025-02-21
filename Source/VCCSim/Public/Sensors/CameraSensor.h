@@ -56,6 +56,8 @@ public:
     URGBCameraComponent();
     void RConfigure(const FRGBCameraConfig& Config, ARecorder* Recorder);
     bool IsConfigured() const { return bBPConfigured; }
+    UFUNCTION()
+    void SetRecordState(bool RState) { RecordState = RState; }
     
     int32 GetCameraIndex() const { return CameraIndex; }
     
@@ -125,6 +127,7 @@ private:
     AActor* ParentActor = nullptr;
     UPROPERTY()
     ARecorder* RecorderPtr = nullptr;
+    bool RecordState = false;
     float RecordInterval = -1.f;
     float TimeSinceLastCapture;
 };

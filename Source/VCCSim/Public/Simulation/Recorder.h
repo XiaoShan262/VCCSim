@@ -28,6 +28,8 @@
 #include "Containers/Queue.h"
 #include "Recorder.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+    FRecordStateChanged, bool, RecordState);
 
 // Configuration struct for tunable parameters
 struct FRecorderConfig
@@ -374,6 +376,7 @@ public:
     // Recording control
     void StartRecording();
     void StopRecording();
+    void ToggleRecording();
 
     // Pawn registration
     void RegisterPawn(AActor* Pawn,  bool bHasLidar, bool bHasDepth, bool bHasRGB);
@@ -391,8 +394,12 @@ public:
     UPROPERTY(EditAnywhere, Category = "Recording")
     FString LogBasePath = FPaths::ProjectSavedDir() / TEXT("Recordings");
 
+    FRecordStateChanged OnRecordStateChanged;
+    bool RecordState = false; // If the sensors should submit data
+
 private:
-    bool bRecording;
+    bool bRecording = false; // Recording state of the recorder
+    
     FString CurrentRecordingPath;
     TAtomic<int32> PendingTasks;
 

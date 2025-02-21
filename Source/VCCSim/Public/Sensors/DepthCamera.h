@@ -39,6 +39,8 @@ public:
     UDepthCameraComponent();
     void RConfigure(const FDepthCameraConfig& Config, ARecorder* Recorder);
     bool IsConfigured() const { return bBPConfigured; }
+    UFUNCTION()
+    void SetRecordState(bool RState){ RecordState = RState; }
     
     int32 GetCameraIndex() const { return CameraIndex; }
     
@@ -108,5 +110,6 @@ private:
     UPROPERTY()
     ARecorder* RecorderPtr = nullptr;
     float RecordInterval = -1.f;
+    bool RecordState = false;
     float TimeSinceLastCapture;
 };

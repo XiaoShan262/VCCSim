@@ -39,6 +39,7 @@ FVCCSimConfig ParseConfig()
         Config.VCCSim.DefaultDronePawn = (*VCCSim)["DefaultDronePawn"].value_or("");
         Config.VCCSim.DefaultCarPawn = (*VCCSim)["DefaultCarPawn"].value_or("");
         Config.VCCSim.BufferSize = (*VCCSim)["BufferSize"].value_or(100);
+        Config.VCCSim.StartWithRecording = (*VCCSim)["StartWithRecording"].value_or(false);
         
         if (auto staticMeshActors = (*VCCSim)["StaticMeshActor"].as_array())
         {

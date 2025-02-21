@@ -57,6 +57,9 @@ void ULidarComponent::RConfigure(
 		ParentActor = GetOwner();
 		RecorderPtr = Recorder;
 		RecordInterval = Config.RecordInterval;
+		RecordState = Recorder->RecordState;
+		Recorder->OnRecordStateChanged.AddDynamic(this,
+			&ULidarComponent::SetRecordState);
 		SetComponentTickEnabled(true);
 		bRecorded = true;
 	}
@@ -101,7 +104,7 @@ void ULidarComponent::TickComponent(
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 
-	if (bRecorded)
+	if (bRecorded && RecordState)
 	{
 		TimeSinceLastCapture += DeltaTime;
 		if (TimeSinceLastCapture >= RecordInterval)
