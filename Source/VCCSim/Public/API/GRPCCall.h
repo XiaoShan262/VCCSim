@@ -11,7 +11,7 @@ class UDepthCameraComponent;
 class URGBCameraComponent;
 class UMeshHandlerComponent;
 class UInsMeshHolder;
-class AQuadcopterDrone;
+class ADronePawn;
 
 class AsyncCall
 {
@@ -325,14 +325,30 @@ protected:
     virtual void ProcessRequest() override final;
 };
 
+/* --------------------------Drone Handler---------------------------------- */
+
+class GetDronePoseCall final: public AsyncCallTemplateM<VCCSim::RobotName,
+    VCCSim::Pose, VCCSim::DroneService::AsyncService,
+    std::map<std::string, ADronePawn*>>
+{
+public:
+    GetDronePoseCall(VCCSim::DroneService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        std::map<std::string, ADronePawn*> rcmap);
+protected:
+    virtual void PrepareNextCall() override final;
+    virtual void InitializeRequest() override final;
+    virtual void ProcessRequest() override final;
+};
+
 class SendDronePoseCall : public AsyncCallTemplateM<VCCSim::DronePose,
     VCCSim::Status, VCCSim::DroneService::AsyncService,
-    std::map <std::string, AQuadcopterDrone*>>
+    std::map <std::string, ADronePawn*>>
 {
 public:
     SendDronePoseCall(VCCSim::DroneService::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
-        std::map<std::string, AQuadcopterDrone*> rcmap);
+        std::map<std::string, ADronePawn*> rcmap);
 protected:
     virtual void PrepareNextCall() override final;
     virtual void InitializeRequest() override final;

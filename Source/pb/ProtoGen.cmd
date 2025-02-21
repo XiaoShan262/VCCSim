@@ -14,6 +14,6 @@ set OUTPUT_PATH=../VCCSim/Private/API
 "%PROTOC_PATH%" -I="%PROTO_PATH%" --cpp_out="%OUTPUT_PATH%" "%PROTO_PATH%\VCCSim.proto"
 
 :: Generate Python code
-python -m grpc_tools.protoc -I "%PROTO_PATH%" --grpc_python_out="%PROTO_PATH%" --python_out="%PROTO_PATH%" "%PROTO_PATH%\VCCSim.proto"
+:: python -m grpc_tools.protoc -I "%PROTO_PATH%" --grpc_python_out="%PROTO_PATH%" --python_out="%PROTO_PATH%" "%PROTO_PATH%\VCCSim.proto"
 
 echo Proto generation completed.

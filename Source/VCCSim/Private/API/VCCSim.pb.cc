@@ -991,25 +991,25 @@ const char descriptor_table_protodef_VCCSim_2eproto[] ABSL_ATTRIBUTE_SECTION_VAR
     "raOdom\022\021.VCCSim.RobotName\032\020.VCCSim.Odome"
     "try\022Q\n\034GetRGBIndexedCameraImageData\022\025.VC"
     "CSim.IndexedCamera\032\032.VCCSim.RGBCameraIma"
-    "geData2\253\001\n\014DroneService\0223\n\014GetDroneOdom\022"
-    "\021.VCCSim.RobotName\032\020.VCCSim.Odometry\0222\n\r"
-    "SendDronePose\022\021.VCCSim.DronePose\032\016.VCCSi"
-    "m.Status\0222\n\rSendDronePath\022\021.VCCSim.Drone"
-    "Path\032\016.VCCSim.Status2\237\001\n\nCarService\0221\n\nG"
-    "etCarOdom\022\021.VCCSim.RobotName\032\020.VCCSim.Od"
-    "ometry\022.\n\013SendCarPose\022\017.VCCSim.CarPose\032\016"
-    ".VCCSim.Status\022.\n\013SendCarPath\022\017.VCCSim.C"
-    "arPath\032\016.VCCSim.Status2;\n\013MeshService\022,\n"
-    "\010SendMesh\022\020.VCCSim.MeshData\032\016.VCCSim.Sta"
-    "tus2[\n\021PointCloudService\022F\n\027SendPointClo"
-    "udWithColor\022\033.VCCSim.PointCloudWithColor"
-    "\032\016.VCCSim.Statusb\006proto3"
+    "geData2\247\001\n\014DroneService\022/\n\014GetDronePose\022"
+    "\021.VCCSim.RobotName\032\014.VCCSim.Pose\0222\n\rSend"
+    "DronePose\022\021.VCCSim.DronePose\032\016.VCCSim.St"
+    "atus\0222\n\rSendDronePath\022\021.VCCSim.DronePath"
+    "\032\016.VCCSim.Status2\237\001\n\nCarService\0221\n\nGetCa"
+    "rOdom\022\021.VCCSim.RobotName\032\020.VCCSim.Odomet"
+    "ry\022.\n\013SendCarPose\022\017.VCCSim.CarPose\032\016.VCC"
+    "Sim.Status\022.\n\013SendCarPath\022\017.VCCSim.CarPa"
+    "th\032\016.VCCSim.Status2;\n\013MeshService\022,\n\010Sen"
+    "dMesh\022\020.VCCSim.MeshData\032\016.VCCSim.Status2"
+    "[\n\021PointCloudService\022F\n\027SendPointCloudWi"
+    "thColor\022\033.VCCSim.PointCloudWithColor\032\016.V"
+    "CCSim.Statusb\006proto3"
 };
 static ::absl::once_flag descriptor_table_VCCSim_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_VCCSim_2eproto = {
     false,
     false,
-    2704,
+    2700,
     descriptor_table_protodef_VCCSim_2eproto,
     "VCCSim.proto",
     &descriptor_table_VCCSim_2eproto_once,

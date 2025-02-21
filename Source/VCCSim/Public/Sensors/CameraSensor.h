@@ -47,7 +47,7 @@ public:
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
     FOnRGBImageCaptured, const TArray<FColor>&, ImageData);
 
-UCLASS(ClassGroup = (VCCSIM))
+UCLASS(ClassGroup = (VCCSIM), meta = (BlueprintSpawnableComponent))
 class VCCSIM_API URGBCameraComponent : public UPrimitiveComponent
 {
     GENERATED_BODY()

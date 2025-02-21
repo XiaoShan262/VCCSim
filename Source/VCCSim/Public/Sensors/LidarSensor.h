@@ -49,7 +49,7 @@ public:
     bool bVisualizePoints = true;
 };
 
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (VCCSIM), meta = (BlueprintSpawnableComponent))
 class VCCSIM_API ULidarComponent : public UPrimitiveComponent
 {
     GENERATED_BODY()

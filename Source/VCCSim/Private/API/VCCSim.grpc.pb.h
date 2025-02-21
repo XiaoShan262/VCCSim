@@ -1445,12 +1445,12 @@ class DroneService final {
   class StubInterface {
    public:
     virtual ~StubInterface() {}
-    virtual ::grpc::Status GetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Odometry* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>> AsyncGetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>>(AsyncGetDroneOdomRaw(context, request, cq));
+    virtual ::grpc::Status GetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Pose* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Pose>> AsyncGetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Pose>>(AsyncGetDronePoseRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>> PrepareAsyncGetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>>(PrepareAsyncGetDroneOdomRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Pose>> PrepareAsyncGetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Pose>>(PrepareAsyncGetDronePoseRaw(context, request, cq));
     }
     virtual ::grpc::Status SendDronePose(::grpc::ClientContext* context, const ::VCCSim::DronePose& request, ::VCCSim::Status* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> AsyncSendDronePose(::grpc::ClientContext* context, const ::VCCSim::DronePose& request, ::grpc::CompletionQueue* cq) {
@@ -1466,22 +1466,24 @@ class DroneService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> PrepareAsyncSendDronePath(::grpc::ClientContext* context, const ::VCCSim::DronePath& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(PrepareAsyncSendDronePathRaw(context, request, cq));
     }
+    // todo
     class async_interface {
      public:
       virtual ~async_interface() {}
-      virtual void GetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void GetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void GetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void GetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void SendDronePose(::grpc::ClientContext* context, const ::VCCSim::DronePose* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SendDronePose(::grpc::ClientContext* context, const ::VCCSim::DronePose* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void SendDronePath(::grpc::ClientContext* context, const ::VCCSim::DronePath* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SendDronePath(::grpc::ClientContext* context, const ::VCCSim::DronePath* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      // todo
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
     class async_interface* experimental_async() { return async(); }
    private:
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>* AsyncGetDroneOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>* PrepareAsyncGetDroneOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Pose>* AsyncGetDronePoseRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Pose>* PrepareAsyncGetDronePoseRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* AsyncSendDronePoseRaw(::grpc::ClientContext* context, const ::VCCSim::DronePose& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* PrepareAsyncSendDronePoseRaw(::grpc::ClientContext* context, const ::VCCSim::DronePose& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* AsyncSendDronePathRaw(::grpc::ClientContext* context, const ::VCCSim::DronePath& request, ::grpc::CompletionQueue* cq) = 0;
@@ -1490,12 +1492,12 @@ class DroneService final {
   class Stub final : public StubInterface {
    public:
     Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
-    ::grpc::Status GetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Odometry* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>> AsyncGetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>>(AsyncGetDroneOdomRaw(context, request, cq));
+    ::grpc::Status GetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Pose* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Pose>> AsyncGetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Pose>>(AsyncGetDronePoseRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>> PrepareAsyncGetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>>(PrepareAsyncGetDroneOdomRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Pose>> PrepareAsyncGetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Pose>>(PrepareAsyncGetDronePoseRaw(context, request, cq));
     }
     ::grpc::Status SendDronePose(::grpc::ClientContext* context, const ::VCCSim::DronePose& request, ::VCCSim::Status* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>> AsyncSendDronePose(::grpc::ClientContext* context, const ::VCCSim::DronePose& request, ::grpc::CompletionQueue* cq) {
@@ -1514,8 +1516,8 @@ class DroneService final {
     class async final :
       public StubInterface::async_interface {
      public:
-      void GetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, std::function<void(::grpc::Status)>) override;
-      void GetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void GetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response, std::function<void(::grpc::Status)>) override;
+      void GetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response, ::grpc::ClientUnaryReactor* reactor) override;
       void SendDronePose(::grpc::ClientContext* context, const ::VCCSim::DronePose* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) override;
       void SendDronePose(::grpc::ClientContext* context, const ::VCCSim::DronePose* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) override;
       void SendDronePath(::grpc::ClientContext* context, const ::VCCSim::DronePath* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) override;
@@ -1531,13 +1533,13 @@ class DroneService final {
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
     class async async_stub_{this};
-    ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>* AsyncGetDroneOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>* PrepareAsyncGetDroneOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::Pose>* AsyncGetDronePoseRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::Pose>* PrepareAsyncGetDronePoseRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* AsyncSendDronePoseRaw(::grpc::ClientContext* context, const ::VCCSim::DronePose& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* PrepareAsyncSendDronePoseRaw(::grpc::ClientContext* context, const ::VCCSim::DronePose& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* AsyncSendDronePathRaw(::grpc::ClientContext* context, const ::VCCSim::DronePath& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* PrepareAsyncSendDronePathRaw(::grpc::ClientContext* context, const ::VCCSim::DronePath& request, ::grpc::CompletionQueue* cq) override;
-    const ::grpc::internal::RpcMethod rpcmethod_GetDroneOdom_;
+    const ::grpc::internal::RpcMethod rpcmethod_GetDronePose_;
     const ::grpc::internal::RpcMethod rpcmethod_SendDronePose_;
     const ::grpc::internal::RpcMethod rpcmethod_SendDronePath_;
   };
@@ -1547,27 +1549,28 @@ class DroneService final {
    public:
     Service();
     virtual ~Service();
-    virtual ::grpc::Status GetDroneOdom(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response);
+    virtual ::grpc::Status GetDronePose(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response);
     virtual ::grpc::Status SendDronePose(::grpc::ServerContext* context, const ::VCCSim::DronePose* request, ::VCCSim::Status* response);
     virtual ::grpc::Status SendDronePath(::grpc::ServerContext* context, const ::VCCSim::DronePath* request, ::VCCSim::Status* response);
+    // todo
   };
   template <class BaseClass>
-  class WithAsyncMethod_GetDroneOdom : public BaseClass {
+  class WithAsyncMethod_GetDronePose : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithAsyncMethod_GetDroneOdom() {
+    WithAsyncMethod_GetDronePose() {
       ::grpc::Service::MarkMethodAsync(0);
     }
-    ~WithAsyncMethod_GetDroneOdom() override {
+    ~WithAsyncMethod_GetDronePose() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetDroneOdom(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Odometry* /*response*/) override {
+    ::grpc::Status GetDronePose(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Pose* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestGetDroneOdom(::grpc::ServerContext* context, ::VCCSim::RobotName* request, ::grpc::ServerAsyncResponseWriter< ::VCCSim::Odometry>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+    void RequestGetDronePose(::grpc::ServerContext* context, ::VCCSim::RobotName* request, ::grpc::ServerAsyncResponseWriter< ::VCCSim::Pose>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
@@ -1611,33 +1614,33 @@ class DroneService final {
       ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_GetDroneOdom<WithAsyncMethod_SendDronePose<WithAsyncMethod_SendDronePath<Service > > > AsyncService;
+  typedef WithAsyncMethod_GetDronePose<WithAsyncMethod_SendDronePose<WithAsyncMethod_SendDronePath<Service > > > AsyncService;
   template <class BaseClass>
-  class WithCallbackMethod_GetDroneOdom : public BaseClass {
+  class WithCallbackMethod_GetDronePose : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithCallbackMethod_GetDroneOdom() {
+    WithCallbackMethod_GetDronePose() {
       ::grpc::Service::MarkMethodCallback(0,
-          new ::grpc::internal::CallbackUnaryHandler< ::VCCSim::RobotName, ::VCCSim::Odometry>(
+          new ::grpc::internal::CallbackUnaryHandler< ::VCCSim::RobotName, ::VCCSim::Pose>(
             [this](
-                   ::grpc::CallbackServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response) { return this->GetDroneOdom(context, request, response); }));}
-    void SetMessageAllocatorFor_GetDroneOdom(
-        ::grpc::MessageAllocator< ::VCCSim::RobotName, ::VCCSim::Odometry>* allocator) {
+                   ::grpc::CallbackServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response) { return this->GetDronePose(context, request, response); }));}
+    void SetMessageAllocatorFor_GetDronePose(
+        ::grpc::MessageAllocator< ::VCCSim::RobotName, ::VCCSim::Pose>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::VCCSim::RobotName, ::VCCSim::Odometry>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::VCCSim::RobotName, ::VCCSim::Pose>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~WithCallbackMethod_GetDroneOdom() override {
+    ~WithCallbackMethod_GetDronePose() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetDroneOdom(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Odometry* /*response*/) override {
+    ::grpc::Status GetDronePose(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Pose* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* GetDroneOdom(
-      ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Odometry* /*response*/)  { return nullptr; }
+    virtual ::grpc::ServerUnaryReactor* GetDronePose(
+      ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Pose* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithCallbackMethod_SendDronePose : public BaseClass {
@@ -1693,21 +1696,21 @@ class DroneService final {
     virtual ::grpc::ServerUnaryReactor* SendDronePath(
       ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::DronePath* /*request*/, ::VCCSim::Status* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_GetDroneOdom<WithCallbackMethod_SendDronePose<WithCallbackMethod_SendDronePath<Service > > > CallbackService;
+  typedef WithCallbackMethod_GetDronePose<WithCallbackMethod_SendDronePose<WithCallbackMethod_SendDronePath<Service > > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
-  class WithGenericMethod_GetDroneOdom : public BaseClass {
+  class WithGenericMethod_GetDronePose : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithGenericMethod_GetDroneOdom() {
+    WithGenericMethod_GetDronePose() {
       ::grpc::Service::MarkMethodGeneric(0);
     }
-    ~WithGenericMethod_GetDroneOdom() override {
+    ~WithGenericMethod_GetDronePose() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetDroneOdom(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Odometry* /*response*/) override {
+    ::grpc::Status GetDronePose(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Pose* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1747,22 +1750,22 @@ class DroneService final {
     }
   };
   template <class BaseClass>
-  class WithRawMethod_GetDroneOdom : public BaseClass {
+  class WithRawMethod_GetDronePose : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithRawMethod_GetDroneOdom() {
+    WithRawMethod_GetDronePose() {
       ::grpc::Service::MarkMethodRaw(0);
     }
-    ~WithRawMethod_GetDroneOdom() override {
+    ~WithRawMethod_GetDronePose() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetDroneOdom(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Odometry* /*response*/) override {
+    ::grpc::Status GetDronePose(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Pose* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestGetDroneOdom(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+    void RequestGetDronePose(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
@@ -1807,25 +1810,25 @@ class DroneService final {
     }
   };
   template <class BaseClass>
-  class WithRawCallbackMethod_GetDroneOdom : public BaseClass {
+  class WithRawCallbackMethod_GetDronePose : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithRawCallbackMethod_GetDroneOdom() {
+    WithRawCallbackMethod_GetDronePose() {
       ::grpc::Service::MarkMethodRawCallback(0,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetDroneOdom(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetDronePose(context, request, response); }));
     }
-    ~WithRawCallbackMethod_GetDroneOdom() override {
+    ~WithRawCallbackMethod_GetDronePose() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status GetDroneOdom(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Odometry* /*response*/) override {
+    ::grpc::Status GetDronePose(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Pose* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* GetDroneOdom(
+    virtual ::grpc::ServerUnaryReactor* GetDronePose(
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
@@ -1873,31 +1876,31 @@ class DroneService final {
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class WithStreamedUnaryMethod_GetDroneOdom : public BaseClass {
+  class WithStreamedUnaryMethod_GetDronePose : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithStreamedUnaryMethod_GetDroneOdom() {
+    WithStreamedUnaryMethod_GetDronePose() {
       ::grpc::Service::MarkMethodStreamed(0,
         new ::grpc::internal::StreamedUnaryHandler<
-          ::VCCSim::RobotName, ::VCCSim::Odometry>(
+          ::VCCSim::RobotName, ::VCCSim::Pose>(
             [this](::grpc::ServerContext* context,
                    ::grpc::ServerUnaryStreamer<
-                     ::VCCSim::RobotName, ::VCCSim::Odometry>* streamer) {
-                       return this->StreamedGetDroneOdom(context,
+                     ::VCCSim::RobotName, ::VCCSim::Pose>* streamer) {
+                       return this->StreamedGetDronePose(context,
                          streamer);
                   }));
     }
-    ~WithStreamedUnaryMethod_GetDroneOdom() override {
+    ~WithStreamedUnaryMethod_GetDronePose() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status GetDroneOdom(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Odometry* /*response*/) override {
+    ::grpc::Status GetDronePose(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Pose* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedGetDroneOdom(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::RobotName,::VCCSim::Odometry>* server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedGetDronePose(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::RobotName,::VCCSim::Pose>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_SendDronePose : public BaseClass {
@@ -1953,9 +1956,9 @@ class DroneService final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedSendDronePath(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::DronePath,::VCCSim::Status>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_GetDroneOdom<WithStreamedUnaryMethod_SendDronePose<WithStreamedUnaryMethod_SendDronePath<Service > > > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_GetDronePose<WithStreamedUnaryMethod_SendDronePose<WithStreamedUnaryMethod_SendDronePath<Service > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_GetDroneOdom<WithStreamedUnaryMethod_SendDronePose<WithStreamedUnaryMethod_SendDronePath<Service > > > StreamedService;
+  typedef WithStreamedUnaryMethod_GetDronePose<WithStreamedUnaryMethod_SendDronePose<WithStreamedUnaryMethod_SendDronePath<Service > > > StreamedService;
 };
 
 class CarService final {
@@ -1973,6 +1976,7 @@ class CarService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>> PrepareAsyncGetCarOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>>(PrepareAsyncGetCarOdomRaw(context, request, cq));
     }
+    // todo
     virtual ::grpc::Status SendCarPose(::grpc::ClientContext* context, const ::VCCSim::CarPose& request, ::VCCSim::Status* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> AsyncSendCarPose(::grpc::ClientContext* context, const ::VCCSim::CarPose& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(AsyncSendCarPoseRaw(context, request, cq));
@@ -1980,6 +1984,7 @@ class CarService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> PrepareAsyncSendCarPose(::grpc::ClientContext* context, const ::VCCSim::CarPose& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(PrepareAsyncSendCarPoseRaw(context, request, cq));
     }
+    // todo
     virtual ::grpc::Status SendCarPath(::grpc::ClientContext* context, const ::VCCSim::CarPath& request, ::VCCSim::Status* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> AsyncSendCarPath(::grpc::ClientContext* context, const ::VCCSim::CarPath& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(AsyncSendCarPathRaw(context, request, cq));
@@ -1987,15 +1992,19 @@ class CarService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> PrepareAsyncSendCarPath(::grpc::ClientContext* context, const ::VCCSim::CarPath& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(PrepareAsyncSendCarPathRaw(context, request, cq));
     }
+    // todo
     class async_interface {
      public:
       virtual ~async_interface() {}
       virtual void GetCarOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, std::function<void(::grpc::Status)>) = 0;
       virtual void GetCarOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      // todo
       virtual void SendCarPose(::grpc::ClientContext* context, const ::VCCSim::CarPose* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SendCarPose(::grpc::ClientContext* context, const ::VCCSim::CarPose* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      // todo
       virtual void SendCarPath(::grpc::ClientContext* context, const ::VCCSim::CarPath* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SendCarPath(::grpc::ClientContext* context, const ::VCCSim::CarPath* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      // todo
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
@@ -2069,8 +2078,11 @@ class CarService final {
     Service();
     virtual ~Service();
     virtual ::grpc::Status GetCarOdom(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response);
+    // todo
     virtual ::grpc::Status SendCarPose(::grpc::ServerContext* context, const ::VCCSim::CarPose* request, ::VCCSim::Status* response);
+    // todo
     virtual ::grpc::Status SendCarPath(::grpc::ServerContext* context, const ::VCCSim::CarPath* request, ::VCCSim::Status* response);
+    // todo
   };
   template <class BaseClass>
   class WithAsyncMethod_GetCarOdom : public BaseClass {

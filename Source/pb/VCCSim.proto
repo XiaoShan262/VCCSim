@@ -161,15 +161,15 @@ service RGBCameraService {
 }
 
 service DroneService {
-  rpc GetDroneOdom (RobotName) returns (Odometry);
+  rpc GetDronePose (RobotName) returns (Pose);
   rpc SendDronePose (DronePose) returns (Status);
-  rpc SendDronePath (DronePath) returns (Status);
+  rpc SendDronePath (DronePath) returns (Status); //todo
 }
 
 service CarService {
-  rpc GetCarOdom (RobotName) returns (Odometry);
-  rpc SendCarPose (CarPose) returns (Status);
-  rpc SendCarPath (CarPath) returns (Status);
+  rpc GetCarOdom (RobotName) returns (Odometry); //todo
+  rpc SendCarPose (CarPose) returns (Status); //todo
+  rpc SendCarPath (CarPath) returns (Status); //todo
 }
 
 service MeshService {

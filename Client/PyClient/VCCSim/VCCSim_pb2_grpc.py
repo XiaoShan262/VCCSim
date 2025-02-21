@@ -57,15 +57,13 @@ class LidarServiceServicer(object):
     """
 
     def GetLiDARData(self, request, context):
-        """todo
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def GetLiDAROdom(self, request, context):
-        """todo
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -471,10 +469,10 @@ class DroneServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetDroneOdom = channel.unary_unary(
-                '/VCCSim.DroneService/GetDroneOdom',
+        self.GetDronePose = channel.unary_unary(
+                '/VCCSim.DroneService/GetDronePose',
                 request_serializer=VCCSim__pb2.RobotName.SerializeToString,
-                response_deserializer=VCCSim__pb2.Odometry.FromString,
+                response_deserializer=VCCSim__pb2.Pose.FromString,
                 _registered_method=True)
         self.SendDronePose = channel.unary_unary(
                 '/VCCSim.DroneService/SendDronePose',
@@ -491,7 +489,7 @@ class DroneServiceStub(object):
 class DroneServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def GetDroneOdom(self, request, context):
+    def GetDronePose(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -504,7 +502,8 @@ class DroneServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def SendDronePath(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """todo
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -512,10 +511,10 @@ class DroneServiceServicer(object):
 
 def add_DroneServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetDroneOdom': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetDroneOdom,
+            'GetDronePose': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetDronePose,
                     request_deserializer=VCCSim__pb2.RobotName.FromString,
-                    response_serializer=VCCSim__pb2.Odometry.SerializeToString,
+                    response_serializer=VCCSim__pb2.Pose.SerializeToString,
             ),
             'SendDronePose': grpc.unary_unary_rpc_method_handler(
                     servicer.SendDronePose,
@@ -539,7 +538,7 @@ class DroneService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def GetDroneOdom(request,
+    def GetDronePose(request,
             target,
             options=(),
             channel_credentials=None,
@@ -552,9 +551,9 @@ class DroneService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/VCCSim.DroneService/GetDroneOdom',
+            '/VCCSim.DroneService/GetDronePose',
             VCCSim__pb2.RobotName.SerializeToString,
-            VCCSim__pb2.Odometry.FromString,
+            VCCSim__pb2.Pose.FromString,
             options,
             channel_credentials,
             insecure,
@@ -650,19 +649,22 @@ class CarServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetCarOdom(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """todo
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def SendCarPose(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """todo
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def SendCarPath(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """todo
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')

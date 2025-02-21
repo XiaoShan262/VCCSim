@@ -415,7 +415,7 @@ RGBCameraService::Service::~Service() {
 
 
 static const char* DroneService_method_names[] = {
-  "/VCCSim.DroneService/GetDroneOdom",
+  "/VCCSim.DroneService/GetDronePose",
   "/VCCSim.DroneService/SendDronePose",
   "/VCCSim.DroneService/SendDronePath",
 };
@@ -427,30 +427,30 @@ std::unique_ptr< DroneService::Stub> DroneService::NewStub(const std::shared_ptr
 }
 
 DroneService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
-  : channel_(channel), rpcmethod_GetDroneOdom_(DroneService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  : channel_(channel), rpcmethod_GetDronePose_(DroneService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_SendDronePose_(DroneService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_SendDronePath_(DroneService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
-::grpc::Status DroneService::Stub::GetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Odometry* response) {
-  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::RobotName, ::VCCSim::Odometry, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_GetDroneOdom_, context, request, response);
+::grpc::Status DroneService::Stub::GetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Pose* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::RobotName, ::VCCSim::Pose, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_GetDronePose_, context, request, response);
 }
 
-void DroneService::Stub::async::GetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, std::function<void(::grpc::Status)> f) {
-  ::grpc::internal::CallbackUnaryCall< ::VCCSim::RobotName, ::VCCSim::Odometry, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetDroneOdom_, context, request, response, std::move(f));
+void DroneService::Stub::async::GetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::RobotName, ::VCCSim::Pose, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetDronePose_, context, request, response, std::move(f));
 }
 
-void DroneService::Stub::async::GetDroneOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, ::grpc::ClientUnaryReactor* reactor) {
-  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetDroneOdom_, context, request, response, reactor);
+void DroneService::Stub::async::GetDronePose(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetDronePose_, context, request, response, reactor);
 }
 
-::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>* DroneService::Stub::PrepareAsyncGetDroneOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Odometry, ::VCCSim::RobotName, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_GetDroneOdom_, context, request);
+::grpc::ClientAsyncResponseReader< ::VCCSim::Pose>* DroneService::Stub::PrepareAsyncGetDronePoseRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Pose, ::VCCSim::RobotName, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_GetDronePose_, context, request);
 }
 
-::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>* DroneService::Stub::AsyncGetDroneOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+::grpc::ClientAsyncResponseReader< ::VCCSim::Pose>* DroneService::Stub::AsyncGetDronePoseRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
   auto* result =
-    this->PrepareAsyncGetDroneOdomRaw(context, request, cq);
+    this->PrepareAsyncGetDronePoseRaw(context, request, cq);
   result->StartCall();
   return result;
 }
@@ -505,12 +505,12 @@ DroneService::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       DroneService_method_names[0],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< DroneService::Service, ::VCCSim::RobotName, ::VCCSim::Odometry, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+      new ::grpc::internal::RpcMethodHandler< DroneService::Service, ::VCCSim::RobotName, ::VCCSim::Pose, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](DroneService::Service* service,
              ::grpc::ServerContext* ctx,
              const ::VCCSim::RobotName* req,
-             ::VCCSim::Odometry* resp) {
-               return service->GetDroneOdom(ctx, req, resp);
+             ::VCCSim::Pose* resp) {
+               return service->GetDronePose(ctx, req, resp);
              }, this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       DroneService_method_names[1],
@@ -537,7 +537,7 @@ DroneService::Service::Service() {
 DroneService::Service::~Service() {
 }
 
-::grpc::Status DroneService::Service::GetDroneOdom(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response) {
+::grpc::Status DroneService::Service::GetDronePose(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response) {
   (void) context;
   (void) request;
   (void) response;

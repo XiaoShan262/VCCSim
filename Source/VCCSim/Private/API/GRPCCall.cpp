@@ -568,10 +568,53 @@ void SendPointCloudWithColorCall::ProcessRequest()
     }
 }
 
+GetDronePoseCall::GetDronePoseCall(
+    VCCSim::DroneService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, ADronePawn*> rcmap)
+        : AsyncCallTemplateM(service, cq, rcmap)
+{
+    Proceed(true);
+}
+
+void GetDronePoseCall::PrepareNextCall()
+{
+    new GetDronePoseCall(service_, cq_, RCMap_);
+}
+
+void GetDronePoseCall::InitializeRequest()
+{
+    UE_LOG(LogTemp, Warning, TEXT("Registering GetDronePose handler"));
+    service_->RequestGetDronePose(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void GetDronePoseCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        const auto Drone = RCMap_[request_.name()];
+        const FVector Loc = Drone->GetActorLocation();
+        const FRotator Rot = Drone->GetActorRotation();
+
+        response_.set_x(Loc.X);
+        response_.set_y(Loc.Y);
+        response_.set_z(Loc.Z);
+        response_.set_roll(Rot.Roll);
+        response_.set_pitch(Rot.Pitch);
+        response_.set_yaw(Rot.Yaw);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("GetDroneOdomCall: "
+                                      "Drone not found!"));
+    }
+}
+
 SendDronePoseCall::SendDronePoseCall(
     VCCSim::DroneService::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
-    std::map<std::string, AQuadcopterDrone*> rcmap)
+    std::map<std::string, ADronePawn*> rcmap)
         : AsyncCallTemplateM(service, cq, rcmap)
 {
     Proceed(true);
@@ -592,7 +635,7 @@ void SendDronePoseCall::ProcessRequest()
 {
     if (RCMap_.contains(request_.name()))
     {
-        if (AQuadcopterDrone* Drone = RCMap_[request_.name()])
+        if (ADronePawn* Drone = RCMap_[request_.name()])
         {
             const FVector TargetLocation(
                 request_.pose().x(),
@@ -600,9 +643,9 @@ void SendDronePoseCall::ProcessRequest()
                 request_.pose().z()
             );
             const FRotator TargetRotation(
-                request_.pose().roll(),
                 request_.pose().pitch(),
-                request_.pose().yaw()
+                request_.pose().yaw(),
+                request_.pose().roll()
             );
             if (!Drone->IfCloseToTarget(TargetLocation, TargetRotation))
             {

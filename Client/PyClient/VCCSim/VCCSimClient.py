@@ -47,15 +47,15 @@ class VCCSimClient:
         return VCCSim_pb2.PoseOnlyYaw(x=x, y=y, z=z, yaw=yaw)
 
     # LiDAR Service Methods
-    def get_lidar_data(self, robot_name: str) -> List[Tuple[float, float, float, int]]:
+    def get_lidar_data(self, robot_name: str) -> List[Tuple[float, float, float]]:
         """Get LiDAR data for a robot.
         
         Returns:
-            List of (x, y, z, hit) tuples representing LiDAR points
+            List of (x, y, z) tuples representing LiDAR points
         """
         request = self._create_robot_name(robot_name)
         response = self.lidar_service.GetLiDARData(request)
-        return [(point.x, point.y, point.z, point.hit) for point in response.data]
+        return [(point.x, point.y, point.z) for point in response.data]
 
     def get_lidar_odom(self, robot_name: str) -> Tuple[VCCSim_pb2.Pose, VCCSim_pb2.twist]:
         """Get LiDAR odometry for a robot."""
@@ -63,11 +63,11 @@ class VCCSimClient:
         response = self.lidar_service.GetLiDAROdom(request)
         return response.pose, response.twist
 
-    def get_lidar_data_and_odom(self, robot_name: str) -> Tuple[List[Tuple[float, float, float, int]], VCCSim_pb2.Odometry]:
+    def get_lidar_data_and_odom(self, robot_name: str) -> Tuple[List[Tuple[float, float, float]], VCCSim_pb2.Odometry]:
         """Get both LiDAR data and odometry for a robot."""
         request = self._create_robot_name(robot_name)
         response = self.lidar_service.GetLiDARDataAndOdom(request)
-        points = [(point.x, point.y, point.z, point.hit) for point in response.data.data]
+        points = [(point.x, point.y, point.z) for point in response.data.data]
         return points, response.odom
 
     # Depth Camera Service Methods
@@ -95,7 +95,11 @@ class VCCSimClient:
         return self.rgb_camera_service.GetRGBCameraOdom(request)
 
     def get_rgb_indexed_camera_image_data(self, robot_name: str, index: int) -> VCCSim_pb2.RGBCameraImageData:
-        """Get RGB camera image data for a specific camera index."""
+        """Get RGB camera image data for a specific camera index.
+        
+        Returns:
+            RGBCameraImageData object with width, height, data, format and optional metadata
+        """
         request = VCCSim_pb2.IndexedCamera(
             robot_name=self._create_robot_name(robot_name),
             index=index
@@ -103,10 +107,10 @@ class VCCSimClient:
         return self.rgb_camera_service.GetRGBIndexedCameraImageData(request)
 
     # Drone Service Methods
-    def get_drone_odom(self, robot_name: str) -> VCCSim_pb2.Odometry:
-        """Get drone odometry."""
+    def get_drone_pose(self, robot_name: str) -> VCCSim_pb2.Pose:
+        """Get drone pose."""
         request = self._create_robot_name(robot_name)
-        return self.drone_service.GetDroneOdom(request)
+        return self.drone_service.GetDronePose(request)
 
     def send_drone_pose(self, name: str, x: float, y: float, z: float,
                        roll: float, pitch: float, yaw: float) -> bool:

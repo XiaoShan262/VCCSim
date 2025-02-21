@@ -65,11 +65,12 @@ public:
             	*FString(ServerAddress.c_str()));
 
             // Spawn initial asynchronous calls
-        	std::map<std::string, AQuadcopterDrone*> DroneMap;
+        	std::map<std::string, ADronePawn*> DroneMap;
         	for (const auto& Pair : RGrpcMaps.RMaps.DroneMap)
 			{
-				DroneMap[Pair.first] = Cast<AQuadcopterDrone>(Pair.second);
+				DroneMap[Pair.first] = Cast<ADronePawn>(Pair.second);
 			}
+        	new GetDronePoseCall(&DroneService, CompletionQueue.get(), DroneMap);
         	new SendDronePoseCall(&DroneService, CompletionQueue.get(), DroneMap);
         	
         	new LidarGetDataCall(&LidarService, CompletionQueue.get(), 
