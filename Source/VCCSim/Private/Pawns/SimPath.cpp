@@ -135,7 +135,7 @@ void AVCCSimPath::MovePivotToFirstPoint()
 void AVCCSimPath::SetNewTrajectory(
 	const TArray<FVector>& Positions, const TArray<FRotator>& Rotations)
 {
-	Spline->ClearSplinePoints();
+	Spline->ClearSplinePoints(false);
 	for (int32 i = 0; i < Positions.Num(); i++)
 	{
 		Spline->AddSplinePoint(Positions[i], ESplineCoordinateSpace::World);

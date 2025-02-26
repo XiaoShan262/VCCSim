@@ -780,6 +780,250 @@ class CarService(object):
             _registered_method=True)
 
 
+class FlashServiceStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.GetFlashPose = channel.unary_unary(
+                '/VCCSim.FlashService/GetFlashPose',
+                request_serializer=VCCSim__pb2.RobotName.SerializeToString,
+                response_deserializer=VCCSim__pb2.Pose.FromString,
+                _registered_method=True)
+        self.SendFlashPose = channel.unary_unary(
+                '/VCCSim.FlashService/SendFlashPose',
+                request_serializer=VCCSim__pb2.FlashPose.SerializeToString,
+                response_deserializer=VCCSim__pb2.Status.FromString,
+                _registered_method=True)
+        self.SendFlashPath = channel.unary_unary(
+                '/VCCSim.FlashService/SendFlashPath',
+                request_serializer=VCCSim__pb2.FlashPath.SerializeToString,
+                response_deserializer=VCCSim__pb2.Status.FromString,
+                _registered_method=True)
+        self.CheckFlashReady = channel.unary_unary(
+                '/VCCSim.FlashService/CheckFlashReady',
+                request_serializer=VCCSim__pb2.RobotName.SerializeToString,
+                response_deserializer=VCCSim__pb2.Status.FromString,
+                _registered_method=True)
+        self.MoveToNext = channel.unary_unary(
+                '/VCCSim.FlashService/MoveToNext',
+                request_serializer=VCCSim__pb2.RobotName.SerializeToString,
+                response_deserializer=VCCSim__pb2.Status.FromString,
+                _registered_method=True)
+
+
+class FlashServiceServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def GetFlashPose(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SendFlashPose(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SendFlashPath(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CheckFlashReady(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def MoveToNext(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_FlashServiceServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'GetFlashPose': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetFlashPose,
+                    request_deserializer=VCCSim__pb2.RobotName.FromString,
+                    response_serializer=VCCSim__pb2.Pose.SerializeToString,
+            ),
+            'SendFlashPose': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendFlashPose,
+                    request_deserializer=VCCSim__pb2.FlashPose.FromString,
+                    response_serializer=VCCSim__pb2.Status.SerializeToString,
+            ),
+            'SendFlashPath': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendFlashPath,
+                    request_deserializer=VCCSim__pb2.FlashPath.FromString,
+                    response_serializer=VCCSim__pb2.Status.SerializeToString,
+            ),
+            'CheckFlashReady': grpc.unary_unary_rpc_method_handler(
+                    servicer.CheckFlashReady,
+                    request_deserializer=VCCSim__pb2.RobotName.FromString,
+                    response_serializer=VCCSim__pb2.Status.SerializeToString,
+            ),
+            'MoveToNext': grpc.unary_unary_rpc_method_handler(
+                    servicer.MoveToNext,
+                    request_deserializer=VCCSim__pb2.RobotName.FromString,
+                    response_serializer=VCCSim__pb2.Status.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'VCCSim.FlashService', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('VCCSim.FlashService', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class FlashService(object):
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def GetFlashPose(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.FlashService/GetFlashPose',
+            VCCSim__pb2.RobotName.SerializeToString,
+            VCCSim__pb2.Pose.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SendFlashPose(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.FlashService/SendFlashPose',
+            VCCSim__pb2.FlashPose.SerializeToString,
+            VCCSim__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SendFlashPath(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.FlashService/SendFlashPath',
+            VCCSim__pb2.FlashPath.SerializeToString,
+            VCCSim__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CheckFlashReady(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.FlashService/CheckFlashReady',
+            VCCSim__pb2.RobotName.SerializeToString,
+            VCCSim__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def MoveToNext(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.FlashService/MoveToNext',
+            VCCSim__pb2.RobotName.SerializeToString,
+            VCCSim__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
 class MeshServiceStub(object):
     """Missing associated documentation comment in .proto file."""
 

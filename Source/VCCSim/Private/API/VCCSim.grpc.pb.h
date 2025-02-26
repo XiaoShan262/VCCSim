@@ -3341,11 +3341,29 @@ class MeshService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> PrepareAsyncSendMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(PrepareAsyncSendMeshRaw(context, request, cq));
     }
+    virtual ::grpc::Status SendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::VCCSim::MeshID* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::MeshID>> AsyncSendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::MeshID>>(AsyncSendGlobalMeshRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::MeshID>> PrepareAsyncSendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::MeshID>>(PrepareAsyncSendGlobalMeshRaw(context, request, cq));
+    }
+    virtual ::grpc::Status RemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::VCCSim::Status* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> AsyncRemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(AsyncRemoveGlobalMeshRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> PrepareAsyncRemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(PrepareAsyncRemoveGlobalMeshRaw(context, request, cq));
+    }
     class async_interface {
      public:
       virtual ~async_interface() {}
       virtual void SendMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SendMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void SendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData* request, ::VCCSim::MeshID* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void SendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData* request, ::VCCSim::MeshID* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void RemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void RemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
@@ -3353,6 +3371,10 @@ class MeshService final {
    private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* AsyncSendMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* PrepareAsyncSendMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::MeshID>* AsyncSendGlobalMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::MeshID>* PrepareAsyncSendGlobalMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* AsyncRemoveGlobalMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* PrepareAsyncRemoveGlobalMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -3364,11 +3386,29 @@ class MeshService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>> PrepareAsyncSendMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>>(PrepareAsyncSendMeshRaw(context, request, cq));
     }
+    ::grpc::Status SendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::VCCSim::MeshID* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::MeshID>> AsyncSendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::MeshID>>(AsyncSendGlobalMeshRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::MeshID>> PrepareAsyncSendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::MeshID>>(PrepareAsyncSendGlobalMeshRaw(context, request, cq));
+    }
+    ::grpc::Status RemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::VCCSim::Status* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>> AsyncRemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>>(AsyncRemoveGlobalMeshRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>> PrepareAsyncRemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>>(PrepareAsyncRemoveGlobalMeshRaw(context, request, cq));
+    }
     class async final :
       public StubInterface::async_interface {
      public:
       void SendMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) override;
       void SendMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void SendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData* request, ::VCCSim::MeshID* response, std::function<void(::grpc::Status)>) override;
+      void SendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData* request, ::VCCSim::MeshID* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void RemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) override;
+      void RemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
       friend class Stub;
       explicit async(Stub* stub): stub_(stub) { }
@@ -3382,7 +3422,13 @@ class MeshService final {
     class async async_stub_{this};
     ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* AsyncSendMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* PrepareAsyncSendMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::MeshID>* AsyncSendGlobalMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::MeshID>* PrepareAsyncSendGlobalMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* AsyncRemoveGlobalMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* PrepareAsyncRemoveGlobalMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_SendMesh_;
+    const ::grpc::internal::RpcMethod rpcmethod_SendGlobalMesh_;
+    const ::grpc::internal::RpcMethod rpcmethod_RemoveGlobalMesh_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -3391,6 +3437,8 @@ class MeshService final {
     Service();
     virtual ~Service();
     virtual ::grpc::Status SendMesh(::grpc::ServerContext* context, const ::VCCSim::MeshData* request, ::VCCSim::Status* response);
+    virtual ::grpc::Status SendGlobalMesh(::grpc::ServerContext* context, const ::VCCSim::MeshData* request, ::VCCSim::MeshID* response);
+    virtual ::grpc::Status RemoveGlobalMesh(::grpc::ServerContext* context, const ::VCCSim::MeshID* request, ::VCCSim::Status* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_SendMesh : public BaseClass {
@@ -3412,7 +3460,47 @@ class MeshService final {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_SendMesh<Service > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_SendGlobalMesh : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_SendGlobalMesh() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
+    ~WithAsyncMethod_SendGlobalMesh() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SendGlobalMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshData* /*request*/, ::VCCSim::MeshID* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestSendGlobalMesh(::grpc::ServerContext* context, ::VCCSim::MeshData* request, ::grpc::ServerAsyncResponseWriter< ::VCCSim::MeshID>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_RemoveGlobalMesh : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_RemoveGlobalMesh() {
+      ::grpc::Service::MarkMethodAsync(2);
+    }
+    ~WithAsyncMethod_RemoveGlobalMesh() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RemoveGlobalMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshID* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestRemoveGlobalMesh(::grpc::ServerContext* context, ::VCCSim::MeshID* request, ::grpc::ServerAsyncResponseWriter< ::VCCSim::Status>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_SendMesh<WithAsyncMethod_SendGlobalMesh<WithAsyncMethod_RemoveGlobalMesh<Service > > > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_SendMesh : public BaseClass {
    private:
@@ -3440,7 +3528,61 @@ class MeshService final {
     virtual ::grpc::ServerUnaryReactor* SendMesh(
       ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::MeshData* /*request*/, ::VCCSim::Status* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_SendMesh<Service > CallbackService;
+  template <class BaseClass>
+  class WithCallbackMethod_SendGlobalMesh : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_SendGlobalMesh() {
+      ::grpc::Service::MarkMethodCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::VCCSim::MeshData, ::VCCSim::MeshID>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::VCCSim::MeshData* request, ::VCCSim::MeshID* response) { return this->SendGlobalMesh(context, request, response); }));}
+    void SetMessageAllocatorFor_SendGlobalMesh(
+        ::grpc::MessageAllocator< ::VCCSim::MeshData, ::VCCSim::MeshID>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::VCCSim::MeshData, ::VCCSim::MeshID>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_SendGlobalMesh() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SendGlobalMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshData* /*request*/, ::VCCSim::MeshID* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* SendGlobalMesh(
+      ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::MeshData* /*request*/, ::VCCSim::MeshID* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithCallbackMethod_RemoveGlobalMesh : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_RemoveGlobalMesh() {
+      ::grpc::Service::MarkMethodCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::VCCSim::MeshID, ::VCCSim::Status>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::VCCSim::MeshID* request, ::VCCSim::Status* response) { return this->RemoveGlobalMesh(context, request, response); }));}
+    void SetMessageAllocatorFor_RemoveGlobalMesh(
+        ::grpc::MessageAllocator< ::VCCSim::MeshID, ::VCCSim::Status>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::VCCSim::MeshID, ::VCCSim::Status>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_RemoveGlobalMesh() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RemoveGlobalMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshID* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* RemoveGlobalMesh(
+      ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::MeshID* /*request*/, ::VCCSim::Status* /*response*/)  { return nullptr; }
+  };
+  typedef WithCallbackMethod_SendMesh<WithCallbackMethod_SendGlobalMesh<WithCallbackMethod_RemoveGlobalMesh<Service > > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_SendMesh : public BaseClass {
@@ -3455,6 +3597,40 @@ class MeshService final {
     }
     // disable synchronous version of this method
     ::grpc::Status SendMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshData* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_SendGlobalMesh : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_SendGlobalMesh() {
+      ::grpc::Service::MarkMethodGeneric(1);
+    }
+    ~WithGenericMethod_SendGlobalMesh() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SendGlobalMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshData* /*request*/, ::VCCSim::MeshID* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_RemoveGlobalMesh : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_RemoveGlobalMesh() {
+      ::grpc::Service::MarkMethodGeneric(2);
+    }
+    ~WithGenericMethod_RemoveGlobalMesh() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RemoveGlobalMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshID* /*request*/, ::VCCSim::Status* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -3480,6 +3656,46 @@ class MeshService final {
     }
   };
   template <class BaseClass>
+  class WithRawMethod_SendGlobalMesh : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_SendGlobalMesh() {
+      ::grpc::Service::MarkMethodRaw(1);
+    }
+    ~WithRawMethod_SendGlobalMesh() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SendGlobalMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshData* /*request*/, ::VCCSim::MeshID* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestSendGlobalMesh(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_RemoveGlobalMesh : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_RemoveGlobalMesh() {
+      ::grpc::Service::MarkMethodRaw(2);
+    }
+    ~WithRawMethod_RemoveGlobalMesh() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RemoveGlobalMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshID* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestRemoveGlobalMesh(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithRawCallbackMethod_SendMesh : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
@@ -3499,6 +3715,50 @@ class MeshService final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     virtual ::grpc::ServerUnaryReactor* SendMesh(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_SendGlobalMesh : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_SendGlobalMesh() {
+      ::grpc::Service::MarkMethodRawCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SendGlobalMesh(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_SendGlobalMesh() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SendGlobalMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshData* /*request*/, ::VCCSim::MeshID* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* SendGlobalMesh(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_RemoveGlobalMesh : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_RemoveGlobalMesh() {
+      ::grpc::Service::MarkMethodRawCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->RemoveGlobalMesh(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_RemoveGlobalMesh() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RemoveGlobalMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshID* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* RemoveGlobalMesh(
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
@@ -3528,9 +3788,63 @@ class MeshService final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedSendMesh(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::MeshData,::VCCSim::Status>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_SendMesh<Service > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_SendGlobalMesh : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_SendGlobalMesh() {
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::VCCSim::MeshData, ::VCCSim::MeshID>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::VCCSim::MeshData, ::VCCSim::MeshID>* streamer) {
+                       return this->StreamedSendGlobalMesh(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_SendGlobalMesh() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status SendGlobalMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshData* /*request*/, ::VCCSim::MeshID* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedSendGlobalMesh(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::MeshData,::VCCSim::MeshID>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_RemoveGlobalMesh : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_RemoveGlobalMesh() {
+      ::grpc::Service::MarkMethodStreamed(2,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::VCCSim::MeshID, ::VCCSim::Status>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::VCCSim::MeshID, ::VCCSim::Status>* streamer) {
+                       return this->StreamedRemoveGlobalMesh(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_RemoveGlobalMesh() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status RemoveGlobalMesh(::grpc::ServerContext* /*context*/, const ::VCCSim::MeshID* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedRemoveGlobalMesh(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::MeshID,::VCCSim::Status>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_SendMesh<WithStreamedUnaryMethod_SendGlobalMesh<WithStreamedUnaryMethod_RemoveGlobalMesh<Service > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_SendMesh<Service > StreamedService;
+  typedef WithStreamedUnaryMethod_SendMesh<WithStreamedUnaryMethod_SendGlobalMesh<WithStreamedUnaryMethod_RemoveGlobalMesh<Service > > > StreamedService;
 };
 
 class PointCloudService final {

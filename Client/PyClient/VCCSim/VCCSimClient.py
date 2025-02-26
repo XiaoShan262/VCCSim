@@ -21,6 +21,7 @@ class VCCSimClient:
         self.rgb_camera_service = VCCSim_pb2_grpc.RGBCameraServiceStub(self.channel)
         self.drone_service = VCCSim_pb2_grpc.DroneServiceStub(self.channel)
         self.car_service = VCCSim_pb2_grpc.CarServiceStub(self.channel)
+        self.flash_service = VCCSim_pb2_grpc.FlashServiceStub(self.channel)  # Added Flash service
         self.mesh_service = VCCSim_pb2_grpc.MeshServiceStub(self.channel)
         self.point_cloud_service = VCCSim_pb2_grpc.PointCloudServiceStub(self.channel)
 
@@ -145,6 +146,39 @@ class VCCSimClient:
         path_poses = [self._create_pose_only_yaw(*pose) for pose in poses]
         request = VCCSim_pb2.CarPath(name=name, path=path_poses)
         response = self.car_service.SendCarPath(request)
+        return response.status
+        
+    # Flash Service Methods
+    def get_flash_pose(self, robot_name: str) -> VCCSim_pb2.Pose:
+        """Get flash pose."""
+        request = self._create_robot_name(robot_name)
+        return self.flash_service.GetFlashPose(request)
+        
+    def send_flash_pose(self, name: str, x: float, y: float, z: float,
+                       roll: float, pitch: float, yaw: float) -> bool:
+        """Send flash pose."""
+        pose = self._create_pose(x, y, z, roll, pitch, yaw)
+        request = VCCSim_pb2.FlashPose(name=name, pose=pose)
+        response = self.flash_service.SendFlashPose(request)
+        return response.status
+        
+    def send_flash_path(self, name: str, poses: List[Tuple[float, float, float, float, float, float]]) -> bool:
+        """Send flash path as a list of poses."""
+        path_poses = [self._create_pose(*pose) for pose in poses]
+        request = VCCSim_pb2.FlashPath(name=name, path=path_poses)
+        response = self.flash_service.SendFlashPath(request)
+        return response.status
+        
+    def check_flash_ready(self, robot_name: str) -> bool:
+        """Check if flash is ready."""
+        request = self._create_robot_name(robot_name)
+        response = self.flash_service.CheckFlashReady(request)
+        return response.status
+        
+    def move_to_next(self, robot_name: str) -> bool:
+        """Move flash to next position."""
+        request = self._create_robot_name(robot_name)
+        response = self.flash_service.MoveToNext(request)
         return response.status
 
     # Mesh Service Methods

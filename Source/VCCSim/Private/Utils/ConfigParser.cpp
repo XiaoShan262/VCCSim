@@ -41,6 +41,7 @@ FVCCSimConfig ParseConfig()
         Config.VCCSim.DefaultFlashPawn = (*VCCSim)["DefaultFlashPawn"].value_or("");
         Config.VCCSim.BufferSize = (*VCCSim)["BufferSize"].value_or(100);
         Config.VCCSim.StartWithRecording = (*VCCSim)["StartWithRecording"].value_or(false);
+        Config.VCCSim.UseMeshManager = (*VCCSim)["UseMeshManager"].value_or(false);
         
         if (auto staticMeshActors = (*VCCSim)["StaticMeshActor"].as_array())
         {

@@ -25,6 +25,7 @@ struct FVCCSimPresets
 	std::vector<float> SubWindowsOpacities;
 	int LS_StartOffset;
 	bool StartWithRecording;
+	bool UseMeshManager;
 	std::string LogSavePath;
 	std::string DefaultDronePawn;
 	std::string DefaultCarPawn;

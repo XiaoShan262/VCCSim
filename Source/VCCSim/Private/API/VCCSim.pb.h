@@ -93,9 +93,9 @@ extern LidarDataAndOdomDefaultTypeInternal _LidarDataAndOdom_default_instance_;
 class MeshData;
 struct MeshDataDefaultTypeInternal;
 extern MeshDataDefaultTypeInternal _MeshData_default_instance_;
-class MeshDataWithOdom;
-struct MeshDataWithOdomDefaultTypeInternal;
-extern MeshDataWithOdomDefaultTypeInternal _MeshDataWithOdom_default_instance_;
+class MeshID;
+struct MeshIDDefaultTypeInternal;
+extern MeshIDDefaultTypeInternal _MeshID_default_instance_;
 class Odometry;
 struct OdometryDefaultTypeInternal;
 extern OdometryDefaultTypeInternal _Odometry_default_instance_;
@@ -1804,6 +1804,197 @@ class Point final
     float x_;
     float y_;
     float z_;
+    ::google::protobuf::internal::CachedSize _cached_size_;
+    PROTOBUF_TSAN_DECLARE_MEMBER
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_VCCSim_2eproto;
+};
+// -------------------------------------------------------------------
+
+class MeshID final
+    : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:VCCSim.MeshID) */ {
+ public:
+  inline MeshID() : MeshID(nullptr) {}
+  ~MeshID() PROTOBUF_FINAL;
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+  void operator delete(MeshID* msg, std::destroying_delete_t) {
+    SharedDtor(*msg);
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(MeshID));
+  }
+#endif
+
+  template <typename = void>
+  explicit PROTOBUF_CONSTEXPR MeshID(
+      ::google::protobuf::internal::ConstantInitialized);
+
+  inline MeshID(const MeshID& from) : MeshID(nullptr, from) {}
+  inline MeshID(MeshID&& from) noexcept
+      : MeshID(nullptr, std::move(from)) {}
+  inline MeshID& operator=(const MeshID& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline MeshID& operator=(MeshID&& from) noexcept {
+    if (this == &from) return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields()
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::google::protobuf::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::google::protobuf::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const MeshID& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const MeshID* internal_default_instance() {
+    return reinterpret_cast<const MeshID*>(
+        &_MeshID_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages = 12;
+  friend void swap(MeshID& a, MeshID& b) { a.Swap(&b); }
+  inline void Swap(MeshID* other) {
+    if (other == this) return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+      InternalSwap(other);
+    } else {
+      ::google::protobuf::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(MeshID* other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  MeshID* New(::google::protobuf::Arena* arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<MeshID>(arena);
+  }
+  using ::google::protobuf::Message::CopyFrom;
+  void CopyFrom(const MeshID& from);
+  using ::google::protobuf::Message::MergeFrom;
+  void MergeFrom(const MeshID& from) { MeshID::MergeImpl(*this, from); }
+
+  private:
+  static void MergeImpl(
+      ::google::protobuf::MessageLite& to_msg,
+      const ::google::protobuf::MessageLite& from_msg);
+
+  public:
+  bool IsInitialized() const {
+    return true;
+  }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+  #if defined(PROTOBUF_CUSTOM_VTABLE)
+  private:
+  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  static ::uint8_t* _InternalSerialize(
+      const MessageLite& msg, ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream);
+
+  public:
+  ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+    return _InternalSerialize(*this, target, stream);
+  }
+  #else   // PROTOBUF_CUSTOM_VTABLE
+  ::size_t ByteSizeLong() const final;
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream) const final;
+  #endif  // PROTOBUF_CUSTOM_VTABLE
+  int GetCachedSize() const { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::google::protobuf::Arena* arena);
+  static void SharedDtor(MessageLite& self);
+  void InternalSwap(MeshID* other);
+ private:
+  template <typename T>
+  friend ::absl::string_view(
+      ::google::protobuf::internal::GetAnyMessageName)();
+  static ::absl::string_view FullMessageName() { return "VCCSim.MeshID"; }
+
+ protected:
+  explicit MeshID(::google::protobuf::Arena* arena);
+  MeshID(::google::protobuf::Arena* arena, const MeshID& from);
+  MeshID(::google::protobuf::Arena* arena, MeshID&& from) noexcept
+      : MeshID(arena) {
+    *this = ::std::move(from);
+  }
+  const ::google::protobuf::internal::ClassData* GetClassData() const PROTOBUF_FINAL;
+  static void* PlacementNew_(const void*, void* mem,
+                             ::google::protobuf::Arena* arena);
+  static constexpr auto InternalNewImpl_();
+  static const ::google::protobuf::internal::ClassDataFull _class_data_;
+
+ public:
+  ::google::protobuf::Metadata GetMetadata() const;
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+  enum : int {
+    kIdFieldNumber = 1,
+  };
+  // uint32 id = 1;
+  void clear_id() ;
+  ::uint32_t id() const;
+  void set_id(::uint32_t value);
+
+  private:
+  ::uint32_t _internal_id() const;
+  void _internal_set_id(::uint32_t value);
+
+  public:
+  // @@protoc_insertion_point(class_scope:VCCSim.MeshID)
+ private:
+  class _Internal;
+  friend class ::google::protobuf::internal::TcParser;
+  static const ::google::protobuf::internal::TcParseTable<
+      0, 1, 0,
+      0, 2>
+      _table_;
+
+  friend class ::google::protobuf::MessageLite;
+  friend class ::google::protobuf::Arena;
+  template <typename T>
+  friend class ::google::protobuf::Arena::InternalHelper;
+  using InternalArenaConstructable_ = void;
+  using DestructorSkippable_ = void;
+  struct Impl_ {
+    inline explicit constexpr Impl_(
+        ::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                          ::google::protobuf::Arena* arena);
+    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                          ::google::protobuf::Arena* arena, const Impl_& from,
+                          const MeshID& from_msg);
+    ::uint32_t id_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
@@ -4927,220 +5118,6 @@ class PointCloudWithColor final
 };
 // -------------------------------------------------------------------
 
-class MeshDataWithOdom final
-    : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:VCCSim.MeshDataWithOdom) */ {
- public:
-  inline MeshDataWithOdom() : MeshDataWithOdom(nullptr) {}
-  ~MeshDataWithOdom() PROTOBUF_FINAL;
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(MeshDataWithOdom* msg, std::destroying_delete_t) {
-    SharedDtor(*msg);
-    ::google::protobuf::internal::SizedDelete(msg, sizeof(MeshDataWithOdom));
-  }
-#endif
-
-  template <typename = void>
-  explicit PROTOBUF_CONSTEXPR MeshDataWithOdom(
-      ::google::protobuf::internal::ConstantInitialized);
-
-  inline MeshDataWithOdom(const MeshDataWithOdom& from) : MeshDataWithOdom(nullptr, from) {}
-  inline MeshDataWithOdom(MeshDataWithOdom&& from) noexcept
-      : MeshDataWithOdom(nullptr, std::move(from)) {}
-  inline MeshDataWithOdom& operator=(const MeshDataWithOdom& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline MeshDataWithOdom& operator=(MeshDataWithOdom&& from) noexcept {
-    if (this == &from) return *this;
-    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
-  }
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields()
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::google::protobuf::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::google::protobuf::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const MeshDataWithOdom& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const MeshDataWithOdom* internal_default_instance() {
-    return reinterpret_cast<const MeshDataWithOdom*>(
-        &_MeshDataWithOdom_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages = 12;
-  friend void swap(MeshDataWithOdom& a, MeshDataWithOdom& b) { a.Swap(&b); }
-  inline void Swap(MeshDataWithOdom* other) {
-    if (other == this) return;
-    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
-      InternalSwap(other);
-    } else {
-      ::google::protobuf::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(MeshDataWithOdom* other) {
-    if (other == this) return;
-    ABSL_DCHECK(GetArena() == other->GetArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  MeshDataWithOdom* New(::google::protobuf::Arena* arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<MeshDataWithOdom>(arena);
-  }
-  using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const MeshDataWithOdom& from);
-  using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const MeshDataWithOdom& from) { MeshDataWithOdom::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(
-      ::google::protobuf::MessageLite& to_msg,
-      const ::google::protobuf::MessageLite& from_msg);
-
-  public:
-  bool IsInitialized() const {
-    return true;
-  }
-  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
-  #if defined(PROTOBUF_CUSTOM_VTABLE)
-  private:
-  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  static ::uint8_t* _InternalSerialize(
-      const MessageLite& msg, ::uint8_t* target,
-      ::google::protobuf::io::EpsCopyOutputStream* stream);
-
-  public:
-  ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
-  ::uint8_t* _InternalSerialize(
-      ::uint8_t* target,
-      ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-    return _InternalSerialize(*this, target, stream);
-  }
-  #else   // PROTOBUF_CUSTOM_VTABLE
-  ::size_t ByteSizeLong() const final;
-  ::uint8_t* _InternalSerialize(
-      ::uint8_t* target,
-      ::google::protobuf::io::EpsCopyOutputStream* stream) const final;
-  #endif  // PROTOBUF_CUSTOM_VTABLE
-  int GetCachedSize() const { return _impl_._cached_size_.Get(); }
-
-  private:
-  void SharedCtor(::google::protobuf::Arena* arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(MeshDataWithOdom* other);
- private:
-  template <typename T>
-  friend ::absl::string_view(
-      ::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "VCCSim.MeshDataWithOdom"; }
-
- protected:
-  explicit MeshDataWithOdom(::google::protobuf::Arena* arena);
-  MeshDataWithOdom(::google::protobuf::Arena* arena, const MeshDataWithOdom& from);
-  MeshDataWithOdom(::google::protobuf::Arena* arena, MeshDataWithOdom&& from) noexcept
-      : MeshDataWithOdom(arena) {
-    *this = ::std::move(from);
-  }
-  const ::google::protobuf::internal::ClassData* GetClassData() const PROTOBUF_FINAL;
-  static void* PlacementNew_(const void*, void* mem,
-                             ::google::protobuf::Arena* arena);
-  static constexpr auto InternalNewImpl_();
-  static const ::google::protobuf::internal::ClassDataFull _class_data_;
-
- public:
-  ::google::protobuf::Metadata GetMetadata() const;
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-  enum : int {
-    kMeshFieldNumber = 1,
-    kOdomFieldNumber = 2,
-  };
-  // .VCCSim.MeshData mesh = 1;
-  bool has_mesh() const;
-  void clear_mesh() ;
-  const ::VCCSim::MeshData& mesh() const;
-  PROTOBUF_NODISCARD ::VCCSim::MeshData* release_mesh();
-  ::VCCSim::MeshData* mutable_mesh();
-  void set_allocated_mesh(::VCCSim::MeshData* value);
-  void unsafe_arena_set_allocated_mesh(::VCCSim::MeshData* value);
-  ::VCCSim::MeshData* unsafe_arena_release_mesh();
-
-  private:
-  const ::VCCSim::MeshData& _internal_mesh() const;
-  ::VCCSim::MeshData* _internal_mutable_mesh();
-
-  public:
-  // .VCCSim.Odometry odom = 2;
-  bool has_odom() const;
-  void clear_odom() ;
-  const ::VCCSim::Odometry& odom() const;
-  PROTOBUF_NODISCARD ::VCCSim::Odometry* release_odom();
-  ::VCCSim::Odometry* mutable_odom();
-  void set_allocated_odom(::VCCSim::Odometry* value);
-  void unsafe_arena_set_allocated_odom(::VCCSim::Odometry* value);
-  ::VCCSim::Odometry* unsafe_arena_release_odom();
-
-  private:
-  const ::VCCSim::Odometry& _internal_odom() const;
-  ::VCCSim::Odometry* _internal_mutable_odom();
-
-  public:
-  // @@protoc_insertion_point(class_scope:VCCSim.MeshDataWithOdom)
- private:
-  class _Internal;
-  friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<
-      1, 2, 2,
-      0, 2>
-      _table_;
-
-  friend class ::google::protobuf::MessageLite;
-  friend class ::google::protobuf::Arena;
-  template <typename T>
-  friend class ::google::protobuf::Arena::InternalHelper;
-  using InternalArenaConstructable_ = void;
-  using DestructorSkippable_ = void;
-  struct Impl_ {
-    inline explicit constexpr Impl_(
-        ::google::protobuf::internal::ConstantInitialized) noexcept;
-    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
-                          ::google::protobuf::Arena* arena);
-    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
-                          ::google::protobuf::Arena* arena, const Impl_& from,
-                          const MeshDataWithOdom& from_msg);
-    ::google::protobuf::internal::HasBits<1> _has_bits_;
-    ::google::protobuf::internal::CachedSize _cached_size_;
-    ::VCCSim::MeshData* mesh_;
-    ::VCCSim::Odometry* odom_;
-    PROTOBUF_TSAN_DECLARE_MEMBER
-  };
-  union { Impl_ _impl_; };
-  friend struct ::TableStruct_VCCSim_2eproto;
-};
-// -------------------------------------------------------------------
-
 class LidarDataAndOdom final
     : public ::google::protobuf::Message
 /* @@protoc_insertion_point(class_definition:VCCSim.LidarDataAndOdom) */ {
@@ -6591,198 +6568,28 @@ inline void MeshData::set_allocated_transform(::VCCSim::Pose* value) {
 
 // -------------------------------------------------------------------
 
-// MeshDataWithOdom
+// MeshID
 
-// .VCCSim.MeshData mesh = 1;
-inline bool MeshDataWithOdom::has_mesh() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
-  PROTOBUF_ASSUME(!value || _impl_.mesh_ != nullptr);
-  return value;
-}
-inline void MeshDataWithOdom::clear_mesh() {
+// uint32 id = 1;
+inline void MeshID::clear_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.mesh_ != nullptr) _impl_.mesh_->Clear();
-  _impl_._has_bits_[0] &= ~0x00000001u;
+  _impl_.id_ = 0u;
 }
-inline const ::VCCSim::MeshData& MeshDataWithOdom::_internal_mesh() const {
+inline ::uint32_t MeshID::id() const {
+  // @@protoc_insertion_point(field_get:VCCSim.MeshID.id)
+  return _internal_id();
+}
+inline void MeshID::set_id(::uint32_t value) {
+  _internal_set_id(value);
+  // @@protoc_insertion_point(field_set:VCCSim.MeshID.id)
+}
+inline ::uint32_t MeshID::_internal_id() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::VCCSim::MeshData* p = _impl_.mesh_;
-  return p != nullptr ? *p : reinterpret_cast<const ::VCCSim::MeshData&>(::VCCSim::_MeshData_default_instance_);
+  return _impl_.id_;
 }
-inline const ::VCCSim::MeshData& MeshDataWithOdom::mesh() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:VCCSim.MeshDataWithOdom.mesh)
-  return _internal_mesh();
-}
-inline void MeshDataWithOdom::unsafe_arena_set_allocated_mesh(::VCCSim::MeshData* value) {
+inline void MeshID::_internal_set_id(::uint32_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (GetArena() == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.mesh_);
-  }
-  _impl_.mesh_ = reinterpret_cast<::VCCSim::MeshData*>(value);
-  if (value != nullptr) {
-    _impl_._has_bits_[0] |= 0x00000001u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000001u;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:VCCSim.MeshDataWithOdom.mesh)
-}
-inline ::VCCSim::MeshData* MeshDataWithOdom::release_mesh() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-
-  _impl_._has_bits_[0] &= ~0x00000001u;
-  ::VCCSim::MeshData* released = _impl_.mesh_;
-  _impl_.mesh_ = nullptr;
-  if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
-    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
-    released = ::google::protobuf::internal::DuplicateIfNonNull(released);
-    if (GetArena() == nullptr) {
-      delete old;
-    }
-  } else {
-    if (GetArena() != nullptr) {
-      released = ::google::protobuf::internal::DuplicateIfNonNull(released);
-    }
-  }
-  return released;
-}
-inline ::VCCSim::MeshData* MeshDataWithOdom::unsafe_arena_release_mesh() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:VCCSim.MeshDataWithOdom.mesh)
-
-  _impl_._has_bits_[0] &= ~0x00000001u;
-  ::VCCSim::MeshData* temp = _impl_.mesh_;
-  _impl_.mesh_ = nullptr;
-  return temp;
-}
-inline ::VCCSim::MeshData* MeshDataWithOdom::_internal_mutable_mesh() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.mesh_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::VCCSim::MeshData>(GetArena());
-    _impl_.mesh_ = reinterpret_cast<::VCCSim::MeshData*>(p);
-  }
-  return _impl_.mesh_;
-}
-inline ::VCCSim::MeshData* MeshDataWithOdom::mutable_mesh() ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  _impl_._has_bits_[0] |= 0x00000001u;
-  ::VCCSim::MeshData* _msg = _internal_mutable_mesh();
-  // @@protoc_insertion_point(field_mutable:VCCSim.MeshDataWithOdom.mesh)
-  return _msg;
-}
-inline void MeshDataWithOdom::set_allocated_mesh(::VCCSim::MeshData* value) {
-  ::google::protobuf::Arena* message_arena = GetArena();
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (message_arena == nullptr) {
-    delete (_impl_.mesh_);
-  }
-
-  if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = (value)->GetArena();
-    if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
-    }
-    _impl_._has_bits_[0] |= 0x00000001u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000001u;
-  }
-
-  _impl_.mesh_ = reinterpret_cast<::VCCSim::MeshData*>(value);
-  // @@protoc_insertion_point(field_set_allocated:VCCSim.MeshDataWithOdom.mesh)
-}
-
-// .VCCSim.Odometry odom = 2;
-inline bool MeshDataWithOdom::has_odom() const {
-  bool value = (_impl_._has_bits_[0] & 0x00000002u) != 0;
-  PROTOBUF_ASSUME(!value || _impl_.odom_ != nullptr);
-  return value;
-}
-inline void MeshDataWithOdom::clear_odom() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.odom_ != nullptr) _impl_.odom_->Clear();
-  _impl_._has_bits_[0] &= ~0x00000002u;
-}
-inline const ::VCCSim::Odometry& MeshDataWithOdom::_internal_odom() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  const ::VCCSim::Odometry* p = _impl_.odom_;
-  return p != nullptr ? *p : reinterpret_cast<const ::VCCSim::Odometry&>(::VCCSim::_Odometry_default_instance_);
-}
-inline const ::VCCSim::Odometry& MeshDataWithOdom::odom() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:VCCSim.MeshDataWithOdom.odom)
-  return _internal_odom();
-}
-inline void MeshDataWithOdom::unsafe_arena_set_allocated_odom(::VCCSim::Odometry* value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (GetArena() == nullptr) {
-    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.odom_);
-  }
-  _impl_.odom_ = reinterpret_cast<::VCCSim::Odometry*>(value);
-  if (value != nullptr) {
-    _impl_._has_bits_[0] |= 0x00000002u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000002u;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:VCCSim.MeshDataWithOdom.odom)
-}
-inline ::VCCSim::Odometry* MeshDataWithOdom::release_odom() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-
-  _impl_._has_bits_[0] &= ~0x00000002u;
-  ::VCCSim::Odometry* released = _impl_.odom_;
-  _impl_.odom_ = nullptr;
-  if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
-    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
-    released = ::google::protobuf::internal::DuplicateIfNonNull(released);
-    if (GetArena() == nullptr) {
-      delete old;
-    }
-  } else {
-    if (GetArena() != nullptr) {
-      released = ::google::protobuf::internal::DuplicateIfNonNull(released);
-    }
-  }
-  return released;
-}
-inline ::VCCSim::Odometry* MeshDataWithOdom::unsafe_arena_release_odom() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:VCCSim.MeshDataWithOdom.odom)
-
-  _impl_._has_bits_[0] &= ~0x00000002u;
-  ::VCCSim::Odometry* temp = _impl_.odom_;
-  _impl_.odom_ = nullptr;
-  return temp;
-}
-inline ::VCCSim::Odometry* MeshDataWithOdom::_internal_mutable_odom() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (_impl_.odom_ == nullptr) {
-    auto* p = ::google::protobuf::Message::DefaultConstruct<::VCCSim::Odometry>(GetArena());
-    _impl_.odom_ = reinterpret_cast<::VCCSim::Odometry*>(p);
-  }
-  return _impl_.odom_;
-}
-inline ::VCCSim::Odometry* MeshDataWithOdom::mutable_odom() ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  _impl_._has_bits_[0] |= 0x00000002u;
-  ::VCCSim::Odometry* _msg = _internal_mutable_odom();
-  // @@protoc_insertion_point(field_mutable:VCCSim.MeshDataWithOdom.odom)
-  return _msg;
-}
-inline void MeshDataWithOdom::set_allocated_odom(::VCCSim::Odometry* value) {
-  ::google::protobuf::Arena* message_arena = GetArena();
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  if (message_arena == nullptr) {
-    delete (_impl_.odom_);
-  }
-
-  if (value != nullptr) {
-    ::google::protobuf::Arena* submessage_arena = (value)->GetArena();
-    if (message_arena != submessage_arena) {
-      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
-    }
-    _impl_._has_bits_[0] |= 0x00000002u;
-  } else {
-    _impl_._has_bits_[0] &= ~0x00000002u;
-  }
-
-  _impl_.odom_ = reinterpret_cast<::VCCSim::Odometry*>(value);
-  // @@protoc_insertion_point(field_set_allocated:VCCSim.MeshDataWithOdom.odom)
+  _impl_.id_ = value;
 }
 
 // -------------------------------------------------------------------

@@ -75,9 +75,8 @@ message MeshData {
   Pose transform = 5;       // Mesh world transform
 }
 
-message MeshDataWithOdom {
-  MeshData mesh = 1;
-  Odometry odom = 2;
+message MeshID {
+  uint32 id = 1; 
 }
 
 // Lidar:
@@ -193,6 +192,8 @@ service FlashService {
 
 service MeshService {
   rpc SendMesh (MeshData) returns (Status);
+  rpc SendGlobalMesh (MeshData) returns (MeshID);
+  rpc RemoveGlobalMesh (MeshID) returns (Status);
 }
 
 service PointCloudService {

@@ -935,6 +935,8 @@ FlashService::Service::~Service() {
 
 static const char* MeshService_method_names[] = {
   "/VCCSim.MeshService/SendMesh",
+  "/VCCSim.MeshService/SendGlobalMesh",
+  "/VCCSim.MeshService/RemoveGlobalMesh",
 };
 
 std::unique_ptr< MeshService::Stub> MeshService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -945,6 +947,8 @@ std::unique_ptr< MeshService::Stub> MeshService::NewStub(const std::shared_ptr< 
 
 MeshService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
   : channel_(channel), rpcmethod_SendMesh_(MeshService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SendGlobalMesh_(MeshService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_RemoveGlobalMesh_(MeshService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status MeshService::Stub::SendMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::VCCSim::Status* response) {
@@ -970,6 +974,52 @@ void MeshService::Stub::async::SendMesh(::grpc::ClientContext* context, const ::
   return result;
 }
 
+::grpc::Status MeshService::Stub::SendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::VCCSim::MeshID* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::MeshData, ::VCCSim::MeshID, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SendGlobalMesh_, context, request, response);
+}
+
+void MeshService::Stub::async::SendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData* request, ::VCCSim::MeshID* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::MeshData, ::VCCSim::MeshID, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendGlobalMesh_, context, request, response, std::move(f));
+}
+
+void MeshService::Stub::async::SendGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshData* request, ::VCCSim::MeshID* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendGlobalMesh_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::MeshID>* MeshService::Stub::PrepareAsyncSendGlobalMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::MeshID, ::VCCSim::MeshData, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SendGlobalMesh_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::MeshID>* MeshService::Stub::AsyncSendGlobalMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshData& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSendGlobalMeshRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status MeshService::Stub::RemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::VCCSim::Status* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::MeshID, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_RemoveGlobalMesh_, context, request, response);
+}
+
+void MeshService::Stub::async::RemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::MeshID, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_RemoveGlobalMesh_, context, request, response, std::move(f));
+}
+
+void MeshService::Stub::async::RemoveGlobalMesh(::grpc::ClientContext* context, const ::VCCSim::MeshID* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_RemoveGlobalMesh_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* MeshService::Stub::PrepareAsyncRemoveGlobalMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Status, ::VCCSim::MeshID, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_RemoveGlobalMesh_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* MeshService::Stub::AsyncRemoveGlobalMeshRaw(::grpc::ClientContext* context, const ::VCCSim::MeshID& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncRemoveGlobalMeshRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
 MeshService::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       MeshService_method_names[0],
@@ -981,12 +1031,46 @@ MeshService::Service::Service() {
              ::VCCSim::Status* resp) {
                return service->SendMesh(ctx, req, resp);
              }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      MeshService_method_names[1],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< MeshService::Service, ::VCCSim::MeshData, ::VCCSim::MeshID, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](MeshService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::MeshData* req,
+             ::VCCSim::MeshID* resp) {
+               return service->SendGlobalMesh(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      MeshService_method_names[2],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< MeshService::Service, ::VCCSim::MeshID, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](MeshService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::MeshID* req,
+             ::VCCSim::Status* resp) {
+               return service->RemoveGlobalMesh(ctx, req, resp);
+             }, this)));
 }
 
 MeshService::Service::~Service() {
 }
 
 ::grpc::Status MeshService::Service::SendMesh(::grpc::ServerContext* context, const ::VCCSim::MeshData* request, ::VCCSim::Status* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status MeshService::Service::SendGlobalMesh(::grpc::ServerContext* context, const ::VCCSim::MeshData* request, ::VCCSim::MeshID* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status MeshService::Service::RemoveGlobalMesh(::grpc::ServerContext* context, const ::VCCSim::MeshID* request, ::VCCSim::Status* response) {
   (void) context;
   (void) request;
   (void) response;

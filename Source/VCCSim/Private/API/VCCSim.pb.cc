@@ -226,6 +226,31 @@ struct PointDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 PointDefaultTypeInternal _Point_default_instance_;
+
+inline constexpr MeshID::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : id_{0u},
+        _cached_size_{0} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR MeshID::MeshID(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(::_pbi::ConstantInitialized()) {
+}
+struct MeshIDDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR MeshIDDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~MeshIDDefaultTypeInternal() {}
+  union {
+    MeshID _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 MeshIDDefaultTypeInternal _MeshID_default_instance_;
               template <typename>
 PROTOBUF_CONSTEXPR EmptyRequest::EmptyRequest(::_pbi::ConstantInitialized)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
@@ -622,32 +647,6 @@ struct PointCloudWithColorDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 PointCloudWithColorDefaultTypeInternal _PointCloudWithColor_default_instance_;
 
-inline constexpr MeshDataWithOdom::Impl_::Impl_(
-    ::_pbi::ConstantInitialized) noexcept
-      : _cached_size_{0},
-        mesh_{nullptr},
-        odom_{nullptr} {}
-
-template <typename>
-PROTOBUF_CONSTEXPR MeshDataWithOdom::MeshDataWithOdom(::_pbi::ConstantInitialized)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(_class_data_.base()),
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(),
-#endif  // PROTOBUF_CUSTOM_VTABLE
-      _impl_(::_pbi::ConstantInitialized()) {
-}
-struct MeshDataWithOdomDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR MeshDataWithOdomDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~MeshDataWithOdomDefaultTypeInternal() {}
-  union {
-    MeshDataWithOdom _instance;
-  };
-};
-
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 MeshDataWithOdomDefaultTypeInternal _MeshDataWithOdom_default_instance_;
-
 inline constexpr LidarDataAndOdom::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
@@ -820,18 +819,15 @@ const ::uint32_t
         ~0u,
         ~0u,
         0,
-        PROTOBUF_FIELD_OFFSET(::VCCSim::MeshDataWithOdom, _impl_._has_bits_),
-        PROTOBUF_FIELD_OFFSET(::VCCSim::MeshDataWithOdom, _internal_metadata_),
+        ~0u,  // no _has_bits_
+        PROTOBUF_FIELD_OFFSET(::VCCSim::MeshID, _internal_metadata_),
         ~0u,  // no _extensions_
         ~0u,  // no _oneof_case_
         ~0u,  // no _weak_field_map_
         ~0u,  // no _inlined_string_donated_
         ~0u,  // no _split_
         ~0u,  // no sizeof(Split)
-        PROTOBUF_FIELD_OFFSET(::VCCSim::MeshDataWithOdom, _impl_.mesh_),
-        PROTOBUF_FIELD_OFFSET(::VCCSim::MeshDataWithOdom, _impl_.odom_),
-        0,
-        1,
+        PROTOBUF_FIELD_OFFSET(::VCCSim::MeshID, _impl_.id_),
         ~0u,  // no _has_bits_
         PROTOBUF_FIELD_OFFSET(::VCCSim::LidarData, _internal_metadata_),
         ~0u,  // no _extensions_
@@ -977,18 +973,18 @@ static const ::_pbi::MigrationSchema
         {101, -1, -1, sizeof(::VCCSim::RobotName)},
         {110, 120, -1, sizeof(::VCCSim::IndexedCamera)},
         {122, 135, -1, sizeof(::VCCSim::MeshData)},
-        {140, 150, -1, sizeof(::VCCSim::MeshDataWithOdom)},
-        {152, -1, -1, sizeof(::VCCSim::LidarData)},
-        {161, 171, -1, sizeof(::VCCSim::LidarDataAndOdom)},
-        {173, -1, -1, sizeof(::VCCSim::DepthCameraPointData)},
-        {182, -1, -1, sizeof(::VCCSim::DepthCameraImageData)},
-        {191, 207, -1, sizeof(::VCCSim::RGBCameraImageData)},
-        {215, 225, -1, sizeof(::VCCSim::DronePose)},
-        {227, -1, -1, sizeof(::VCCSim::DronePath)},
-        {237, 247, -1, sizeof(::VCCSim::CarPose)},
-        {249, -1, -1, sizeof(::VCCSim::CarPath)},
-        {259, 269, -1, sizeof(::VCCSim::FlashPose)},
-        {271, -1, -1, sizeof(::VCCSim::FlashPath)},
+        {140, -1, -1, sizeof(::VCCSim::MeshID)},
+        {149, -1, -1, sizeof(::VCCSim::LidarData)},
+        {158, 168, -1, sizeof(::VCCSim::LidarDataAndOdom)},
+        {170, -1, -1, sizeof(::VCCSim::DepthCameraPointData)},
+        {179, -1, -1, sizeof(::VCCSim::DepthCameraImageData)},
+        {188, 204, -1, sizeof(::VCCSim::RGBCameraImageData)},
+        {212, 222, -1, sizeof(::VCCSim::DronePose)},
+        {224, -1, -1, sizeof(::VCCSim::DronePath)},
+        {234, 244, -1, sizeof(::VCCSim::CarPose)},
+        {246, -1, -1, sizeof(::VCCSim::CarPath)},
+        {256, 266, -1, sizeof(::VCCSim::FlashPose)},
+        {268, -1, -1, sizeof(::VCCSim::FlashPath)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::VCCSim::_Point_default_instance_._instance,
@@ -1003,7 +999,7 @@ static const ::_pb::Message* const file_default_instances[] = {
     &::VCCSim::_RobotName_default_instance_._instance,
     &::VCCSim::_IndexedCamera_default_instance_._instance,
     &::VCCSim::_MeshData_default_instance_._instance,
-    &::VCCSim::_MeshDataWithOdom_default_instance_._instance,
+    &::VCCSim::_MeshID_default_instance_._instance,
     &::VCCSim::_LidarData_default_instance_._instance,
     &::VCCSim::_LidarDataAndOdom_default_instance_._instance,
     &::VCCSim::_DepthCameraPointData_default_instance_._instance,
@@ -1037,71 +1033,72 @@ const char descriptor_table_protodef_VCCSim_2eproto[] ABSL_ATTRIBUTE_SECTION_VAR
     "botName\022\r\n\005index\030\002 \001(\r\"n\n\010MeshData\022\014\n\004da"
     "ta\030\001 \001(\014\022\016\n\006format\030\002 \001(\r\022\017\n\007version\030\003 \001("
     "\r\022\022\n\nsimplified\030\004 \001(\010\022\037\n\ttransform\030\005 \001(\013"
-    "2\014.VCCSim.Pose\"R\n\020MeshDataWithOdom\022\036\n\004me"
-    "sh\030\001 \001(\0132\020.VCCSim.MeshData\022\036\n\004odom\030\002 \001(\013"
-    "2\020.VCCSim.Odometry\"(\n\tLidarData\022\033\n\004data\030"
-    "\001 \003(\0132\r.VCCSim.Point\"S\n\020LidarDataAndOdom"
-    "\022\037\n\004data\030\001 \001(\0132\021.VCCSim.LidarData\022\036\n\004odo"
-    "m\030\002 \001(\0132\020.VCCSim.Odometry\"3\n\024DepthCamera"
-    "PointData\022\033\n\004data\030\001 \003(\0132\r.VCCSim.Point\"$"
-    "\n\024DepthCameraImageData\022\014\n\004data\030\001 \003(\002\"\266\002\n"
-    "\022RGBCameraImageData\022\r\n\005width\030\001 \001(\r\022\016\n\006he"
-    "ight\030\002 \001(\r\022\014\n\004data\030\003 \001(\014\0221\n\006format\030\004 \001(\016"
-    "2!.VCCSim.RGBCameraImageData.Format\022\021\n\tt"
-    "imestamp\030\005 \001(\r\022\034\n\017bytes_per_pixel\030\006 \001(\rH"
-    "\000\210\001\001\022\023\n\006stride\030\007 \001(\rH\001\210\001\001\022\032\n\ris_compress"
-    "ed\030\010 \001(\010H\002\210\001\001\"-\n\006Format\022\007\n\003RGB\020\000\022\007\n\003BGR\020"
-    "\001\022\010\n\004JPEG\020\002\022\007\n\003PNG\020\003B\022\n\020_bytes_per_pixel"
-    "B\t\n\007_strideB\020\n\016_is_compressed\"5\n\tDronePo"
-    "se\022\014\n\004name\030\001 \001(\t\022\032\n\004pose\030\002 \001(\0132\014.VCCSim."
-    "Pose\"5\n\tDronePath\022\014\n\004name\030\001 \001(\t\022\032\n\004path\030"
-    "\002 \003(\0132\014.VCCSim.Pose\":\n\007CarPose\022\014\n\004name\030\001"
-    " \001(\t\022!\n\004pose\030\002 \001(\0132\023.VCCSim.PoseOnlyYaw\""
-    ":\n\007CarPath\022\014\n\004name\030\001 \001(\t\022!\n\004path\030\002 \003(\0132\023"
-    ".VCCSim.PoseOnlyYaw\"5\n\tFlashPose\022\014\n\004name"
-    "\030\001 \001(\t\022\032\n\004pose\030\002 \001(\0132\014.VCCSim.Pose\"5\n\tFl"
-    "ashPath\022\014\n\004name\030\001 \001(\t\022\032\n\004path\030\002 \003(\0132\014.VC"
-    "CSim.Pose2\275\001\n\014LidarService\0224\n\014GetLiDARDa"
-    "ta\022\021.VCCSim.RobotName\032\021.VCCSim.LidarData"
-    "\0223\n\014GetLiDAROdom\022\021.VCCSim.RobotName\032\020.VC"
-    "CSim.Odometry\022B\n\023GetLiDARDataAndOdom\022\021.V"
-    "CCSim.RobotName\032\030.VCCSim.LidarDataAndOdo"
-    "m2\347\001\n\022DepthCameraService\022J\n\027GetDepthCame"
-    "raPointData\022\021.VCCSim.RobotName\032\034.VCCSim."
-    "DepthCameraPointData\022J\n\027GetDepthCameraIm"
-    "ageData\022\021.VCCSim.RobotName\032\034.VCCSim.Dept"
-    "hCameraImageData\0229\n\022GetDepthCameraOdom\022\021"
-    ".VCCSim.RobotName\032\020.VCCSim.Odometry2\236\001\n\020"
-    "RGBCameraService\0227\n\020GetRGBCameraOdom\022\021.V"
-    "CCSim.RobotName\032\020.VCCSim.Odometry\022Q\n\034Get"
-    "RGBIndexedCameraImageData\022\025.VCCSim.Index"
-    "edCamera\032\032.VCCSim.RGBCameraImageData2\247\001\n"
-    "\014DroneService\022/\n\014GetDronePose\022\021.VCCSim.R"
-    "obotName\032\014.VCCSim.Pose\0222\n\rSendDronePose\022"
-    "\021.VCCSim.DronePose\032\016.VCCSim.Status\0222\n\rSe"
-    "ndDronePath\022\021.VCCSim.DronePath\032\016.VCCSim."
-    "Status2\237\001\n\nCarService\0221\n\nGetCarOdom\022\021.VC"
-    "CSim.RobotName\032\020.VCCSim.Odometry\022.\n\013Send"
-    "CarPose\022\017.VCCSim.CarPose\032\016.VCCSim.Status"
-    "\022.\n\013SendCarPath\022\017.VCCSim.CarPath\032\016.VCCSi"
-    "m.Status2\216\002\n\014FlashService\022/\n\014GetFlashPos"
-    "e\022\021.VCCSim.RobotName\032\014.VCCSim.Pose\0222\n\rSe"
-    "ndFlashPose\022\021.VCCSim.FlashPose\032\016.VCCSim."
-    "Status\0222\n\rSendFlashPath\022\021.VCCSim.FlashPa"
-    "th\032\016.VCCSim.Status\0224\n\017CheckFlashReady\022\021."
-    "VCCSim.RobotName\032\016.VCCSim.Status\022/\n\nMove"
-    "ToNext\022\021.VCCSim.RobotName\032\016.VCCSim.Statu"
-    "s2;\n\013MeshService\022,\n\010SendMesh\022\020.VCCSim.Me"
-    "shData\032\016.VCCSim.Status2[\n\021PointCloudServ"
-    "ice\022F\n\027SendPointCloudWithColor\022\033.VCCSim."
-    "PointCloudWithColor\032\016.VCCSim.Statusb\006pro"
-    "to3"
+    "2\014.VCCSim.Pose\"\024\n\006MeshID\022\n\n\002id\030\001 \001(\r\"(\n\t"
+    "LidarData\022\033\n\004data\030\001 \003(\0132\r.VCCSim.Point\"S"
+    "\n\020LidarDataAndOdom\022\037\n\004data\030\001 \001(\0132\021.VCCSi"
+    "m.LidarData\022\036\n\004odom\030\002 \001(\0132\020.VCCSim.Odome"
+    "try\"3\n\024DepthCameraPointData\022\033\n\004data\030\001 \003("
+    "\0132\r.VCCSim.Point\"$\n\024DepthCameraImageData"
+    "\022\014\n\004data\030\001 \003(\002\"\266\002\n\022RGBCameraImageData\022\r\n"
+    "\005width\030\001 \001(\r\022\016\n\006height\030\002 \001(\r\022\014\n\004data\030\003 \001"
+    "(\014\0221\n\006format\030\004 \001(\0162!.VCCSim.RGBCameraIma"
+    "geData.Format\022\021\n\ttimestamp\030\005 \001(\r\022\034\n\017byte"
+    "s_per_pixel\030\006 \001(\rH\000\210\001\001\022\023\n\006stride\030\007 \001(\rH\001"
+    "\210\001\001\022\032\n\ris_compressed\030\010 \001(\010H\002\210\001\001\"-\n\006Forma"
+    "t\022\007\n\003RGB\020\000\022\007\n\003BGR\020\001\022\010\n\004JPEG\020\002\022\007\n\003PNG\020\003B\022"
+    "\n\020_bytes_per_pixelB\t\n\007_strideB\020\n\016_is_com"
+    "pressed\"5\n\tDronePose\022\014\n\004name\030\001 \001(\t\022\032\n\004po"
+    "se\030\002 \001(\0132\014.VCCSim.Pose\"5\n\tDronePath\022\014\n\004n"
+    "ame\030\001 \001(\t\022\032\n\004path\030\002 \003(\0132\014.VCCSim.Pose\":\n"
+    "\007CarPose\022\014\n\004name\030\001 \001(\t\022!\n\004pose\030\002 \001(\0132\023.V"
+    "CCSim.PoseOnlyYaw\":\n\007CarPath\022\014\n\004name\030\001 \001"
+    "(\t\022!\n\004path\030\002 \003(\0132\023.VCCSim.PoseOnlyYaw\"5\n"
+    "\tFlashPose\022\014\n\004name\030\001 \001(\t\022\032\n\004pose\030\002 \001(\0132\014"
+    ".VCCSim.Pose\"5\n\tFlashPath\022\014\n\004name\030\001 \001(\t\022"
+    "\032\n\004path\030\002 \003(\0132\014.VCCSim.Pose2\275\001\n\014LidarSer"
+    "vice\0224\n\014GetLiDARData\022\021.VCCSim.RobotName\032"
+    "\021.VCCSim.LidarData\0223\n\014GetLiDAROdom\022\021.VCC"
+    "Sim.RobotName\032\020.VCCSim.Odometry\022B\n\023GetLi"
+    "DARDataAndOdom\022\021.VCCSim.RobotName\032\030.VCCS"
+    "im.LidarDataAndOdom2\347\001\n\022DepthCameraServi"
+    "ce\022J\n\027GetDepthCameraPointData\022\021.VCCSim.R"
+    "obotName\032\034.VCCSim.DepthCameraPointData\022J"
+    "\n\027GetDepthCameraImageData\022\021.VCCSim.Robot"
+    "Name\032\034.VCCSim.DepthCameraImageData\0229\n\022Ge"
+    "tDepthCameraOdom\022\021.VCCSim.RobotName\032\020.VC"
+    "CSim.Odometry2\236\001\n\020RGBCameraService\0227\n\020Ge"
+    "tRGBCameraOdom\022\021.VCCSim.RobotName\032\020.VCCS"
+    "im.Odometry\022Q\n\034GetRGBIndexedCameraImageD"
+    "ata\022\025.VCCSim.IndexedCamera\032\032.VCCSim.RGBC"
+    "ameraImageData2\247\001\n\014DroneService\022/\n\014GetDr"
+    "onePose\022\021.VCCSim.RobotName\032\014.VCCSim.Pose"
+    "\0222\n\rSendDronePose\022\021.VCCSim.DronePose\032\016.V"
+    "CCSim.Status\0222\n\rSendDronePath\022\021.VCCSim.D"
+    "ronePath\032\016.VCCSim.Status2\237\001\n\nCarService\022"
+    "1\n\nGetCarOdom\022\021.VCCSim.RobotName\032\020.VCCSi"
+    "m.Odometry\022.\n\013SendCarPose\022\017.VCCSim.CarPo"
+    "se\032\016.VCCSim.Status\022.\n\013SendCarPath\022\017.VCCS"
+    "im.CarPath\032\016.VCCSim.Status2\216\002\n\014FlashServ"
+    "ice\022/\n\014GetFlashPose\022\021.VCCSim.RobotName\032\014"
+    ".VCCSim.Pose\0222\n\rSendFlashPose\022\021.VCCSim.F"
+    "lashPose\032\016.VCCSim.Status\0222\n\rSendFlashPat"
+    "h\022\021.VCCSim.FlashPath\032\016.VCCSim.Status\0224\n\017"
+    "CheckFlashReady\022\021.VCCSim.RobotName\032\016.VCC"
+    "Sim.Status\022/\n\nMoveToNext\022\021.VCCSim.RobotN"
+    "ame\032\016.VCCSim.Status2\243\001\n\013MeshService\022,\n\010S"
+    "endMesh\022\020.VCCSim.MeshData\032\016.VCCSim.Statu"
+    "s\0222\n\016SendGlobalMesh\022\020.VCCSim.MeshData\032\016."
+    "VCCSim.MeshID\0222\n\020RemoveGlobalMesh\022\016.VCCS"
+    "im.MeshID\032\016.VCCSim.Status2[\n\021PointCloudS"
+    "ervice\022F\n\027SendPointCloudWithColor\022\033.VCCS"
+    "im.PointCloudWithColor\032\016.VCCSim.Statusb\006"
+    "proto3"
 };
 static ::absl::once_flag descriptor_table_VCCSim_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_VCCSim_2eproto = {
     false,
     false,
-    3083,
+    3126,
     descriptor_table_protodef_VCCSim_2eproto,
     "VCCSim.proto",
     &descriptor_table_VCCSim_2eproto_once,
@@ -4342,205 +4339,144 @@ void MeshData::InternalSwap(MeshData* PROTOBUF_RESTRICT other) {
 }
 // ===================================================================
 
-class MeshDataWithOdom::_Internal {
+class MeshID::_Internal {
  public:
-  using HasBits =
-      decltype(std::declval<MeshDataWithOdom>()._impl_._has_bits_);
-  static constexpr ::int32_t kHasBitsOffset =
-      8 * PROTOBUF_FIELD_OFFSET(MeshDataWithOdom, _impl_._has_bits_);
 };
 
-MeshDataWithOdom::MeshDataWithOdom(::google::protobuf::Arena* arena)
+MeshID::MeshID(::google::protobuf::Arena* arena)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
     : ::google::protobuf::Message(arena, _class_data_.base()) {
 #else   // PROTOBUF_CUSTOM_VTABLE
     : ::google::protobuf::Message(arena) {
 #endif  // PROTOBUF_CUSTOM_VTABLE
   SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:VCCSim.MeshDataWithOdom)
+  // @@protoc_insertion_point(arena_constructor:VCCSim.MeshID)
 }
-inline PROTOBUF_NDEBUG_INLINE MeshDataWithOdom::Impl_::Impl_(
-    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
-    const Impl_& from, const ::VCCSim::MeshDataWithOdom& from_msg)
-      : _has_bits_{from._has_bits_},
-        _cached_size_{0} {}
-
-MeshDataWithOdom::MeshDataWithOdom(
-    ::google::protobuf::Arena* arena,
-    const MeshDataWithOdom& from)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  MeshDataWithOdom* const _this = this;
-  (void)_this;
-  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
-  ::uint32_t cached_has_bits = _impl_._has_bits_[0];
-  _impl_.mesh_ = (cached_has_bits & 0x00000001u) ? ::google::protobuf::Message::CopyConstruct<::VCCSim::MeshData>(
-                              arena, *from._impl_.mesh_)
-                        : nullptr;
-  _impl_.odom_ = (cached_has_bits & 0x00000002u) ? ::google::protobuf::Message::CopyConstruct<::VCCSim::Odometry>(
-                              arena, *from._impl_.odom_)
-                        : nullptr;
-
-  // @@protoc_insertion_point(copy_constructor:VCCSim.MeshDataWithOdom)
+MeshID::MeshID(
+    ::google::protobuf::Arena* arena, const MeshID& from)
+    : MeshID(arena) {
+  MergeFrom(from);
 }
-inline PROTOBUF_NDEBUG_INLINE MeshDataWithOdom::Impl_::Impl_(
+inline PROTOBUF_NDEBUG_INLINE MeshID::Impl_::Impl_(
     ::google::protobuf::internal::InternalVisibility visibility,
     ::google::protobuf::Arena* arena)
       : _cached_size_{0} {}
 
-inline void MeshDataWithOdom::SharedCtor(::_pb::Arena* arena) {
+inline void MeshID::SharedCtor(::_pb::Arena* arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
-  ::memset(reinterpret_cast<char *>(&_impl_) +
-               offsetof(Impl_, mesh_),
-           0,
-           offsetof(Impl_, odom_) -
-               offsetof(Impl_, mesh_) +
-               sizeof(Impl_::odom_));
+  _impl_.id_ = {};
 }
-MeshDataWithOdom::~MeshDataWithOdom() {
-  // @@protoc_insertion_point(destructor:VCCSim.MeshDataWithOdom)
+MeshID::~MeshID() {
+  // @@protoc_insertion_point(destructor:VCCSim.MeshID)
   SharedDtor(*this);
 }
-inline void MeshDataWithOdom::SharedDtor(MessageLite& self) {
-  MeshDataWithOdom& this_ = static_cast<MeshDataWithOdom&>(self);
+inline void MeshID::SharedDtor(MessageLite& self) {
+  MeshID& this_ = static_cast<MeshID&>(self);
   this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
   ABSL_DCHECK(this_.GetArena() == nullptr);
-  delete this_._impl_.mesh_;
-  delete this_._impl_.odom_;
   this_._impl_.~Impl_();
 }
 
-inline void* MeshDataWithOdom::PlacementNew_(const void*, void* mem,
+inline void* MeshID::PlacementNew_(const void*, void* mem,
                                         ::google::protobuf::Arena* arena) {
-  return ::new (mem) MeshDataWithOdom(arena);
+  return ::new (mem) MeshID(arena);
 }
-constexpr auto MeshDataWithOdom::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(MeshDataWithOdom),
-                                            alignof(MeshDataWithOdom));
+constexpr auto MeshID::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(MeshID),
+                                            alignof(MeshID));
 }
 PROTOBUF_CONSTINIT
 PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::google::protobuf::internal::ClassDataFull MeshDataWithOdom::_class_data_ = {
+const ::google::protobuf::internal::ClassDataFull MeshID::_class_data_ = {
     ::google::protobuf::internal::ClassData{
-        &_MeshDataWithOdom_default_instance_._instance,
+        &_MeshID_default_instance_._instance,
         &_table_.header,
         nullptr,  // OnDemandRegisterArenaDtor
         nullptr,  // IsInitialized
-        &MeshDataWithOdom::MergeImpl,
-        ::google::protobuf::Message::GetNewImpl<MeshDataWithOdom>(),
+        &MeshID::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<MeshID>(),
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-        &MeshDataWithOdom::SharedDtor,
-        ::google::protobuf::Message::GetClearImpl<MeshDataWithOdom>(), &MeshDataWithOdom::ByteSizeLong,
-            &MeshDataWithOdom::_InternalSerialize,
+        &MeshID::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<MeshID>(), &MeshID::ByteSizeLong,
+            &MeshID::_InternalSerialize,
 #endif  // PROTOBUF_CUSTOM_VTABLE
-        PROTOBUF_FIELD_OFFSET(MeshDataWithOdom, _impl_._cached_size_),
+        PROTOBUF_FIELD_OFFSET(MeshID, _impl_._cached_size_),
         false,
     },
-    &MeshDataWithOdom::kDescriptorMethods,
+    &MeshID::kDescriptorMethods,
     &descriptor_table_VCCSim_2eproto,
     nullptr,  // tracker
 };
-const ::google::protobuf::internal::ClassData* MeshDataWithOdom::GetClassData() const {
+const ::google::protobuf::internal::ClassData* MeshID::GetClassData() const {
   ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
   ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
   return _class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<1, 2, 2, 0, 2> MeshDataWithOdom::_table_ = {
+const ::_pbi::TcParseTable<0, 1, 0, 0, 2> MeshID::_table_ = {
   {
-    PROTOBUF_FIELD_OFFSET(MeshDataWithOdom, _impl_._has_bits_),
+    0,  // no _has_bits_
     0, // no _extensions_
-    2, 8,  // max_field_number, fast_idx_mask
+    1, 0,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967292,  // skipmap
+    4294967294,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    2,  // num_field_entries
-    2,  // num_aux_entries
-    offsetof(decltype(_table_), aux_entries),
+    1,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
     _class_data_.base(),
     nullptr,  // post_loop_handler
     ::_pbi::TcParser::GenericFallback,  // fallback
     #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::VCCSim::MeshDataWithOdom>(),  // to_prefetch
+    ::_pbi::TcParser::GetTable<::VCCSim::MeshID>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // .VCCSim.Odometry odom = 2;
-    {::_pbi::TcParser::FastMtS1,
-     {18, 1, 1, PROTOBUF_FIELD_OFFSET(MeshDataWithOdom, _impl_.odom_)}},
-    // .VCCSim.MeshData mesh = 1;
-    {::_pbi::TcParser::FastMtS1,
-     {10, 0, 0, PROTOBUF_FIELD_OFFSET(MeshDataWithOdom, _impl_.mesh_)}},
+    // uint32 id = 1;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(MeshID, _impl_.id_), 63>(),
+     {8, 63, 0, PROTOBUF_FIELD_OFFSET(MeshID, _impl_.id_)}},
   }}, {{
     65535, 65535
   }}, {{
-    // .VCCSim.MeshData mesh = 1;
-    {PROTOBUF_FIELD_OFFSET(MeshDataWithOdom, _impl_.mesh_), _Internal::kHasBitsOffset + 0, 0,
-    (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-    // .VCCSim.Odometry odom = 2;
-    {PROTOBUF_FIELD_OFFSET(MeshDataWithOdom, _impl_.odom_), _Internal::kHasBitsOffset + 1, 1,
-    (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-  }}, {{
-    {::_pbi::TcParser::GetTable<::VCCSim::MeshData>()},
-    {::_pbi::TcParser::GetTable<::VCCSim::Odometry>()},
-  }}, {{
+    // uint32 id = 1;
+    {PROTOBUF_FIELD_OFFSET(MeshID, _impl_.id_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt32)},
+  }},
+  // no aux_entries
+  {{
   }},
 };
 
-PROTOBUF_NOINLINE void MeshDataWithOdom::Clear() {
-// @@protoc_insertion_point(message_clear_start:VCCSim.MeshDataWithOdom)
+PROTOBUF_NOINLINE void MeshID::Clear() {
+// @@protoc_insertion_point(message_clear_start:VCCSim.MeshID)
   ::google::protobuf::internal::TSanWrite(&_impl_);
   ::uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  cached_has_bits = _impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000003u) {
-    if (cached_has_bits & 0x00000001u) {
-      ABSL_DCHECK(_impl_.mesh_ != nullptr);
-      _impl_.mesh_->Clear();
-    }
-    if (cached_has_bits & 0x00000002u) {
-      ABSL_DCHECK(_impl_.odom_ != nullptr);
-      _impl_.odom_->Clear();
-    }
-  }
-  _impl_._has_bits_.Clear();
+  _impl_.id_ = 0u;
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
 }
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::uint8_t* MeshDataWithOdom::_InternalSerialize(
+        ::uint8_t* MeshID::_InternalSerialize(
             const MessageLite& base, ::uint8_t* target,
             ::google::protobuf::io::EpsCopyOutputStream* stream) {
-          const MeshDataWithOdom& this_ = static_cast<const MeshDataWithOdom&>(base);
+          const MeshID& this_ = static_cast<const MeshID&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
-        ::uint8_t* MeshDataWithOdom::_InternalSerialize(
+        ::uint8_t* MeshID::_InternalSerialize(
             ::uint8_t* target,
             ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-          const MeshDataWithOdom& this_ = *this;
+          const MeshID& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(serialize_to_array_start:VCCSim.MeshDataWithOdom)
+          // @@protoc_insertion_point(serialize_to_array_start:VCCSim.MeshID)
           ::uint32_t cached_has_bits = 0;
           (void)cached_has_bits;
 
-          cached_has_bits = this_._impl_._has_bits_[0];
-          // .VCCSim.MeshData mesh = 1;
-          if (cached_has_bits & 0x00000001u) {
-            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-                1, *this_._impl_.mesh_, this_._impl_.mesh_->GetCachedSize(), target,
-                stream);
-          }
-
-          // .VCCSim.Odometry odom = 2;
-          if (cached_has_bits & 0x00000002u) {
-            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-                2, *this_._impl_.odom_, this_._impl_.odom_->GetCachedSize(), target,
-                stream);
+          // uint32 id = 1;
+          if (this_._internal_id() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
+                1, this_._internal_id(), target);
           }
 
           if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
@@ -4548,97 +4484,64 @@ PROTOBUF_NOINLINE void MeshDataWithOdom::Clear() {
                 ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
                     this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
           }
-          // @@protoc_insertion_point(serialize_to_array_end:VCCSim.MeshDataWithOdom)
+          // @@protoc_insertion_point(serialize_to_array_end:VCCSim.MeshID)
           return target;
         }
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::size_t MeshDataWithOdom::ByteSizeLong(const MessageLite& base) {
-          const MeshDataWithOdom& this_ = static_cast<const MeshDataWithOdom&>(base);
+        ::size_t MeshID::ByteSizeLong(const MessageLite& base) {
+          const MeshID& this_ = static_cast<const MeshID&>(base);
 #else   // PROTOBUF_CUSTOM_VTABLE
-        ::size_t MeshDataWithOdom::ByteSizeLong() const {
-          const MeshDataWithOdom& this_ = *this;
+        ::size_t MeshID::ByteSizeLong() const {
+          const MeshID& this_ = *this;
 #endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(message_byte_size_start:VCCSim.MeshDataWithOdom)
+          // @@protoc_insertion_point(message_byte_size_start:VCCSim.MeshID)
           ::size_t total_size = 0;
 
           ::uint32_t cached_has_bits = 0;
           // Prevent compiler warnings about cached_has_bits being unused
           (void)cached_has_bits;
 
-          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-          cached_has_bits = this_._impl_._has_bits_[0];
-          if (cached_has_bits & 0x00000003u) {
-            // .VCCSim.MeshData mesh = 1;
-            if (cached_has_bits & 0x00000001u) {
-              total_size += 1 +
-                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.mesh_);
-            }
-            // .VCCSim.Odometry odom = 2;
-            if (cached_has_bits & 0x00000002u) {
-              total_size += 1 +
-                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.odom_);
+           {
+            // uint32 id = 1;
+            if (this_._internal_id() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
+                  this_._internal_id());
             }
           }
           return this_.MaybeComputeUnknownFieldsSize(total_size,
                                                      &this_._impl_._cached_size_);
         }
 
-void MeshDataWithOdom::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
-  auto* const _this = static_cast<MeshDataWithOdom*>(&to_msg);
-  auto& from = static_cast<const MeshDataWithOdom&>(from_msg);
-  ::google::protobuf::Arena* arena = _this->GetArena();
-  // @@protoc_insertion_point(class_specific_merge_from_start:VCCSim.MeshDataWithOdom)
+void MeshID::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<MeshID*>(&to_msg);
+  auto& from = static_cast<const MeshID&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:VCCSim.MeshID)
   ABSL_DCHECK_NE(&from, _this);
   ::uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  cached_has_bits = from._impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000003u) {
-    if (cached_has_bits & 0x00000001u) {
-      ABSL_DCHECK(from._impl_.mesh_ != nullptr);
-      if (_this->_impl_.mesh_ == nullptr) {
-        _this->_impl_.mesh_ =
-            ::google::protobuf::Message::CopyConstruct<::VCCSim::MeshData>(arena, *from._impl_.mesh_);
-      } else {
-        _this->_impl_.mesh_->MergeFrom(*from._impl_.mesh_);
-      }
-    }
-    if (cached_has_bits & 0x00000002u) {
-      ABSL_DCHECK(from._impl_.odom_ != nullptr);
-      if (_this->_impl_.odom_ == nullptr) {
-        _this->_impl_.odom_ =
-            ::google::protobuf::Message::CopyConstruct<::VCCSim::Odometry>(arena, *from._impl_.odom_);
-      } else {
-        _this->_impl_.odom_->MergeFrom(*from._impl_.odom_);
-      }
-    }
+  if (from._internal_id() != 0) {
+    _this->_impl_.id_ = from._impl_.id_;
   }
-  _this->_impl_._has_bits_[0] |= cached_has_bits;
   _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
 }
 
-void MeshDataWithOdom::CopyFrom(const MeshDataWithOdom& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:VCCSim.MeshDataWithOdom)
+void MeshID::CopyFrom(const MeshID& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:VCCSim.MeshID)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
 
-void MeshDataWithOdom::InternalSwap(MeshDataWithOdom* PROTOBUF_RESTRICT other) {
+void MeshID::InternalSwap(MeshID* PROTOBUF_RESTRICT other) {
   using std::swap;
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
-  ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(MeshDataWithOdom, _impl_.odom_)
-      + sizeof(MeshDataWithOdom::_impl_.odom_)
-      - PROTOBUF_FIELD_OFFSET(MeshDataWithOdom, _impl_.mesh_)>(
-          reinterpret_cast<char*>(&_impl_.mesh_),
-          reinterpret_cast<char*>(&other->_impl_.mesh_));
+        swap(_impl_.id_, other->_impl_.id_);
 }
 
-::google::protobuf::Metadata MeshDataWithOdom::GetMetadata() const {
+::google::protobuf::Metadata MeshID::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // ===================================================================

@@ -1,5 +1,6 @@
 ﻿#include "Utils/MeshHandlerComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "DataType/DataMesh.h"
 
 UMeshHandlerComponent::UMeshHandlerComponent()
 {
@@ -97,18 +98,6 @@ void UMeshHandlerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     Super::EndPlay(EndPlayReason);
 }
 
-struct CompactVertex {
-    float x, y, z;
-};
-
-struct MeshHeader {
-    uint32 magic;
-    uint32 version;
-    uint32 vertexCount;
-    uint32 indexCount;
-    uint32 flags;
-};
-
 void UMeshHandlerComponent::UpdateMeshFromGRPC(
     const uint8* MeshData, uint32 DataSize, const FTransform& Transform)
 {
@@ -133,24 +122,24 @@ void UMeshHandlerComponent::UpdateMeshFromGRPC(
     WriteBuffer.Triangles.Empty();
 
     // Check minimum size for header
-    if (DataSize < sizeof(MeshHeader))
+    if (DataSize < sizeof(FMeshHeader))
     {
         UE_LOG(LogTemp, Error,
             TEXT("Received mesh data is too small for header"));
         return;
     }
 
-    const MeshHeader* Header = reinterpret_cast<const MeshHeader*>(MeshData);
+    const FMeshHeader* Header = reinterpret_cast<const FMeshHeader*>(MeshData);
     
-    if (Header->magic != 0x48534D55)
+    if (Header->Magic != 0x48534D55)
     {
         UE_LOG(LogTemp, Error, TEXT("Invalid mesh magic number"));
         return;
     }
 
-    uint32 ExpectedSize = sizeof(MeshHeader) + 
-                         Header->vertexCount * sizeof(CompactVertex) +
-                         Header->indexCount * sizeof(uint32);
+    uint32 ExpectedSize = sizeof(FMeshHeader) + 
+                         Header->VertexCount * sizeof(FCompactVertex) +
+                         Header->IndexCount * sizeof(uint32);
     
     if (DataSize < ExpectedSize)
     {
@@ -160,28 +149,28 @@ void UMeshHandlerComponent::UpdateMeshFromGRPC(
     }
 
     // Get pointers to vertex and index data
-    const CompactVertex* Vertices =
-        reinterpret_cast<const CompactVertex*>(MeshData + sizeof(MeshHeader));
+    const FCompactVertex* Vertices =
+        reinterpret_cast<const FCompactVertex*>(MeshData + sizeof(FMeshHeader));
     const uint32* Indices =
-        reinterpret_cast<const uint32*>(MeshData + sizeof(MeshHeader) + 
-        Header->vertexCount * sizeof(CompactVertex));
+        reinterpret_cast<const uint32*>(MeshData + sizeof(FMeshHeader) + 
+        Header->VertexCount * sizeof(FCompactVertex));
 
     // Temporary arrays for base mesh
     TArray<FVector> BaseVertices;
     TArray<int32> BaseTriangles;
-    BaseVertices.Reserve(Header->vertexCount);
-    BaseTriangles.Reserve(Header->indexCount);
+    BaseVertices.Reserve(Header->VertexCount);
+    BaseTriangles.Reserve(Header->IndexCount);
 
-    for (uint32 i = 0; i < Header->vertexCount; ++i)
+    for (uint32 i = 0; i < Header->VertexCount; ++i)
     {
         BaseVertices.Add(FVector(
-            Vertices[i].x * 100.0f,
-            -Vertices[i].y * 100.0f,
-            Vertices[i].z * 100.0f
+            Vertices[i].X * 100.0f,
+            -Vertices[i].Y * 100.0f,
+            Vertices[i].Z * 100.0f
         ));
     }
 
-    for (uint32 i = 0; i < Header->indexCount; i += 3)
+    for (uint32 i = 0; i < Header->IndexCount; i += 3)
     {
         BaseTriangles.Add(Indices[i]);
         BaseTriangles.Add(Indices[i + 2]);
