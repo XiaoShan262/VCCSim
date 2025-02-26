@@ -25,6 +25,7 @@
 #include "Sensors/LidarSensor.h"
 #include "Sensors/DepthCamera.h"
 #include "Pawns/DronePawn.h"
+#include "Pawns/FlashPawn.h"
 #include "Utils/MeshHandlerComponent.h"
 #include "Async/AsyncWork.h"
 #include "Utils/ConfigParser.h"
@@ -60,59 +61,103 @@ public:
 
     void DoWork()
     {
+    	grpc::ServerBuilder Builder;
+    	Builder.AddListeningPort(ServerAddress, grpc::InsecureServerCredentials());
+    	
     	VCCSim::DroneService::AsyncService DroneService;
     	VCCSim::LidarService::AsyncService LidarService;
+    	VCCSim::FlashService::AsyncService FlashService;
     	VCCSim::DepthCameraService::AsyncService DepthCameraService;
     	VCCSim::RGBCameraService::AsyncService RGBCameraService;
     	VCCSim::MeshService::AsyncService MeshService;
     	VCCSim::PointCloudService::AsyncService PointCloudService;
     	
-        grpc::ServerBuilder Builder;
-        Builder.AddListeningPort(ServerAddress, grpc::InsecureServerCredentials());
-    	Builder.RegisterService(&DroneService);
-    	Builder.RegisterService(&DepthCameraService);
-    	Builder.RegisterService(&RGBCameraService);
-        Builder.RegisterService(&LidarService);
+    	if (!RGrpcMaps.RMaps.DroneMap.empty())
+		{
+    		Builder.RegisterService(&DroneService);
+		}
+    	if (!RGrpcMaps.RMaps.CarMap.empty())
+    	{
+    		
+    	}
+    	if (!RGrpcMaps.RMaps.FlashMap.empty())
+		{
+    		Builder.RegisterService(&FlashService);
+		}
+    	if (!RGrpcMaps.RCMaps.RLMap.empty())
+    	{
+    		Builder.RegisterService(&LidarService);
+    	}
+    	if (!RGrpcMaps.RCMaps.RDCMap.empty())
+		{
+			Builder.RegisterService(&DepthCameraService);
+		}
+    	if (!RGrpcMaps.RCMaps.RRGBCMap.empty())
+    	{
+    		Builder.RegisterService(&RGBCameraService);
+    		RGBIndexedCameraImageDataCall::InitializeImageModule();
+    	}
+        
         Builder.RegisterService(&MeshService);
     	Builder.RegisterService(&PointCloudService);
     	
         CompletionQueue = Builder.AddCompletionQueue();
         Server = Builder.BuildAndStart();
-
-    	RGBIndexedCameraImageDataCall::InitializeImageModule();
-
+    	
         if (Server)
         {
             UE_LOG(LogTemp, Warning, TEXT("Asynchronous Server listening on %s"),
             	*FString(ServerAddress.c_str()));
 
             // Spawn initial asynchronous calls
-        	std::map<std::string, ADronePawn*> DroneMap;
-        	for (const auto& Pair : RGrpcMaps.RMaps.DroneMap)
+        	if (!RGrpcMaps.RMaps.DroneMap.empty())
+        	{
+        		std::map<std::string, ADronePawn*> DroneMap;
+        		for (const auto& Pair : RGrpcMaps.RMaps.DroneMap)
+        		{
+        			DroneMap[Pair.first] = Cast<ADronePawn>(Pair.second);
+        		}
+        		new GetDronePoseCall(&DroneService, CompletionQueue.get(), DroneMap);
+        		new SendDronePoseCall(&DroneService, CompletionQueue.get(), DroneMap);
+        	}
+        	if (!RGrpcMaps.RMaps.FlashMap.empty())
 			{
-				DroneMap[Pair.first] = Cast<ADronePawn>(Pair.second);
+				std::map<std::string, AFlashPawn*> FlashMap;
+				for (const auto& Pair : RGrpcMaps.RMaps.FlashMap)
+				{
+					FlashMap[Pair.first] = Cast<AFlashPawn>(Pair.second);
+				}
+				new GetFlashPoseCall(&FlashService, CompletionQueue.get(), FlashMap);
+				new SendFlashPoseCall(&FlashService, CompletionQueue.get(), FlashMap);
+				new SendFlashPathCall(&FlashService, CompletionQueue.get(), FlashMap);
+				new CheckFlashReadyCall(&FlashService, CompletionQueue.get(), FlashMap);
+				new MoveToNextCall(&FlashService, CompletionQueue.get(), FlashMap);
 			}
-        	new GetDronePoseCall(&DroneService, CompletionQueue.get(), DroneMap);
-        	new SendDronePoseCall(&DroneService, CompletionQueue.get(), DroneMap);
-        	
-        	new LidarGetDataCall(&LidarService, CompletionQueue.get(), 
-				RGrpcMaps.RCMaps.RLMap);
-        	new LidarGetOdomCall(&LidarService, CompletionQueue.get(),
-        		RGrpcMaps.RCMaps.RLMap);
-        	new LidarGetDataAndOdomCall(&LidarService, CompletionQueue.get(),
-        		RGrpcMaps.RCMaps.RLMap);
-        	
-			new DepthCameraGetImageDataCall(&DepthCameraService,
-				CompletionQueue.get(), RGrpcMaps.RCMaps.RDCMap);
-        	new DepthCameraGetPointDataCall(&DepthCameraService,
-				CompletionQueue.get(), RGrpcMaps.RCMaps.RDCMap);
-			new DepthCameraGetOdomCall(&DepthCameraService,
-				CompletionQueue.get(), RGrpcMaps.RCMaps.RDCMap);
-
-        	new RGBCameraGetOdomCall(&RGBCameraService,
-        		CompletionQueue.get(), RGrpcMaps.RCMaps.RRGBCMap);
-        	new RGBIndexedCameraImageDataCall(&RGBCameraService,
-				CompletionQueue.get(), RGrpcMaps.RCMaps.RRGBCMap);
+        	if (!RGrpcMaps.RCMaps.RLMap.empty())
+        	{
+        		new LidarGetDataCall(&LidarService, CompletionQueue.get(), 
+					RGrpcMaps.RCMaps.RLMap);
+        		new LidarGetOdomCall(&LidarService, CompletionQueue.get(),
+					RGrpcMaps.RCMaps.RLMap);
+        		new LidarGetDataAndOdomCall(&LidarService, CompletionQueue.get(),
+					RGrpcMaps.RCMaps.RLMap);
+        	}
+        	if (!RGrpcMaps.RCMaps.RDCMap.empty())
+        	{
+        		new DepthCameraGetImageDataCall(&DepthCameraService,
+					CompletionQueue.get(), RGrpcMaps.RCMaps.RDCMap);
+        		new DepthCameraGetPointDataCall(&DepthCameraService,
+					CompletionQueue.get(), RGrpcMaps.RCMaps.RDCMap);
+        		new DepthCameraGetOdomCall(&DepthCameraService,
+					CompletionQueue.get(), RGrpcMaps.RCMaps.RDCMap);
+        	}
+        	if (!RGrpcMaps.RCMaps.RRGBCMap.empty())
+        	{
+        		new RGBCameraGetOdomCall(&RGBCameraService,
+					CompletionQueue.get(), RGrpcMaps.RCMaps.RRGBCMap);
+        		new RGBIndexedCameraImageDataCall(&RGBCameraService,
+					CompletionQueue.get(), RGrpcMaps.RCMaps.RRGBCMap);
+        	}
         	
         	new SendMeshCall(&MeshService, CompletionQueue.get(), MeshComponent);
         	new SendPointCloudWithColorCall(&PointCloudService,

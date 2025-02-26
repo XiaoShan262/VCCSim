@@ -560,7 +560,7 @@ void UVCCSIMDisplayWidget::ProcessCapture(const int32 ID)
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("URatSIMDisplayWidget::ProcessCapture: "
+            UE_LOG(LogTemp, Warning, TEXT("UVCCSIMDisplayWidget::ProcessCapture: "
                                           "RGBRenderTarget not set"));
         }
         break;
@@ -571,7 +571,7 @@ void UVCCSIMDisplayWidget::ProcessCapture(const int32 ID)
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("URatSIMDisplayWidget::ProcessCapture: "
+            UE_LOG(LogTemp, Warning, TEXT("UVCCSIMDisplayWidget::ProcessCapture: "
                                           "LitSceneCapture or LitRenderTarget not set"));
         }
         break;
@@ -582,7 +582,7 @@ void UVCCSIMDisplayWidget::ProcessCapture(const int32 ID)
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("URatSIMDisplayWidget::ProcessCapture: "
+            UE_LOG(LogTemp, Warning, TEXT("UVCCSIMDisplayWidget::ProcessCapture: "
                                           "PCSceneCapture or PCRenderTarget not set"));
         }
         break;
@@ -593,7 +593,7 @@ void UVCCSIMDisplayWidget::ProcessCapture(const int32 ID)
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("URatSIMDisplayWidget::ProcessCapture: "
+            UE_LOG(LogTemp, Warning, TEXT("UVCCSIMDisplayWidget::ProcessCapture: "
                                           "MeshSceneCapture or MeshRenderTarget not set"));
         }
         break;
@@ -604,7 +604,7 @@ void UVCCSIMDisplayWidget::ProcessCapture(const int32 ID)
         }
         else
         {
-            UE_LOG(LogTemp, Warning, TEXT("URatSIMDisplayWidget::ProcessCapture: "
+            UE_LOG(LogTemp, Warning, TEXT("UVCCSIMDisplayWidget::ProcessCapture: "
                                           "DepthRenderTarget not set"));
         }
         break;

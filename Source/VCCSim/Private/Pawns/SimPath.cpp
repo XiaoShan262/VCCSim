@@ -12,7 +12,6 @@ AVCCSimPath::AVCCSimPath()
 	ClosedSpline = false;
 	FlattenTangents = false;
 	
-	Index = 0;
 	PathLength = 0;
 }
 
@@ -131,4 +130,34 @@ void AVCCSimPath::MovePivotToFirstPoint()
 			ESplineCoordinateSpace::World);
 	}
 	Spline->UpdateSpline();
+}
+
+void AVCCSimPath::SetNewTrajectory(
+	const TArray<FVector>& Positions, const TArray<FRotator>& Rotations)
+{
+	Spline->ClearSplinePoints();
+	for (int32 i = 0; i < Positions.Num(); i++)
+	{
+		Spline->AddSplinePoint(Positions[i], ESplineCoordinateSpace::World);
+		Spline->SetRotationAtSplinePoint(i, Rotations[i], ESplineCoordinateSpace::World);
+	}
+	Spline->UpdateSpline();
+	PathLength = Spline->GetSplineLength();
+
+	MovePivotToFirstPoint();
+}
+
+int32 AVCCSimPath::GetNumberOfSplinePoints() const
+{
+	return Spline->GetNumberOfSplinePoints();
+}
+
+FVector AVCCSimPath::GetLocationAtSplinePoint(int32 Index) const
+{
+	return Spline->GetLocationAtSplinePoint(Index, ESplineCoordinateSpace::World);
+}
+
+FRotator AVCCSimPath::GetRotationAtSplinePoint(int32 Index) const
+{
+	return Spline->GetRotationAtSplinePoint(Index, ESplineCoordinateSpace::World);
 }

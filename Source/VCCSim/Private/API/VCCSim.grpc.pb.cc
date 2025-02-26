@@ -704,6 +704,235 @@ CarService::Service::~Service() {
 }
 
 
+static const char* FlashService_method_names[] = {
+  "/VCCSim.FlashService/GetFlashPose",
+  "/VCCSim.FlashService/SendFlashPose",
+  "/VCCSim.FlashService/SendFlashPath",
+  "/VCCSim.FlashService/CheckFlashReady",
+  "/VCCSim.FlashService/MoveToNext",
+};
+
+std::unique_ptr< FlashService::Stub> FlashService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
+  (void)options;
+  std::unique_ptr< FlashService::Stub> stub(new FlashService::Stub(channel, options));
+  return stub;
+}
+
+FlashService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
+  : channel_(channel), rpcmethod_GetFlashPose_(FlashService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SendFlashPose_(FlashService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SendFlashPath_(FlashService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_CheckFlashReady_(FlashService_method_names[3], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_MoveToNext_(FlashService_method_names[4], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  {}
+
+::grpc::Status FlashService::Stub::GetFlashPose(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Pose* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::RobotName, ::VCCSim::Pose, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_GetFlashPose_, context, request, response);
+}
+
+void FlashService::Stub::async::GetFlashPose(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::RobotName, ::VCCSim::Pose, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetFlashPose_, context, request, response, std::move(f));
+}
+
+void FlashService::Stub::async::GetFlashPose(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetFlashPose_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Pose>* FlashService::Stub::PrepareAsyncGetFlashPoseRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Pose, ::VCCSim::RobotName, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_GetFlashPose_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Pose>* FlashService::Stub::AsyncGetFlashPoseRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncGetFlashPoseRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status FlashService::Stub::SendFlashPose(::grpc::ClientContext* context, const ::VCCSim::FlashPose& request, ::VCCSim::Status* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::FlashPose, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SendFlashPose_, context, request, response);
+}
+
+void FlashService::Stub::async::SendFlashPose(::grpc::ClientContext* context, const ::VCCSim::FlashPose* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::FlashPose, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendFlashPose_, context, request, response, std::move(f));
+}
+
+void FlashService::Stub::async::SendFlashPose(::grpc::ClientContext* context, const ::VCCSim::FlashPose* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendFlashPose_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* FlashService::Stub::PrepareAsyncSendFlashPoseRaw(::grpc::ClientContext* context, const ::VCCSim::FlashPose& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Status, ::VCCSim::FlashPose, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SendFlashPose_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* FlashService::Stub::AsyncSendFlashPoseRaw(::grpc::ClientContext* context, const ::VCCSim::FlashPose& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSendFlashPoseRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status FlashService::Stub::SendFlashPath(::grpc::ClientContext* context, const ::VCCSim::FlashPath& request, ::VCCSim::Status* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::FlashPath, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SendFlashPath_, context, request, response);
+}
+
+void FlashService::Stub::async::SendFlashPath(::grpc::ClientContext* context, const ::VCCSim::FlashPath* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::FlashPath, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendFlashPath_, context, request, response, std::move(f));
+}
+
+void FlashService::Stub::async::SendFlashPath(::grpc::ClientContext* context, const ::VCCSim::FlashPath* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendFlashPath_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* FlashService::Stub::PrepareAsyncSendFlashPathRaw(::grpc::ClientContext* context, const ::VCCSim::FlashPath& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Status, ::VCCSim::FlashPath, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SendFlashPath_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* FlashService::Stub::AsyncSendFlashPathRaw(::grpc::ClientContext* context, const ::VCCSim::FlashPath& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSendFlashPathRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status FlashService::Stub::CheckFlashReady(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Status* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::RobotName, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_CheckFlashReady_, context, request, response);
+}
+
+void FlashService::Stub::async::CheckFlashReady(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::RobotName, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CheckFlashReady_, context, request, response, std::move(f));
+}
+
+void FlashService::Stub::async::CheckFlashReady(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CheckFlashReady_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* FlashService::Stub::PrepareAsyncCheckFlashReadyRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Status, ::VCCSim::RobotName, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_CheckFlashReady_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* FlashService::Stub::AsyncCheckFlashReadyRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncCheckFlashReadyRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status FlashService::Stub::MoveToNext(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Status* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::RobotName, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_MoveToNext_, context, request, response);
+}
+
+void FlashService::Stub::async::MoveToNext(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::RobotName, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_MoveToNext_, context, request, response, std::move(f));
+}
+
+void FlashService::Stub::async::MoveToNext(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_MoveToNext_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* FlashService::Stub::PrepareAsyncMoveToNextRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Status, ::VCCSim::RobotName, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_MoveToNext_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* FlashService::Stub::AsyncMoveToNextRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncMoveToNextRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+FlashService::Service::Service() {
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      FlashService_method_names[0],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< FlashService::Service, ::VCCSim::RobotName, ::VCCSim::Pose, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](FlashService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::RobotName* req,
+             ::VCCSim::Pose* resp) {
+               return service->GetFlashPose(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      FlashService_method_names[1],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< FlashService::Service, ::VCCSim::FlashPose, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](FlashService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::FlashPose* req,
+             ::VCCSim::Status* resp) {
+               return service->SendFlashPose(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      FlashService_method_names[2],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< FlashService::Service, ::VCCSim::FlashPath, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](FlashService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::FlashPath* req,
+             ::VCCSim::Status* resp) {
+               return service->SendFlashPath(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      FlashService_method_names[3],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< FlashService::Service, ::VCCSim::RobotName, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](FlashService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::RobotName* req,
+             ::VCCSim::Status* resp) {
+               return service->CheckFlashReady(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      FlashService_method_names[4],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< FlashService::Service, ::VCCSim::RobotName, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](FlashService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::RobotName* req,
+             ::VCCSim::Status* resp) {
+               return service->MoveToNext(ctx, req, resp);
+             }, this)));
+}
+
+FlashService::Service::~Service() {
+}
+
+::grpc::Status FlashService::Service::GetFlashPose(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status FlashService::Service::SendFlashPose(::grpc::ServerContext* context, const ::VCCSim::FlashPose* request, ::VCCSim::Status* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status FlashService::Service::SendFlashPath(::grpc::ServerContext* context, const ::VCCSim::FlashPath* request, ::VCCSim::Status* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status FlashService::Service::CheckFlashReady(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status FlashService::Service::MoveToNext(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+
 static const char* MeshService_method_names[] = {
   "/VCCSim.MeshService/SendMesh",
 };

@@ -45,9 +45,9 @@ public:
     virtual bool IfCloseToTarget(FVector Location, FRotator Rotation) const override;
     
     // Movement parameters
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RatSim|Movement")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
     float MovementSpeed = 500.0f;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RatSim|Movement")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
     float RotationSpeed = 180.0f;
     
 protected:
@@ -62,7 +62,7 @@ protected:
     UPROPERTY(VisibleAnywhere)
     class UStaticMeshComponent* RotorMesh4;
 
-    UPROPERTY(EditAnywhere, Category = "RatSim|Physics")
+    UPROPERTY(EditAnywhere, Category = "VCCSim|Physics")
     float RotorRotationSpeed = 3000.0f;
 
     void HandleThrottleInput(const FInputActionValue& Value);

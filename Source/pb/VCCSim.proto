@@ -140,6 +140,17 @@ message CarPath {
   string name = 1;
   repeated PoseOnlyYaw path = 2;
 }
+
+// Flash:
+message FlashPose {
+  string name = 1;
+  Pose pose = 2;
+}
+
+message FlashPath {
+  string name = 1;
+  repeated Pose path = 2;
+}
   
 
 // Services:
@@ -170,6 +181,14 @@ service CarService {
   rpc GetCarOdom (RobotName) returns (Odometry); //todo
   rpc SendCarPose (CarPose) returns (Status); //todo
   rpc SendCarPath (CarPath) returns (Status); //todo
+}
+
+service FlashService {
+  rpc GetFlashPose (RobotName) returns (Pose);
+  rpc SendFlashPose (FlashPose) returns (Status);
+  rpc SendFlashPath (FlashPath) returns (Status);
+  rpc CheckFlashReady (RobotName) returns (Status);
+  rpc MoveToNext (RobotName) returns (Status);
 }
 
 service MeshService {

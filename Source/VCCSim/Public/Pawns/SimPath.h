@@ -31,6 +31,14 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void MovePivotToFirstPoint();
+
+	UFUNCTION(BlueprintCallable)
+	void SetNewTrajectory(const TArray<FVector>& Positions,
+		const TArray<FRotator>& Rotations);
+
+	int32 GetNumberOfSplinePoints() const;
+	FVector GetLocationAtSplinePoint(int32 Index) const;
+	FRotator GetRotationAtSplinePoint(int32 Index) const;
 	
 public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Default")
@@ -44,9 +52,7 @@ public:
 	bool ClosedSpline;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Path")
 	bool FlattenTangents;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Hidden")
-	int32 Index;
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Hidden")
 	TArray<FSplinePoint> SplinePoints;
 	UPROPERTY(BlueprintReadWrite, EditInstanceOnly, Category="Hidden")

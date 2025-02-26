@@ -28,6 +28,7 @@ struct FVCCSimPresets
 	std::string LogSavePath;
 	std::string DefaultDronePawn;
 	std::string DefaultCarPawn;
+	std::string DefaultFlashPawn;
 	int BufferSize;
 };
 

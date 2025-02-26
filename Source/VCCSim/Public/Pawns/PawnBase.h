@@ -8,7 +8,8 @@ class ARecorder;
 enum class EPawnType : uint8
 {
 	Drone,
-	Car
+	Car,
+	Flash
 };
 
 UCLASS()
@@ -24,7 +25,7 @@ public:
 	UFUNCTION()
 	void SetRecordState(bool RState){ RecordState = RState; }
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RatSim|Debug")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VCCSim|Debug")
 	bool bRecorded = false;
 	bool RecordState = false;
 

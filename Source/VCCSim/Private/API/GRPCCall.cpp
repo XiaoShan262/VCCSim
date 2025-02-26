@@ -27,6 +27,7 @@
 #include "Utils/MeshHandlerComponent.h"
 #include "Utils/InsMeshHolder.h"
 #include "Pawns/DronePawn.h"
+#include "Pawns/FlashPawn.h"
 
 LidarGetDataCall::LidarGetDataCall(
     VCCSim::LidarService::AsyncService* service,
@@ -685,6 +686,222 @@ void SendDronePoseCall::ProcessRequest()
     {
         UE_LOG(LogTemp, Warning, TEXT("SendDronePoseCall: "
                                       "Drone not found!"));
+        response_.set_status(false);
+    }
+}
+
+GetFlashPoseCall::GetFlashPoseCall(
+    VCCSim::FlashService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, AFlashPawn*> rcmap)
+        : AsyncCallTemplateM(service, cq, rcmap)
+{
+    Proceed(true);
+}
+
+void GetFlashPoseCall::PrepareNextCall()
+{
+    new GetFlashPoseCall(service_, cq_, RCMap_);
+}
+
+void GetFlashPoseCall::InitializeRequest()
+{
+    service_->RequestGetFlashPose(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void GetFlashPoseCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        const auto Flash = RCMap_[request_.name()];
+        const FVector Loc = Flash->GetActorLocation();
+        const FRotator Rot = Flash->GetActorRotation();
+
+        response_.set_x(Loc.X);
+        response_.set_y(Loc.Y);
+        response_.set_z(Loc.Z);
+        response_.set_roll(Rot.Roll);
+        response_.set_pitch(Rot.Pitch);
+        response_.set_yaw(Rot.Yaw);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("GetFlashPoseCall: "
+                                      "Flash not found!"));
+    }
+}
+
+SendFlashPoseCall::SendFlashPoseCall(
+    VCCSim::FlashService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, AFlashPawn*> rcmap)
+        : AsyncCallTemplateM(service, cq, rcmap)
+{
+    Proceed(true);
+}
+
+void SendFlashPoseCall::PrepareNextCall()
+{
+    new SendFlashPoseCall(service_, cq_, RCMap_);
+}
+
+void SendFlashPoseCall::InitializeRequest()
+{
+    service_->RequestSendFlashPose(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void SendFlashPoseCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        if (AFlashPawn* Flash = RCMap_[request_.name()])
+        {
+            const FVector TargetLocation(
+                request_.pose().x(),
+                request_.pose().y(),
+                request_.pose().z()
+            );
+            const FRotator TargetRotation(
+                request_.pose().pitch(),
+                request_.pose().yaw(),
+                request_.pose().roll()
+            );
+            Flash->SetTarget(TargetLocation, TargetRotation);
+            response_.set_status(true);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("SendFlashPoseCall: "
+                                          "AFlashPawn* is invalid!"));
+            response_.set_status(false);
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SendFlashPoseCall: "
+                                      "Flash not found!"));
+        response_.set_status(false);
+    }
+}
+
+SendFlashPathCall::SendFlashPathCall(
+    VCCSim::FlashService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, AFlashPawn*> rcmap)
+        : AsyncCallTemplateM(service, cq, rcmap)
+{
+    Proceed(true);
+}
+
+void SendFlashPathCall::PrepareNextCall()
+{
+    new SendFlashPathCall(service_, cq_, RCMap_);
+}
+
+void SendFlashPathCall::InitializeRequest()
+{
+    service_->RequestSendFlashPath(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void SendFlashPathCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        if (AFlashPawn* Flash = RCMap_[request_.name()])
+        {
+            TArray<FVector> Positions;
+            TArray<FRotator> Rotations;
+            for (const auto& Point : request_.path())
+            {
+                Positions.Add(FVector(Point.x(), Point.y(), Point.z()));
+                Rotations.Add(FRotator(Point.pitch(), Point.yaw(), Point.roll()));
+            }
+            Flash->SetPath(Positions, Rotations);
+            response_.set_status(true);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("SendFlashPathCall: "
+                                          "AFlashPawn* is invalid!"));
+            response_.set_status(false);
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SendFlashPathCall: "
+                                      "Flash not found!"));
+        response_.set_status(false);
+    }
+}
+
+CheckFlashReadyCall::CheckFlashReadyCall(
+    VCCSim::FlashService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, AFlashPawn*> rcmap)
+        : AsyncCallTemplateM(service, cq, rcmap)
+{
+    Proceed(true);
+}
+
+void CheckFlashReadyCall::PrepareNextCall()
+{
+    new CheckFlashReadyCall(service_, cq_, RCMap_);
+}
+
+void CheckFlashReadyCall::InitializeRequest()
+{
+    service_->RequestCheckFlashReady(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void CheckFlashReadyCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        response_.set_status(RCMap_[request_.name()]->IsReady());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("CheckFlashReadyCall: "
+                                      "Flash not found!"));
+        response_.set_status(false);
+    }
+}
+
+MoveToNextCall::MoveToNextCall(
+    VCCSim::FlashService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, AFlashPawn*> rcmap)
+        : AsyncCallTemplateM(service, cq, rcmap)
+{
+    Proceed(true);
+}
+
+void MoveToNextCall::PrepareNextCall()
+{
+    new MoveToNextCall(service_, cq_, RCMap_);
+}
+
+void MoveToNextCall::InitializeRequest()
+{
+    service_->RequestMoveToNext(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void MoveToNextCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        RCMap_[request_.name()]->MoveToNext();
+        response_.set_status(true);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("MoveToNextCall: "
+                                      "Flash not found!"));
         response_.set_status(false);
     }
 }

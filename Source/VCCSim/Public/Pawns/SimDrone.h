@@ -24,9 +24,9 @@ public:
 	virtual bool IfCloseToTarget(FVector Location, FRotator Rotation) const override;
     
 	// Movement parameters
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RatSim|Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
 	float MovementSpeed = 500.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RatSim|Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
 	float RotationSpeed = 180.0f;
     
 protected:
@@ -41,23 +41,23 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* RotorMesh4;
 
-	UPROPERTY(EditAnywhere, Category = "RatSim|Physics")
+	UPROPERTY(EditAnywhere, Category = "VCCSim|Physics")
 	float RotorRotationSpeed = 3000.0f;
 
 	// Maximum Pitch Angle
-	UPROPERTY(EditAnywhere, Category = "RatSim|Physics")
+	UPROPERTY(EditAnywhere, Category = "VCCSim|Physics")
 	float MaxPitchAngle = 15.0f;  
 	// Maximum roll angle
-	UPROPERTY(EditAnywhere, Category = "RatSim|Physics")
+	UPROPERTY(EditAnywhere, Category = "VCCSim|Physics")
 	float MaxRollAngle = 15.0f;   
 	// Tilt Interpolation Speed: It makes the change when you tilt the drone smoother.
-	UPROPERTY(EditAnywhere, Category = "RatSim|Physics")
+	UPROPERTY(EditAnywhere, Category = "VCCSim|Physics")
 	float TiltInterpSpeed = 5.0f;
 	
-	UPROPERTY(EditAnywhere, Category = "RatSim|Physics")
+	UPROPERTY(EditAnywhere, Category = "VCCSim|Physics")
 	float AccelerationSpeed = 5.0f;
 
-	UPROPERTY(EditAnywhere, Category = "RatSim|Physics")
+	UPROPERTY(EditAnywhere, Category = "VCCSim|Physics")
 	bool bEnablePhysical = true;
 
 	

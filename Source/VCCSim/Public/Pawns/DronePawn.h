@@ -43,31 +43,31 @@ public:
     void SetTarget(FVector Location, FRotator Rotation);
     virtual bool IfCloseToTarget(FVector Location, FRotator Rotation) const;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RatSim|Target")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Target")
     FVector TargetLocation;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RatSim|Target")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Target")
     FRotator TargetRotation;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RatSim|Target")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Target")
     bool bUseTarget = false;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RatSim|Target")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Target")
     float PositionThreshold = 0.5f;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RatSim|Target")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Target")
     float RotationThreshold = 0.5f;
 
     // Enhanced Input Components
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RatSim|Input")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VCCSim|Input")
     class UInputMappingContext* DroneInputMappingContext;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RatSim|Input")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VCCSim|Input")
     class UInputAction* ThrottleAction;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RatSim|Input")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VCCSim|Input")
     class UInputAction* MovementAction;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RatSim|Input")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VCCSim|Input")
     class UInputAction* YawAction;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "RatSim|Input")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VCCSim|Input")
     class UInputAction* LookAction;
     
     // Components

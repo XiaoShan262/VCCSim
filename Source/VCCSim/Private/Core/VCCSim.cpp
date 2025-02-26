@@ -21,4 +21,4 @@ void FVCCSimModule::ShutdownModule()
 
 #undef LOCTEXT_NAMESPACE
 	
-IMPLEMENT_MODULE(FVCCSimModule, RatSim)
+IMPLEMENT_MODULE(FVCCSimModule, VCCSim)

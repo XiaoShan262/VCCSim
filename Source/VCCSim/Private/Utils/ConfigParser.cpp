@@ -38,6 +38,7 @@ FVCCSimConfig ParseConfig()
             TCHAR_TO_UTF8(FPlatformProcess::UserDir()));
         Config.VCCSim.DefaultDronePawn = (*VCCSim)["DefaultDronePawn"].value_or("");
         Config.VCCSim.DefaultCarPawn = (*VCCSim)["DefaultCarPawn"].value_or("");
+        Config.VCCSim.DefaultFlashPawn = (*VCCSim)["DefaultFlashPawn"].value_or("");
         Config.VCCSim.BufferSize = (*VCCSim)["BufferSize"].value_or(100);
         Config.VCCSim.StartWithRecording = (*VCCSim)["StartWithRecording"].value_or(false);
         
@@ -88,8 +89,23 @@ FVCCSimConfig ParseConfig()
                 continue;
             }
 
-            r.Type = RobotDetails["Type"].value_or("None"sv) == "Drone" ?
-                EPawnType::Drone : EPawnType::Car;
+            if (RobotDetails["Type"].value_or("Drone"sv) == "Drone"sv)
+            {
+                r.Type = EPawnType::Drone;
+            }
+            else if (RobotDetails["Type"].value_or("Drone"sv) == "Car"sv)
+            {
+                r.Type = EPawnType::Car;
+            }
+            else if (RobotDetails["Type"].value_or("Drone"sv) == "Flash"sv)
+            {
+                r.Type = EPawnType::Flash;
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("ParseConfig: Robot type not found!"));
+                continue;
+            }
 
             r.RecordInterval = RobotDetails["RecordInterval"].value_or(-1.0);
 

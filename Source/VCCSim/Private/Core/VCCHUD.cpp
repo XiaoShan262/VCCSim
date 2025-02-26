@@ -234,7 +234,7 @@ void AVCCHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> Fo
     
     if (!MainCharacter)
     {
-        UE_LOG(LogTemp, Warning, TEXT("ARatHUD::SetupMainCharacter: "
+        UE_LOG(LogTemp, Warning, TEXT("AVCCHUD::SetupMainCharacter: "
                                       "MainCharacter not found!"));
         return;
     }
@@ -287,7 +287,8 @@ void AVCCHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> Fo
             }
             else
             {
-                UE_LOG(LogTemp, Warning, TEXT("ARatHUD: DepthCamera component not found!"));
+                UE_LOG(LogTemp, Warning, TEXT("AVCCHUD: "
+                                              "DepthCamera component not found!"));
             }
         }
         if (Component.first == ESensorType::RGBCamera)
@@ -299,7 +300,8 @@ void AVCCHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> Fo
             }
             else
             {
-                UE_LOG(LogTemp, Warning, TEXT("ARatHUD: RGBCamera component not found!"));
+                UE_LOG(LogTemp, Warning, TEXT("AVCCHUD: "
+                                              "RGBCamera component not found!"));
             }
         }
     }
@@ -350,27 +352,32 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
         if (Robot.Type == EPawnType::Drone)
         {
             RGrpcMaps.RMaps.DroneMap[Robot.UETag] = RobotPawn;
-            if (Robot.RecordInterval > 0)
-            {
-                if (auto Func = RobotPawn->FindFunction(FName(TEXT("SetRecorder"))))
-                {
-                    RobotPawn->ProcessEvent(Func, &Recorder);
-                }
-                if (auto Func = RobotPawn->FindFunction(FName(TEXT("SetRecordInterval"))))
-                {
-                    auto RecordInterval = Robot.RecordInterval;
-                    RobotPawn->ProcessEvent(Func, &RecordInterval);
-                }
-            }
         }
         else if (Robot.Type == EPawnType::Car)
         {
             RGrpcMaps.RMaps.CarMap[Robot.UETag] = RobotPawn;
         }
+        else if (Robot.Type == EPawnType::Flash)
+        {
+            RGrpcMaps.RMaps.FlashMap[Robot.UETag] = RobotPawn;
+        }
         else
         {
             UE_LOG(LogTemp, Error, TEXT("AVCCHUD::SetupActors:"
                                         "Unknown pawn type!"));
+        }
+
+        if (Robot.RecordInterval > 0)
+        {
+            if (auto Func = RobotPawn->FindFunction(FName(TEXT("SetRecorder"))))
+            {
+                RobotPawn->ProcessEvent(Func, &Recorder);
+            }
+            if (auto Func = RobotPawn->FindFunction(FName(TEXT("SetRecordInterval"))))
+            {
+                auto RecordInterval = Robot.RecordInterval;
+                RobotPawn->ProcessEvent(Func, &RecordInterval);
+            }
         }
 
         bool bHasLidar = false;
@@ -446,7 +453,7 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
             else
             {
                 UE_LOG(LogTemp, Warning, TEXT(
-                    "ARatHUD::SetupActors: Unknown component, %d"), Component.first);
+                    "AVCCHUD::SetupActors: Unknown component, %d"), Component.first);
             }
         }
         
@@ -483,6 +490,11 @@ APawn* AVCCHUD::CreatePawn(const FVCCSimConfig& Config, const FRobot& Robot)
     {
         PawnClass = LoadClass<APawn>(nullptr,
             *FString(FUTF8ToTCHAR(Config.VCCSim.DefaultCarPawn.c_str())));
+    }
+    else if (Robot.Type == EPawnType::Flash)
+    {
+        PawnClass = LoadClass<APawn>(nullptr,
+            *FString(FUTF8ToTCHAR(Config.VCCSim.DefaultFlashPawn.c_str())));
     }
     else
     {

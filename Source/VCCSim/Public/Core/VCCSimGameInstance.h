@@ -15,31 +15,31 @@ public:
 	virtual void Init() override;
 
 	// Functions for map management
-	UFUNCTION(BlueprintCallable, Category = "RatSim|Maps")
+	UFUNCTION(BlueprintCallable, Category = "VCCSim|Maps")
 	void LoadMap(const FString& MapName);
 
-	UFUNCTION(BlueprintCallable, Category = "RatSim|Maps")
+	UFUNCTION(BlueprintCallable, Category = "VCCSim|Maps")
 	virtual void ReturnToMainMenu() override;
 
 	// Functions for game state
-	UFUNCTION(BlueprintCallable, Category = "RatSim|GameState")
+	UFUNCTION(BlueprintCallable, Category = "VCCSim|GameState")
 	void SaveGameState();
 
-	UFUNCTION(BlueprintCallable, Category = "RatSim|GameState")
+	UFUNCTION(BlueprintCallable, Category = "VCCSim|GameState")
 	void LoadGameState();
 
 	// Map names
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RatSim|Maps")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VCCSim|Maps")
 	FString MainMenuMapName;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "RatSim|Maps")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "VCCSim|Maps")
 	TArray<FString> AvailableMaps;
 
 	// Settings getters/setters
-	UFUNCTION(BlueprintCallable, Category = "RatSim|Settings")
+	UFUNCTION(BlueprintCallable, Category = "VCCSim|Settings")
 	void SetSimulationSpeed(float Speed);
 
-	UFUNCTION(BlueprintPure, Category = "RatSim|Settings")
+	UFUNCTION(BlueprintPure, Category = "VCCSim|Settings")
 	float GetSimulationSpeed() const { return SimulationSpeed; }
 
 private:

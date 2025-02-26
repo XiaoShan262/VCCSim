@@ -404,6 +404,62 @@ struct IndexedCameraDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 IndexedCameraDefaultTypeInternal _IndexedCamera_default_instance_;
 
+inline constexpr FlashPose::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        name_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        pose_{nullptr} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR FlashPose::FlashPose(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(::_pbi::ConstantInitialized()) {
+}
+struct FlashPoseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR FlashPoseDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~FlashPoseDefaultTypeInternal() {}
+  union {
+    FlashPose _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FlashPoseDefaultTypeInternal _FlashPose_default_instance_;
+
+inline constexpr FlashPath::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : path_{},
+        name_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        _cached_size_{0} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR FlashPath::FlashPath(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(::_pbi::ConstantInitialized()) {
+}
+struct FlashPathDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR FlashPathDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~FlashPathDefaultTypeInternal() {}
+  union {
+    FlashPath _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FlashPathDefaultTypeInternal _FlashPath_default_instance_;
+
 inline constexpr DronePose::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
@@ -883,6 +939,28 @@ const ::uint32_t
         ~0u,  // no sizeof(Split)
         PROTOBUF_FIELD_OFFSET(::VCCSim::CarPath, _impl_.name_),
         PROTOBUF_FIELD_OFFSET(::VCCSim::CarPath, _impl_.path_),
+        PROTOBUF_FIELD_OFFSET(::VCCSim::FlashPose, _impl_._has_bits_),
+        PROTOBUF_FIELD_OFFSET(::VCCSim::FlashPose, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::VCCSim::FlashPose, _impl_.name_),
+        PROTOBUF_FIELD_OFFSET(::VCCSim::FlashPose, _impl_.pose_),
+        ~0u,
+        0,
+        ~0u,  // no _has_bits_
+        PROTOBUF_FIELD_OFFSET(::VCCSim::FlashPath, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::VCCSim::FlashPath, _impl_.name_),
+        PROTOBUF_FIELD_OFFSET(::VCCSim::FlashPath, _impl_.path_),
 };
 
 static const ::_pbi::MigrationSchema
@@ -909,6 +987,8 @@ static const ::_pbi::MigrationSchema
         {227, -1, -1, sizeof(::VCCSim::DronePath)},
         {237, 247, -1, sizeof(::VCCSim::CarPose)},
         {249, -1, -1, sizeof(::VCCSim::CarPath)},
+        {259, 269, -1, sizeof(::VCCSim::FlashPose)},
+        {271, -1, -1, sizeof(::VCCSim::FlashPath)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::VCCSim::_Point_default_instance_._instance,
@@ -933,6 +1013,8 @@ static const ::_pb::Message* const file_default_instances[] = {
     &::VCCSim::_DronePath_default_instance_._instance,
     &::VCCSim::_CarPose_default_instance_._instance,
     &::VCCSim::_CarPath_default_instance_._instance,
+    &::VCCSim::_FlashPose_default_instance_._instance,
+    &::VCCSim::_FlashPath_default_instance_._instance,
 };
 const char descriptor_table_protodef_VCCSim_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
@@ -976,46 +1058,56 @@ const char descriptor_table_protodef_VCCSim_2eproto[] ABSL_ATTRIBUTE_SECTION_VAR
     "\002 \003(\0132\014.VCCSim.Pose\":\n\007CarPose\022\014\n\004name\030\001"
     " \001(\t\022!\n\004pose\030\002 \001(\0132\023.VCCSim.PoseOnlyYaw\""
     ":\n\007CarPath\022\014\n\004name\030\001 \001(\t\022!\n\004path\030\002 \003(\0132\023"
-    ".VCCSim.PoseOnlyYaw2\275\001\n\014LidarService\0224\n\014"
-    "GetLiDARData\022\021.VCCSim.RobotName\032\021.VCCSim"
-    ".LidarData\0223\n\014GetLiDAROdom\022\021.VCCSim.Robo"
-    "tName\032\020.VCCSim.Odometry\022B\n\023GetLiDARDataA"
-    "ndOdom\022\021.VCCSim.RobotName\032\030.VCCSim.Lidar"
-    "DataAndOdom2\347\001\n\022DepthCameraService\022J\n\027Ge"
-    "tDepthCameraPointData\022\021.VCCSim.RobotName"
-    "\032\034.VCCSim.DepthCameraPointData\022J\n\027GetDep"
-    "thCameraImageData\022\021.VCCSim.RobotName\032\034.V"
-    "CCSim.DepthCameraImageData\0229\n\022GetDepthCa"
-    "meraOdom\022\021.VCCSim.RobotName\032\020.VCCSim.Odo"
-    "metry2\236\001\n\020RGBCameraService\0227\n\020GetRGBCame"
-    "raOdom\022\021.VCCSim.RobotName\032\020.VCCSim.Odome"
-    "try\022Q\n\034GetRGBIndexedCameraImageData\022\025.VC"
-    "CSim.IndexedCamera\032\032.VCCSim.RGBCameraIma"
-    "geData2\247\001\n\014DroneService\022/\n\014GetDronePose\022"
-    "\021.VCCSim.RobotName\032\014.VCCSim.Pose\0222\n\rSend"
-    "DronePose\022\021.VCCSim.DronePose\032\016.VCCSim.St"
-    "atus\0222\n\rSendDronePath\022\021.VCCSim.DronePath"
-    "\032\016.VCCSim.Status2\237\001\n\nCarService\0221\n\nGetCa"
-    "rOdom\022\021.VCCSim.RobotName\032\020.VCCSim.Odomet"
-    "ry\022.\n\013SendCarPose\022\017.VCCSim.CarPose\032\016.VCC"
-    "Sim.Status\022.\n\013SendCarPath\022\017.VCCSim.CarPa"
-    "th\032\016.VCCSim.Status2;\n\013MeshService\022,\n\010Sen"
-    "dMesh\022\020.VCCSim.MeshData\032\016.VCCSim.Status2"
-    "[\n\021PointCloudService\022F\n\027SendPointCloudWi"
-    "thColor\022\033.VCCSim.PointCloudWithColor\032\016.V"
-    "CCSim.Statusb\006proto3"
+    ".VCCSim.PoseOnlyYaw\"5\n\tFlashPose\022\014\n\004name"
+    "\030\001 \001(\t\022\032\n\004pose\030\002 \001(\0132\014.VCCSim.Pose\"5\n\tFl"
+    "ashPath\022\014\n\004name\030\001 \001(\t\022\032\n\004path\030\002 \003(\0132\014.VC"
+    "CSim.Pose2\275\001\n\014LidarService\0224\n\014GetLiDARDa"
+    "ta\022\021.VCCSim.RobotName\032\021.VCCSim.LidarData"
+    "\0223\n\014GetLiDAROdom\022\021.VCCSim.RobotName\032\020.VC"
+    "CSim.Odometry\022B\n\023GetLiDARDataAndOdom\022\021.V"
+    "CCSim.RobotName\032\030.VCCSim.LidarDataAndOdo"
+    "m2\347\001\n\022DepthCameraService\022J\n\027GetDepthCame"
+    "raPointData\022\021.VCCSim.RobotName\032\034.VCCSim."
+    "DepthCameraPointData\022J\n\027GetDepthCameraIm"
+    "ageData\022\021.VCCSim.RobotName\032\034.VCCSim.Dept"
+    "hCameraImageData\0229\n\022GetDepthCameraOdom\022\021"
+    ".VCCSim.RobotName\032\020.VCCSim.Odometry2\236\001\n\020"
+    "RGBCameraService\0227\n\020GetRGBCameraOdom\022\021.V"
+    "CCSim.RobotName\032\020.VCCSim.Odometry\022Q\n\034Get"
+    "RGBIndexedCameraImageData\022\025.VCCSim.Index"
+    "edCamera\032\032.VCCSim.RGBCameraImageData2\247\001\n"
+    "\014DroneService\022/\n\014GetDronePose\022\021.VCCSim.R"
+    "obotName\032\014.VCCSim.Pose\0222\n\rSendDronePose\022"
+    "\021.VCCSim.DronePose\032\016.VCCSim.Status\0222\n\rSe"
+    "ndDronePath\022\021.VCCSim.DronePath\032\016.VCCSim."
+    "Status2\237\001\n\nCarService\0221\n\nGetCarOdom\022\021.VC"
+    "CSim.RobotName\032\020.VCCSim.Odometry\022.\n\013Send"
+    "CarPose\022\017.VCCSim.CarPose\032\016.VCCSim.Status"
+    "\022.\n\013SendCarPath\022\017.VCCSim.CarPath\032\016.VCCSi"
+    "m.Status2\216\002\n\014FlashService\022/\n\014GetFlashPos"
+    "e\022\021.VCCSim.RobotName\032\014.VCCSim.Pose\0222\n\rSe"
+    "ndFlashPose\022\021.VCCSim.FlashPose\032\016.VCCSim."
+    "Status\0222\n\rSendFlashPath\022\021.VCCSim.FlashPa"
+    "th\032\016.VCCSim.Status\0224\n\017CheckFlashReady\022\021."
+    "VCCSim.RobotName\032\016.VCCSim.Status\022/\n\nMove"
+    "ToNext\022\021.VCCSim.RobotName\032\016.VCCSim.Statu"
+    "s2;\n\013MeshService\022,\n\010SendMesh\022\020.VCCSim.Me"
+    "shData\032\016.VCCSim.Status2[\n\021PointCloudServ"
+    "ice\022F\n\027SendPointCloudWithColor\022\033.VCCSim."
+    "PointCloudWithColor\032\016.VCCSim.Statusb\006pro"
+    "to3"
 };
 static ::absl::once_flag descriptor_table_VCCSim_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_VCCSim_2eproto = {
     false,
     false,
-    2700,
+    3083,
     descriptor_table_protodef_VCCSim_2eproto,
     "VCCSim.proto",
     &descriptor_table_VCCSim_2eproto_once,
     nullptr,
     0,
-    22,
+    24,
     schemas,
     file_default_instances,
     TableStruct_VCCSim_2eproto::offsets,
@@ -7108,6 +7200,567 @@ void CarPath::InternalSwap(CarPath* PROTOBUF_RESTRICT other) {
 }
 
 ::google::protobuf::Metadata CarPath::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class FlashPose::_Internal {
+ public:
+  using HasBits =
+      decltype(std::declval<FlashPose>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+      8 * PROTOBUF_FIELD_OFFSET(FlashPose, _impl_._has_bits_);
+};
+
+FlashPose::FlashPose(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:VCCSim.FlashPose)
+}
+inline PROTOBUF_NDEBUG_INLINE FlashPose::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from, const ::VCCSim::FlashPose& from_msg)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0},
+        name_(arena, from.name_) {}
+
+FlashPose::FlashPose(
+    ::google::protobuf::Arena* arena,
+    const FlashPose& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  FlashPose* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
+  ::uint32_t cached_has_bits = _impl_._has_bits_[0];
+  _impl_.pose_ = (cached_has_bits & 0x00000001u) ? ::google::protobuf::Message::CopyConstruct<::VCCSim::Pose>(
+                              arena, *from._impl_.pose_)
+                        : nullptr;
+
+  // @@protoc_insertion_point(copy_constructor:VCCSim.FlashPose)
+}
+inline PROTOBUF_NDEBUG_INLINE FlashPose::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0},
+        name_(arena) {}
+
+inline void FlashPose::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  _impl_.pose_ = {};
+}
+FlashPose::~FlashPose() {
+  // @@protoc_insertion_point(destructor:VCCSim.FlashPose)
+  SharedDtor(*this);
+}
+inline void FlashPose::SharedDtor(MessageLite& self) {
+  FlashPose& this_ = static_cast<FlashPose&>(self);
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  this_._impl_.name_.Destroy();
+  delete this_._impl_.pose_;
+  this_._impl_.~Impl_();
+}
+
+inline void* FlashPose::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) FlashPose(arena);
+}
+constexpr auto FlashPose::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::CopyInit(sizeof(FlashPose),
+                                            alignof(FlashPose));
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull FlashPose::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_FlashPose_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &FlashPose::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<FlashPose>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &FlashPose::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<FlashPose>(), &FlashPose::ByteSizeLong,
+            &FlashPose::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(FlashPose, _impl_._cached_size_),
+        false,
+    },
+    &FlashPose::kDescriptorMethods,
+    &descriptor_table_VCCSim_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* FlashPose::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<1, 2, 1, 29, 2> FlashPose::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(FlashPose, _impl_._has_bits_),
+    0, // no _extensions_
+    2, 8,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967292,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    2,  // num_field_entries
+    1,  // num_aux_entries
+    offsetof(decltype(_table_), aux_entries),
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::VCCSim::FlashPose>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    // .VCCSim.Pose pose = 2;
+    {::_pbi::TcParser::FastMtS1,
+     {18, 0, 0, PROTOBUF_FIELD_OFFSET(FlashPose, _impl_.pose_)}},
+    // string name = 1;
+    {::_pbi::TcParser::FastUS1,
+     {10, 63, 0, PROTOBUF_FIELD_OFFSET(FlashPose, _impl_.name_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // string name = 1;
+    {PROTOBUF_FIELD_OFFSET(FlashPose, _impl_.name_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // .VCCSim.Pose pose = 2;
+    {PROTOBUF_FIELD_OFFSET(FlashPose, _impl_.pose_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+  }}, {{
+    {::_pbi::TcParser::GetTable<::VCCSim::Pose>()},
+  }}, {{
+    "\20\4\0\0\0\0\0\0"
+    "VCCSim.FlashPose"
+    "name"
+  }},
+};
+
+PROTOBUF_NOINLINE void FlashPose::Clear() {
+// @@protoc_insertion_point(message_clear_start:VCCSim.FlashPose)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.name_.ClearToEmpty();
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    ABSL_DCHECK(_impl_.pose_ != nullptr);
+    _impl_.pose_->Clear();
+  }
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::uint8_t* FlashPose::_InternalSerialize(
+            const MessageLite& base, ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) {
+          const FlashPose& this_ = static_cast<const FlashPose&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::uint8_t* FlashPose::_InternalSerialize(
+            ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+          const FlashPose& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(serialize_to_array_start:VCCSim.FlashPose)
+          ::uint32_t cached_has_bits = 0;
+          (void)cached_has_bits;
+
+          // string name = 1;
+          if (!this_._internal_name().empty()) {
+            const std::string& _s = this_._internal_name();
+            ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+                _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "VCCSim.FlashPose.name");
+            target = stream->WriteStringMaybeAliased(1, _s, target);
+          }
+
+          cached_has_bits = this_._impl_._has_bits_[0];
+          // .VCCSim.Pose pose = 2;
+          if (cached_has_bits & 0x00000001u) {
+            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                2, *this_._impl_.pose_, this_._impl_.pose_->GetCachedSize(), target,
+                stream);
+          }
+
+          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+            target =
+                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+          }
+          // @@protoc_insertion_point(serialize_to_array_end:VCCSim.FlashPose)
+          return target;
+        }
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::size_t FlashPose::ByteSizeLong(const MessageLite& base) {
+          const FlashPose& this_ = static_cast<const FlashPose&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::size_t FlashPose::ByteSizeLong() const {
+          const FlashPose& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(message_byte_size_start:VCCSim.FlashPose)
+          ::size_t total_size = 0;
+
+          ::uint32_t cached_has_bits = 0;
+          // Prevent compiler warnings about cached_has_bits being unused
+          (void)cached_has_bits;
+
+          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+           {
+            // string name = 1;
+            if (!this_._internal_name().empty()) {
+              total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                              this_._internal_name());
+            }
+          }
+           {
+            // .VCCSim.Pose pose = 2;
+            cached_has_bits = this_._impl_._has_bits_[0];
+            if (cached_has_bits & 0x00000001u) {
+              total_size += 1 +
+                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.pose_);
+            }
+          }
+          return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                                     &this_._impl_._cached_size_);
+        }
+
+void FlashPose::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<FlashPose*>(&to_msg);
+  auto& from = static_cast<const FlashPose&>(from_msg);
+  ::google::protobuf::Arena* arena = _this->GetArena();
+  // @@protoc_insertion_point(class_specific_merge_from_start:VCCSim.FlashPose)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_name().empty()) {
+    _this->_internal_set_name(from._internal_name());
+  }
+  cached_has_bits = from._impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    ABSL_DCHECK(from._impl_.pose_ != nullptr);
+    if (_this->_impl_.pose_ == nullptr) {
+      _this->_impl_.pose_ =
+          ::google::protobuf::Message::CopyConstruct<::VCCSim::Pose>(arena, *from._impl_.pose_);
+    } else {
+      _this->_impl_.pose_->MergeFrom(*from._impl_.pose_);
+    }
+  }
+  _this->_impl_._has_bits_[0] |= cached_has_bits;
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void FlashPose::CopyFrom(const FlashPose& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:VCCSim.FlashPose)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void FlashPose::InternalSwap(FlashPose* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  auto* arena = GetArena();
+  ABSL_DCHECK_EQ(arena, other->GetArena());
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.name_, &other->_impl_.name_, arena);
+  swap(_impl_.pose_, other->_impl_.pose_);
+}
+
+::google::protobuf::Metadata FlashPose::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class FlashPath::_Internal {
+ public:
+};
+
+FlashPath::FlashPath(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:VCCSim.FlashPath)
+}
+inline PROTOBUF_NDEBUG_INLINE FlashPath::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from, const ::VCCSim::FlashPath& from_msg)
+      : path_{visibility, arena, from.path_},
+        name_(arena, from.name_),
+        _cached_size_{0} {}
+
+FlashPath::FlashPath(
+    ::google::protobuf::Arena* arena,
+    const FlashPath& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  FlashPath* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
+
+  // @@protoc_insertion_point(copy_constructor:VCCSim.FlashPath)
+}
+inline PROTOBUF_NDEBUG_INLINE FlashPath::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : path_{visibility, arena},
+        name_(arena),
+        _cached_size_{0} {}
+
+inline void FlashPath::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+}
+FlashPath::~FlashPath() {
+  // @@protoc_insertion_point(destructor:VCCSim.FlashPath)
+  SharedDtor(*this);
+}
+inline void FlashPath::SharedDtor(MessageLite& self) {
+  FlashPath& this_ = static_cast<FlashPath&>(self);
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  this_._impl_.name_.Destroy();
+  this_._impl_.~Impl_();
+}
+
+inline void* FlashPath::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) FlashPath(arena);
+}
+constexpr auto FlashPath::InternalNewImpl_() {
+  constexpr auto arena_bits = ::google::protobuf::internal::EncodePlacementArenaOffsets({
+      PROTOBUF_FIELD_OFFSET(FlashPath, _impl_.path_) +
+          decltype(FlashPath::_impl_.path_)::
+              InternalGetArenaOffset(
+                  ::google::protobuf::Message::internal_visibility()),
+  });
+  if (arena_bits.has_value()) {
+    return ::google::protobuf::internal::MessageCreator::CopyInit(
+        sizeof(FlashPath), alignof(FlashPath), *arena_bits);
+  } else {
+    return ::google::protobuf::internal::MessageCreator(&FlashPath::PlacementNew_,
+                                 sizeof(FlashPath),
+                                 alignof(FlashPath));
+  }
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull FlashPath::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_FlashPath_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &FlashPath::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<FlashPath>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &FlashPath::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<FlashPath>(), &FlashPath::ByteSizeLong,
+            &FlashPath::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(FlashPath, _impl_._cached_size_),
+        false,
+    },
+    &FlashPath::kDescriptorMethods,
+    &descriptor_table_VCCSim_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* FlashPath::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<1, 2, 1, 29, 2> FlashPath::_table_ = {
+  {
+    0,  // no _has_bits_
+    0, // no _extensions_
+    2, 8,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967292,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    2,  // num_field_entries
+    1,  // num_aux_entries
+    offsetof(decltype(_table_), aux_entries),
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::VCCSim::FlashPath>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    // repeated .VCCSim.Pose path = 2;
+    {::_pbi::TcParser::FastMtR1,
+     {18, 63, 0, PROTOBUF_FIELD_OFFSET(FlashPath, _impl_.path_)}},
+    // string name = 1;
+    {::_pbi::TcParser::FastUS1,
+     {10, 63, 0, PROTOBUF_FIELD_OFFSET(FlashPath, _impl_.name_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // string name = 1;
+    {PROTOBUF_FIELD_OFFSET(FlashPath, _impl_.name_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // repeated .VCCSim.Pose path = 2;
+    {PROTOBUF_FIELD_OFFSET(FlashPath, _impl_.path_), 0, 0,
+    (0 | ::_fl::kFcRepeated | ::_fl::kMessage | ::_fl::kTvTable)},
+  }}, {{
+    {::_pbi::TcParser::GetTable<::VCCSim::Pose>()},
+  }}, {{
+    "\20\4\0\0\0\0\0\0"
+    "VCCSim.FlashPath"
+    "name"
+  }},
+};
+
+PROTOBUF_NOINLINE void FlashPath::Clear() {
+// @@protoc_insertion_point(message_clear_start:VCCSim.FlashPath)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.path_.Clear();
+  _impl_.name_.ClearToEmpty();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::uint8_t* FlashPath::_InternalSerialize(
+            const MessageLite& base, ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) {
+          const FlashPath& this_ = static_cast<const FlashPath&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::uint8_t* FlashPath::_InternalSerialize(
+            ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+          const FlashPath& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(serialize_to_array_start:VCCSim.FlashPath)
+          ::uint32_t cached_has_bits = 0;
+          (void)cached_has_bits;
+
+          // string name = 1;
+          if (!this_._internal_name().empty()) {
+            const std::string& _s = this_._internal_name();
+            ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+                _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "VCCSim.FlashPath.name");
+            target = stream->WriteStringMaybeAliased(1, _s, target);
+          }
+
+          // repeated .VCCSim.Pose path = 2;
+          for (unsigned i = 0, n = static_cast<unsigned>(
+                                   this_._internal_path_size());
+               i < n; i++) {
+            const auto& repfield = this_._internal_path().Get(i);
+            target =
+                ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                    2, repfield, repfield.GetCachedSize(),
+                    target, stream);
+          }
+
+          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+            target =
+                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+          }
+          // @@protoc_insertion_point(serialize_to_array_end:VCCSim.FlashPath)
+          return target;
+        }
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::size_t FlashPath::ByteSizeLong(const MessageLite& base) {
+          const FlashPath& this_ = static_cast<const FlashPath&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::size_t FlashPath::ByteSizeLong() const {
+          const FlashPath& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(message_byte_size_start:VCCSim.FlashPath)
+          ::size_t total_size = 0;
+
+          ::uint32_t cached_has_bits = 0;
+          // Prevent compiler warnings about cached_has_bits being unused
+          (void)cached_has_bits;
+
+          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+           {
+            // repeated .VCCSim.Pose path = 2;
+            {
+              total_size += 1UL * this_._internal_path_size();
+              for (const auto& msg : this_._internal_path()) {
+                total_size += ::google::protobuf::internal::WireFormatLite::MessageSize(msg);
+              }
+            }
+          }
+           {
+            // string name = 1;
+            if (!this_._internal_name().empty()) {
+              total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                              this_._internal_name());
+            }
+          }
+          return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                                     &this_._impl_._cached_size_);
+        }
+
+void FlashPath::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<FlashPath*>(&to_msg);
+  auto& from = static_cast<const FlashPath&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:VCCSim.FlashPath)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  _this->_internal_mutable_path()->MergeFrom(
+      from._internal_path());
+  if (!from._internal_name().empty()) {
+    _this->_internal_set_name(from._internal_name());
+  }
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void FlashPath::CopyFrom(const FlashPath& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:VCCSim.FlashPath)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void FlashPath::InternalSwap(FlashPath* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  auto* arena = GetArena();
+  ABSL_DCHECK_EQ(arena, other->GetArena());
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  _impl_.path_.InternalSwap(&other->_impl_.path_);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.name_, &other->_impl_.name_, arena);
+}
+
+::google::protobuf::Metadata FlashPath::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // @@protoc_insertion_point(namespace_scope)
