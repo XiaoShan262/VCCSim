@@ -62,4 +62,11 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Read Only")
 	float PathLength;
+
+	TArray<FVector> PendingPositions;
+	TArray<FRotator> PendingRotations;
+	bool bIsProcessingTrajectory = false;
+	FTimerHandle TrajectoryTimerHandle;
+    
+	void ProcessPendingTrajectory();
 };

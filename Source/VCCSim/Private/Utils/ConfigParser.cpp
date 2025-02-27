@@ -42,6 +42,7 @@ FVCCSimConfig ParseConfig()
         Config.VCCSim.BufferSize = (*VCCSim)["BufferSize"].value_or(100);
         Config.VCCSim.StartWithRecording = (*VCCSim)["StartWithRecording"].value_or(false);
         Config.VCCSim.UseMeshManager = (*VCCSim)["UseMeshManager"].value_or(false);
+        Config.VCCSim.MeshMaterial = (*VCCSim)["MeshMaterial"].value_or("None"sv);
         
         if (auto staticMeshActors = (*VCCSim)["StaticMeshActor"].as_array())
         {

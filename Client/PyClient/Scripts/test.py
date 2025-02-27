@@ -17,8 +17,7 @@ def load_poses_from_file(file_path):
             if len(parts) >= 5:  # 确保至少有五列数据
                 x, y, z, roll, pitch, yaw = map(float, parts[:6])
                 poses.append((x * 100, y * 100, -z * 100, roll, pitch, yaw))
-                print(f"Loaded pose: ({x:.2f}, {y:.2f}, {z:.2f}, {roll:.2f}, {pitch:.2f}, {yaw:.2f})")
-    return poses[:100]
+    return poses
 
 def save_rgb_image(image_data, filename):
     """Save RGB image data to a file."""

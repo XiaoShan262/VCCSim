@@ -27,6 +27,7 @@
 #include "Sensors/DepthCamera.h"
 #include "Sensors/CameraSensor.h"
 #include "Simulation/Recorder.h"
+#include "Simulation/MeshManager.h"
 #include "Utils/ConfigParser.h"
 #include "Utils/InsMeshHolder.h"
 #include "Utils/VCCSIMDisplayWidget.h"
@@ -42,7 +43,6 @@ void AVCCHUD::BeginPlay()
     
     const FVCCSimConfig Config = ParseConfig();
     SetupRecorder(Config);
-    
     SetupWidgetsAndLS(Config);
     auto RCMaps = SetupActors(Config);
     RunServer(Config, Holder, RCMaps);

@@ -26,6 +26,7 @@ struct FVCCSimPresets
 	int LS_StartOffset;
 	bool StartWithRecording;
 	bool UseMeshManager;
+	std::string MeshMaterial;
 	std::string LogSavePath;
 	std::string DefaultDronePawn;
 	std::string DefaultCarPawn;

@@ -132,19 +132,36 @@ void AVCCSimPath::MovePivotToFirstPoint()
 	Spline->UpdateSpline();
 }
 
-void AVCCSimPath::SetNewTrajectory(
-	const TArray<FVector>& Positions, const TArray<FRotator>& Rotations)
+void AVCCSimPath::SetNewTrajectory(const TArray<FVector>& Positions, const TArray<FRotator>& Rotations)
 {
-	Spline->ClearSplinePoints(false);
-	for (int32 i = 0; i < Positions.Num(); i++)
+	// Check if we're on the game thread
+	if (!IsInGameThread())
 	{
-		Spline->AddSplinePoint(Positions[i], ESplineCoordinateSpace::World);
-		Spline->SetRotationAtSplinePoint(i, Rotations[i], ESplineCoordinateSpace::World);
+		// Make a copy of the arrays since they might be destroyed before the lambda executes
+		TArray<FVector> PositionsCopy = Positions;
+		TArray<FRotator> RotationsCopy = Rotations;
+        
+		// Schedule the operation to run on the game thread
+		AsyncTask(ENamedThreads::GameThread, [this, PositionsCopy, RotationsCopy]()
+		{
+			SetNewTrajectory(PositionsCopy, RotationsCopy);
+		});
+		return;
 	}
+    
+	// Now we're on the game thread, it's safe to proceed
+	Spline->ClearSplinePoints(false);
+    
+	// Add points without updating each time
+	for (int32 i = 0; i < FMath::Min(Positions.Num(), Rotations.Num()); i++)
+	{
+		Spline->AddSplinePoint(Positions[i], ESplineCoordinateSpace::World, false);
+		Spline->SetRotationAtSplinePoint(i, Rotations[i], ESplineCoordinateSpace::World, false);
+	}
+    
+	// Single update at the end
 	Spline->UpdateSpline();
 	PathLength = Spline->GetSplineLength();
-
-	MovePivotToFirstPoint();
 }
 
 int32 AVCCSimPath::GetNumberOfSplinePoints() const
@@ -160,4 +177,48 @@ FVector AVCCSimPath::GetLocationAtSplinePoint(int32 Index) const
 FRotator AVCCSimPath::GetRotationAtSplinePoint(int32 Index) const
 {
 	return Spline->GetRotationAtSplinePoint(Index, ESplineCoordinateSpace::World);
+}
+
+void AVCCSimPath::ProcessPendingTrajectory()
+{
+	// Clear existing points
+	Spline->ClearSplinePoints(true);
+    
+	// Process points in batches
+	const int32 BatchSize = 100; // Adjust based on your needs
+	const int32 TotalPoints = FMath::Min(PendingPositions.Num(), PendingRotations.Num());
+	int32 ProcessedPoints = 0;
+    
+	while (ProcessedPoints < TotalPoints)
+	{
+		const int32 PointsToProcess = FMath::Min(BatchSize, TotalPoints - ProcessedPoints);
+        
+		for (int32 i = 0; i < PointsToProcess; i++)
+		{
+			const int32 Index = ProcessedPoints + i;
+			Spline->AddSplinePoint(PendingPositions[Index],
+				ESplineCoordinateSpace::World, false);
+			Spline->SetRotationAtSplinePoint(Index,
+				PendingRotations[Index], ESplineCoordinateSpace::World, false);
+		}
+        
+		ProcessedPoints += PointsToProcess;
+        
+		// If we have more points to process, schedule the next batch
+		if (ProcessedPoints < TotalPoints)
+		{
+			GetWorldTimerManager().SetTimerForNextTick(this,
+				&AVCCSimPath::ProcessPendingTrajectory);
+			return;
+		}
+	}
+    
+	// Finalize the spline
+	Spline->UpdateSpline();
+	PathLength = Spline->GetSplineLength();
+    
+	// We're done processing
+	bIsProcessingTrajectory = false;
+	PendingPositions.Empty();
+	PendingRotations.Empty();
 }
