@@ -155,25 +155,6 @@ void AVCCSimPath::MovePivotToFirstPoint()
 	Spline->UpdateSpline();
 }
 
-void AVCCSimPath::SetNewTrajectory(const TArray<FVector>& Positions, const TArray<FRotator>& Rotations)
-{
-	// Store the data for deferred processing
-	PendingPositions = Positions;
-	PendingRotations = Rotations;
-    
-	// If not already processing, start the process
-	if (!bIsProcessingTrajectory)
-	{
-		bIsProcessingTrajectory = true;
-        
-		// Use AsyncTask to ensure we run on the game thread
-		AsyncTask(ENamedThreads::GameThread, [this]()
-		{
-			ProcessPendingTrajectory();
-		});
-	}
-}
-
 int32 AVCCSimPath::GetNumberOfSplinePoints() const
 {
 	return Spline->GetNumberOfSplinePoints();
@@ -189,46 +170,67 @@ FRotator AVCCSimPath::GetRotationAtSplinePoint(int32 Index) const
 	return Spline->GetRotationAtSplinePoint(Index, ESplineCoordinateSpace::World);
 }
 
+void AVCCSimPath::SetNewTrajectory(const TArray<FVector>& Positions, const TArray<FRotator>& Rotations)
+{
+    // Store the data for deferred processing
+    PendingPositions = Positions;
+    PendingRotations = Rotations;
+    
+    // If not already processing, start the process
+    if (!bIsProcessingTrajectory)
+    {
+        bIsProcessingTrajectory = true;
+        ProcessedPoints = 0; // Reset the counter
+        
+        // Clear existing points before starting
+        Spline->ClearSplinePoints(true);
+        
+        // Use AsyncTask to ensure we run on the game thread
+        AsyncTask(ENamedThreads::GameThread, [this]()
+        {
+            ProcessPendingTrajectory();
+        });
+    }
+}
+
 void AVCCSimPath::ProcessPendingTrajectory()
 {
-	// Clear existing points
-	Spline->ClearSplinePoints(true);
+    // Process points in batches
+    const int32 BatchSize = 100; // Adjust based on your needs
+    const int32 TotalPoints = FMath::Min(PendingPositions.Num(), PendingRotations.Num());
     
-	// Process points in batches
-	const int32 BatchSize = 100; // Adjust based on your needs
-	const int32 TotalPoints = FMath::Min(PendingPositions.Num(), PendingRotations.Num());
-	int32 ProcessedPoints = 0;
-    
-	while (ProcessedPoints < TotalPoints)
-	{
-		const int32 PointsToProcess = FMath::Min(BatchSize, TotalPoints - ProcessedPoints);
+    if (ProcessedPoints < TotalPoints)
+    {
+        const int32 PointsToProcess = FMath::Min(BatchSize, TotalPoints - ProcessedPoints);
         
-		for (int32 i = 0; i < PointsToProcess; i++)
-		{
-			const int32 Index = ProcessedPoints + i;
-			Spline->AddSplinePoint(PendingPositions[Index],
-				ESplineCoordinateSpace::World, false);
-			Spline->SetRotationAtSplinePoint(Index,
-				PendingRotations[Index], ESplineCoordinateSpace::World, false);
-		}
+        for (int32 i = 0; i < PointsToProcess; i++)
+        {
+            const int32 Index = ProcessedPoints + i;
+            const int32 SplineIndex = ProcessedPoints + i; // This will be the spline point index
+            
+            Spline->AddSplinePoint(PendingPositions[Index],
+                ESplineCoordinateSpace::World, false);
+            Spline->SetRotationAtSplinePoint(SplineIndex,
+                PendingRotations[Index], ESplineCoordinateSpace::World, false);
+        }
         
-		ProcessedPoints += PointsToProcess;
+        ProcessedPoints += PointsToProcess;
         
-		// If we have more points to process, schedule the next batch
-		if (ProcessedPoints < TotalPoints)
-		{
-			GetWorldTimerManager().SetTimerForNextTick(this,
-				&AVCCSimPath::ProcessPendingTrajectory);
-			return;
-		}
-	}
+        // If we have more points to process, schedule the next batch
+        if (ProcessedPoints < TotalPoints)
+        {
+            GetWorldTimerManager().SetTimerForNextTick(this,
+                &AVCCSimPath::ProcessPendingTrajectory);
+            return;
+        }
+    }
     
-	// Finalize the spline
-	Spline->UpdateSpline();
-	PathLength = Spline->GetSplineLength();
+    // Finalize the spline
+    Spline->UpdateSpline();
+    PathLength = Spline->GetSplineLength();
     
-	// We're done processing
-	bIsProcessingTrajectory = false;
-	PendingPositions.Empty();
-	PendingRotations.Empty();
+    // We're done processing
+    bIsProcessingTrajectory = false;
+    PendingPositions.Empty();
+    PendingRotations.Empty();
 }

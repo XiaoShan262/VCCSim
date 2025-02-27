@@ -88,6 +88,7 @@ public:
 	TArray<FVector> PendingPositions;
 	TArray<FRotator> PendingRotations;
 	bool bIsProcessingTrajectory = false;
+	int32 ProcessedPoints = 0; // New variable to track progress
 	FTimerHandle TrajectoryTimerHandle;
     
 	void ProcessPendingTrajectory();
