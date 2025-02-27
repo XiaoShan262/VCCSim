@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 class VCCSimClient:
     """Client for interacting with VCCSim services."""
     
-    def __init__(self, host: str = "localhost", port: int = 50051):
+    def __init__(self, host: str = "localhost", port: int = 50996):
         """Initialize the VCCSim client.
         
         Args:
@@ -194,6 +194,37 @@ class VCCSimClient:
             transform=transform
         )
         response = self.mesh_service.SendMesh(request)
+        return response.status
+        
+    def send_global_mesh(self, data: bytes, format: int, version: int, simplified: bool,
+                        transform_pose: Tuple[float, float, float, float, float, float]) -> int:
+        """Send global mesh data.
+        
+        Returns:
+            The id of the created mesh
+        """
+        transform = self._create_pose(*transform_pose)
+        request = VCCSim_pb2.MeshData(
+            data=data,
+            format=format,
+            version=version,
+            simplified=simplified,
+            transform=transform
+        )
+        response = self.mesh_service.SendGlobalMesh(request)
+        return response.id
+        
+    def remove_global_mesh(self, mesh_id: int) -> bool:
+        """Remove a global mesh by its ID.
+        
+        Args:
+            mesh_id: The ID of the mesh to remove
+            
+        Returns:
+            True if removal was successful, False otherwise
+        """
+        request = VCCSim_pb2.MeshID(id=mesh_id)
+        response = self.mesh_service.RemoveGlobalMesh(request)
         return response.status
 
     # Point Cloud Service Methods

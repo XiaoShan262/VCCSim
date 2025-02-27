@@ -9,14 +9,14 @@
 IP = "0.0.0.0"
 Port = 50996
 
-MainCharacter = "Flash"                         # Name or Tag, but tag is recommended.
+MainCharacter = "Mavic"                         # Name or Tag, but tag is recommended.
 StaticMeshActor = ["MFMesh", "CompanionCube"]   # Name or Tag
 
 SubWindows = ["Lit", "Unit", "PointCloud"]
 SubWindowsOpacities = [0.95, 0.85, 0.75]
 StartWithRecording = false
 UseMeshManager = true
-MeshMaterial = "VCCSim/Materials/MFMeshMaterial.MFMeshMaterial"
+MeshMaterial = "/VCCSim/Materials/M_Static_mesh"
 LS_StartOffset = 0                              # Frame
 BufferSize = 100
 LogSavePath = "C:/UEProjects/VCCSimDev/Plugins/VCCSim/Logs"
@@ -24,12 +24,12 @@ DefaultDronePawn = "/VCCSim/Pawn/Drone/BP_PreciseDrone_1C_1D_L.BP_PreciseDrone_1
 DefaultCarPawn = "/VCCSim/Pawn/Husky/Blueprints/BP_CarPawn_Husky.BP_CarPawn_Husky_C"
 DefaultFlashPawn = "/VCCSim/Pawn/Flash/BP_FlashPawn.BP_FlashPawn_C"
 
-#[[Robots]]
-#
-#UETag = "Mavic"
-#Type = "Drone"
-#RecordInterval = 0.5
-#
+[[Robots]]
+
+UETag = "Mavic"
+Type = "Drone"
+RecordInterval = 0.5
+
 #[Robots.ComponentConfigs.Lidar]
 #RecordInterval = 0.5
 #NumRays = 32
@@ -40,12 +40,12 @@ DefaultFlashPawn = "/VCCSim/Pawn/Flash/BP_FlashPawn.BP_FlashPawn_C"
 #ScannerAngleDown = 25
 #bVisualizePoints = true
 #
-#[Robots.ComponentConfigs.RGBCamera]
-#RecordInterval = 0.5
-#FOV = 90
-#Width = 1500
-#Height = 800
-#bOrthographic = false
+[Robots.ComponentConfigs.RGBCamera]
+RecordInterval = 0.5
+FOV = 90
+Width = 1500
+Height = 800
+bOrthographic = false
 
 #[Robots.ComponentConfigs.DepthCamera]
 #FOV = 90
@@ -69,15 +69,15 @@ DefaultFlashPawn = "/VCCSim/Pawn/Flash/BP_FlashPawn.BP_FlashPawn_C"
 #ScannerAngleDown = 25
 #bVisualizePoints = true
 
-[[Robots]]
-
-UETag = "Flash"
-Type = "Flash"
-RecordInterval = -1
-
-[Robots.ComponentConfigs.RGBCamera]
-RecordInterval = -1
-FOV = 90
-Width = 800
-Height = 600
-bOrthographic = false
+#[[Robots]]
+#
+#UETag = "Flash"
+#Type = "Flash"
+#RecordInterval = -1
+#
+#[Robots.ComponentConfigs.RGBCamera]
+#RecordInterval = -1
+#FOV = 90
+#Width = 800
+#Height = 600
+#bOrthographic = false

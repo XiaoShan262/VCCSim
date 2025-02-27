@@ -47,11 +47,11 @@ class FGrpcServerTask : public FNonAbandonableTask
 {
 public:
     FGrpcServerTask(
-    	const std::string& InServerAddress,
-    	UMeshHandlerComponent* MeshComponent, UInsMeshHolder* InstancedMeshHolder,
+    	const FVCCSimConfig& Config, UMeshHandlerComponent* MeshComponent,
+    	UInsMeshHolder* InstancedMeshHolder, UFMeshManager* MeshManager,
     	FRobotGrpcMaps RobotGrpcMap)
-        : ServerAddress(InServerAddress),
-		  MeshComponent(MeshComponent), InstancedMeshHolder(InstancedMeshHolder),
+        : Config(Config), MeshComponent(MeshComponent),
+		  InstancedMeshHolder(InstancedMeshHolder), MeshManager(MeshManager),
 		  RGrpcMaps(RobotGrpcMap) {}
 
     FORCEINLINE TStatId GetStatId() const
@@ -62,7 +62,7 @@ public:
     void DoWork()
     {
     	grpc::ServerBuilder Builder;
-    	Builder.AddListeningPort(ServerAddress, grpc::InsecureServerCredentials());
+    	Builder.AddListeningPort(Config.VCCSim.Server, grpc::InsecureServerCredentials());
     	
     	VCCSim::DroneService::AsyncService DroneService;
     	VCCSim::LidarService::AsyncService LidarService;
@@ -107,7 +107,7 @@ public:
         if (Server)
         {
             UE_LOG(LogTemp, Warning, TEXT("Asynchronous Server listening on %s"),
-            	*FString(ServerAddress.c_str()));
+            	*FString(Config.VCCSim.Server.c_str()));
 
             // Spawn initial asynchronous calls
         	if (!RGrpcMaps.RMaps.DroneMap.empty())
@@ -160,6 +160,14 @@ public:
         	}
         	
         	new SendMeshCall(&MeshService, CompletionQueue.get(), MeshComponent);
+        	if (Config.VCCSim.UseMeshManager)
+        	{
+        		new SendGlobalMeshCall(&MeshService, CompletionQueue.get(),
+					MeshManager);
+        		new RemoveGlobalMeshCall(&MeshService, CompletionQueue.get(),
+        			MeshManager);
+        	}
+        	
         	new SendPointCloudWithColorCall(&PointCloudService,
         		CompletionQueue.get(), InstancedMeshHolder);
 
@@ -208,14 +216,15 @@ public:
         else
         {
             UE_LOG(LogTemp, Error, TEXT("Failed to start server on %s"),
-            	*FString(ServerAddress.c_str()));
+            	*FString(Config.VCCSim.Server.c_str()));
         }
     }
 
 private:
-    std::string ServerAddress;
+    FVCCSimConfig Config;
 	UMeshHandlerComponent* MeshComponent = nullptr;
 	UInsMeshHolder* InstancedMeshHolder = nullptr;
+	UFMeshManager* MeshManager;
     FRobotGrpcMaps RGrpcMaps;
 	
     std::unique_ptr<grpc::ServerCompletionQueue> CompletionQueue;
@@ -224,7 +233,7 @@ private:
 };
 
 void RunServer(const FVCCSimConfig& Config, AActor* Holder,
-	const FRobotGrpcMaps& RGrpcMaps)
+	const FRobotGrpcMaps& RGrpcMaps, UFMeshManager* MeshManager)
 {
 	if (ShutdownRequested.load())
 	{
@@ -234,9 +243,10 @@ void RunServer(const FVCCSimConfig& Config, AActor* Holder,
 	}
 	
 	Server_Task = new FAsyncTask<FGrpcServerTask>(
-		Config.VCCSim.Server,
+		Config,
 		Holder->FindComponentByClass<UMeshHandlerComponent>(),
 		Holder->FindComponentByClass<UInsMeshHolder>(),
+		MeshManager,
 		RGrpcMaps);
 	Server_Task->StartBackgroundTask();
 	UE_LOG(LogTemp, Warning, TEXT("GRPC server started."));

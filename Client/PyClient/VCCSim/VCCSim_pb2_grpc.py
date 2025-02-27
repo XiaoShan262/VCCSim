@@ -1038,6 +1038,16 @@ class MeshServiceStub(object):
                 request_serializer=VCCSim__pb2.MeshData.SerializeToString,
                 response_deserializer=VCCSim__pb2.Status.FromString,
                 _registered_method=True)
+        self.SendGlobalMesh = channel.unary_unary(
+                '/VCCSim.MeshService/SendGlobalMesh',
+                request_serializer=VCCSim__pb2.MeshData.SerializeToString,
+                response_deserializer=VCCSim__pb2.MeshID.FromString,
+                _registered_method=True)
+        self.RemoveGlobalMesh = channel.unary_unary(
+                '/VCCSim.MeshService/RemoveGlobalMesh',
+                request_serializer=VCCSim__pb2.MeshID.SerializeToString,
+                response_deserializer=VCCSim__pb2.Status.FromString,
+                _registered_method=True)
 
 
 class MeshServiceServicer(object):
@@ -1049,12 +1059,34 @@ class MeshServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SendGlobalMesh(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RemoveGlobalMesh(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_MeshServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SendMesh': grpc.unary_unary_rpc_method_handler(
                     servicer.SendMesh,
                     request_deserializer=VCCSim__pb2.MeshData.FromString,
+                    response_serializer=VCCSim__pb2.Status.SerializeToString,
+            ),
+            'SendGlobalMesh': grpc.unary_unary_rpc_method_handler(
+                    servicer.SendGlobalMesh,
+                    request_deserializer=VCCSim__pb2.MeshData.FromString,
+                    response_serializer=VCCSim__pb2.MeshID.SerializeToString,
+            ),
+            'RemoveGlobalMesh': grpc.unary_unary_rpc_method_handler(
+                    servicer.RemoveGlobalMesh,
+                    request_deserializer=VCCSim__pb2.MeshID.FromString,
                     response_serializer=VCCSim__pb2.Status.SerializeToString,
             ),
     }
@@ -1084,6 +1116,60 @@ class MeshService(object):
             target,
             '/VCCSim.MeshService/SendMesh',
             VCCSim__pb2.MeshData.SerializeToString,
+            VCCSim__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SendGlobalMesh(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.MeshService/SendGlobalMesh',
+            VCCSim__pb2.MeshData.SerializeToString,
+            VCCSim__pb2.MeshID.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def RemoveGlobalMesh(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.MeshService/RemoveGlobalMesh',
+            VCCSim__pb2.MeshID.SerializeToString,
             VCCSim__pb2.Status.FromString,
             options,
             channel_credentials,

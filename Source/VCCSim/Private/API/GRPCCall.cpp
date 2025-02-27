@@ -28,6 +28,7 @@
 #include "Utils/InsMeshHolder.h"
 #include "Pawns/DronePawn.h"
 #include "Pawns/FlashPawn.h"
+#include "Simulation/MeshManager.h"
 
 LidarGetDataCall::LidarGetDataCall(
     VCCSim::LidarService::AsyncService* service,
@@ -548,6 +549,92 @@ void SendMeshCall::ProcessRequest()
                                     "Mesh component not found!"));
     }
     response_.set_status(true);
+}
+
+SendGlobalMeshCall::SendGlobalMeshCall(
+    VCCSim::MeshService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    UFMeshManager* MeshManager)
+        : AsyncCallTemplate(service, cq, MeshManager)
+{
+    Proceed(true);
+}
+
+void SendGlobalMeshCall::PrepareNextCall()
+{
+    new SendGlobalMeshCall(service_, cq_, component_);
+}
+
+void SendGlobalMeshCall::InitializeRequest()
+{
+    service_->RequestSendGlobalMesh(&ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void SendGlobalMeshCall::ProcessRequest()
+{
+    if (component_)
+    {
+        FTransform MeshTransform(
+            FRotator(
+                request_.transform().roll(),
+                request_.transform().pitch(),
+                request_.transform().yaw()),
+            FVector(
+                request_.transform().x(),
+                request_.transform().y(),
+                request_.transform().z())
+        );
+        
+        const auto ID = component_->AddGlobalMesh();
+        if (component_->UpdateMesh(ID,
+            reinterpret_cast<const uint8*>(request_.data().data()),
+            request_.data().size(),
+            MeshTransform))
+        {
+            response_.set_id(ID);
+        }
+        else
+        {
+            response_.set_id(-1);
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("SendGlobalMeshCall: "
+                                    "Mesh manager not found!"));
+    }
+}
+
+RemoveGlobalMeshCall::RemoveGlobalMeshCall(
+    VCCSim::MeshService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    UFMeshManager* MeshManager)
+        : AsyncCallTemplate(service, cq, MeshManager)
+{
+    Proceed(true);
+}
+
+void RemoveGlobalMeshCall::PrepareNextCall()
+{
+    new RemoveGlobalMeshCall(service_, cq_, component_);
+}
+
+void RemoveGlobalMeshCall::InitializeRequest()
+{
+    service_->RequestRemoveGlobalMesh(&ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void RemoveGlobalMeshCall::ProcessRequest()
+{
+    if (component_)
+    {
+        response_.set_status(component_->RemoveGlobalMesh(request_.id()));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("RemoveGlobalMeshCall: "
+                                    "Mesh manager not found!"));
+    }
 }
 
 SendPointCloudWithColorCall::SendPointCloudWithColorCall(

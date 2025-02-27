@@ -10,7 +10,7 @@ I am using the following development environment.
 
 We recommend using the same environment to avoid compatibility issues.
 
-- Unreal Engine 5.4.2
+- Unreal Engine 5.4.4
 - JetBrains Rider 2024.3.5 (Attention: Rider needs Visual Studio for essential environment toolkits)
 - Windows 11 (We are not sure if it works on other platforms)
 
@@ -43,6 +43,16 @@ We recommend using the same environment to avoid compatibility issues.
 
    We will provide a guide for building the GRPC with UE5 by yourself soon.:)
 3. Build the project.
+
+   Make sure your directory structure is like below.
+   - YourProject
+     - Plugins
+       - VCCSim
+         - Source
+           - VCCSim
+           - pb
+           - grpc
+           - tomlplusplus
 
    Right click on the `.uproject` file and select `Generate Visual Studio project files`.
 

@@ -50,7 +50,7 @@ def save_rgb_image(image_data, filename):
 
 def main():
     # Create output directory for images
-    output_dir = "flash_images"
+    output_dir = "test/flash_images"
     os.makedirs(output_dir, exist_ok=True)
     
     # Initialize client

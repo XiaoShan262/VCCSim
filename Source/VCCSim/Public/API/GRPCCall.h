@@ -320,19 +320,47 @@ private:
     }
 };
 
-    
-/* --------------------------Misc Handler---------------------------------- */
+/* --------------------------Mesh Handler---------------------------------- */
+
 class SendMeshCall : public AsyncCallTemplate<VCCSim::MeshData,
-    VCCSim::Status, VCCSim::MeshService::AsyncService, UMeshHandlerComponent> {
+    VCCSim::Status, VCCSim::MeshService::AsyncService, UMeshHandlerComponent>
+{
 public:
     SendMeshCall(VCCSim::MeshService::AsyncService* service,
         grpc::ServerCompletionQueue* cq, UMeshHandlerComponent* mesh_component);
-
 protected:
     virtual void PrepareNextCall() override final;
     virtual void InitializeRequest() override final;
     virtual void ProcessRequest() override final;
 };
+
+class UFMeshManager;
+
+class SendGlobalMeshCall : public AsyncCallTemplate<VCCSim::MeshData,
+    VCCSim::MeshID, VCCSim::MeshService::AsyncService, UFMeshManager>
+{
+public:
+    SendGlobalMeshCall(VCCSim::MeshService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq, UFMeshManager* MeshManager);
+protected:
+    virtual void PrepareNextCall() override final;
+    virtual void InitializeRequest() override final;
+    virtual void ProcessRequest() override final;
+};
+
+class RemoveGlobalMeshCall : public AsyncCallTemplate<VCCSim::MeshID,
+    VCCSim::Status, VCCSim::MeshService::AsyncService, UFMeshManager>
+{
+public:
+    RemoveGlobalMeshCall(VCCSim::MeshService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq, UFMeshManager* MeshManager);
+protected:
+    virtual void PrepareNextCall() override final;
+    virtual void InitializeRequest() override final;
+    virtual void ProcessRequest() override final;
+};
+
+/* --------------------------Misc Handler---------------------------------- */
 
 class SendPointCloudWithColorCall : public AsyncCallTemplate<
     VCCSim::PointCloudWithColor, VCCSim::Status,
