@@ -1,4 +1,26 @@
-﻿#include "Pawns/SimPath.h"
+﻿// MIT License
+// 
+// Copyright (c) 2025 Mingyang Wang
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+#include "Pawns/SimPath.h"
 #include "Components/SplineComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -57,7 +79,8 @@ void AVCCSimPath::SnapAllPointsToGround()
 			if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End,
 				ECollisionChannel::ECC_Visibility, TraceParams))
 			{
-				Spline->SetLocationAtSplinePoint(i, HitResult.Location, ESplineCoordinateSpace::World);
+				Spline->SetLocationAtSplinePoint(i, HitResult.Location,
+					ESplineCoordinateSpace::World);
 			}
 		}
 		Spline->UpdateSpline();
@@ -134,34 +157,21 @@ void AVCCSimPath::MovePivotToFirstPoint()
 
 void AVCCSimPath::SetNewTrajectory(const TArray<FVector>& Positions, const TArray<FRotator>& Rotations)
 {
-	// Check if we're on the game thread
-	if (!IsInGameThread())
+	// Store the data for deferred processing
+	PendingPositions = Positions;
+	PendingRotations = Rotations;
+    
+	// If not already processing, start the process
+	if (!bIsProcessingTrajectory)
 	{
-		// Make a copy of the arrays since they might be destroyed before the lambda executes
-		TArray<FVector> PositionsCopy = Positions;
-		TArray<FRotator> RotationsCopy = Rotations;
+		bIsProcessingTrajectory = true;
         
-		// Schedule the operation to run on the game thread
-		AsyncTask(ENamedThreads::GameThread, [this, PositionsCopy, RotationsCopy]()
+		// Use AsyncTask to ensure we run on the game thread
+		AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			SetNewTrajectory(PositionsCopy, RotationsCopy);
+			ProcessPendingTrajectory();
 		});
-		return;
 	}
-    
-	// Now we're on the game thread, it's safe to proceed
-	Spline->ClearSplinePoints(false);
-    
-	// Add points without updating each time
-	for (int32 i = 0; i < FMath::Min(Positions.Num(), Rotations.Num()); i++)
-	{
-		Spline->AddSplinePoint(Positions[i], ESplineCoordinateSpace::World, false);
-		Spline->SetRotationAtSplinePoint(i, Rotations[i], ESplineCoordinateSpace::World, false);
-	}
-    
-	// Single update at the end
-	Spline->UpdateSpline();
-	PathLength = Spline->GetSplineLength();
 }
 
 int32 AVCCSimPath::GetNumberOfSplinePoints() const

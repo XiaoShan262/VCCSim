@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "MeshManager.generated.h"
 
+struct FVCCSimConfig;
+
 UCLASS()
 class UFMeshManager : public UObject
 {
@@ -10,6 +12,7 @@ class UFMeshManager : public UObject
 
 public:
 	UFMeshManager();
+	void RConfigure(const FVCCSimConfig& Config);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VCCSim|MeshManager")
 	UMaterialInterface* MeshMaterial;
@@ -20,4 +23,3 @@ public:
 	
 protected:
 };
-

@@ -1,11 +1,15 @@
 #include "Simulation/MeshManager.h"
+#include "Utils/ConfigParser.h"
 
 UFMeshManager::UFMeshManager()
 {
-	if (!MeshMaterial)
+}
+
+void UFMeshManager::RConfigure(const FVCCSimConfig& Config)
+{
+	if (Config.VCCSim.MeshMaterial != "")
 	{
 		MeshMaterial = Cast<UMaterialInterface>(StaticLoadObject(
-			UMaterialInterface::StaticClass(), nullptr,
-			TEXT("/VCCSim/Materials/M_Dynamic_mesh.M_Dynamic_mesh")));
+			UMaterialInterface::StaticClass(), nullptr, *Config.VCCSim.MeshMaterial));
 	}
 }

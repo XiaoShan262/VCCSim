@@ -33,6 +33,7 @@ class UPauseMenuWidget;
 class UInputAction;
 class UInputMappingContext;
 class ARecorder;
+class UFMeshManager;
 struct FRobotGrpcMaps;
 
 UCLASS()
@@ -83,4 +84,6 @@ private:
 	AActor* Holder = nullptr;
 	UPROPERTY()
 	ARecorder* Recorder;
+	UPROPERTY()
+	UFMeshManager* MeshManager = nullptr;
 };

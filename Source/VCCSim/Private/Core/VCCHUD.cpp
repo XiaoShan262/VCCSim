@@ -42,6 +42,12 @@ void AVCCHUD::BeginPlay()
     Super::BeginPlay();
     
     const FVCCSimConfig Config = ParseConfig();
+
+    if (Config.VCCSim.UseMeshManager)
+    {
+        MeshManager = NewObject<UFMeshManager>(this);
+    }
+    
     SetupRecorder(Config);
     SetupWidgetsAndLS(Config);
     auto RCMaps = SetupActors(Config);
