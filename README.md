@@ -33,6 +33,7 @@ We recommend using the same environment to avoid compatibility issues.
    ```bash
    git submodule update --init --recursive
    ```
+
 2. Setup the GRPC.
 
    Download the [GRPC for VCCSIM](https://drive.google.com/file/d/11rhmTjRyMszTzqDrmTah0v8Zu6GyfrNo/view?usp=drive_link)
@@ -80,6 +81,8 @@ We recommend using the same environment to avoid compatibility issues.
 
    The default place of 'RSConfig.toml' file is `/Plugins/VCCSim/Source/VCCSim`. But you can change the path in the `YourUser/VCCSim` directory.
 
+   The specific settings are described in [Here](Resources/RSConfig.md).
+
 ## Keyboard Controls Reference
 
 ### General Pawn Controls
@@ -124,12 +127,14 @@ We recommend using the same environment to avoid compatibility issues.
 - You can customize these key bindings as needed
 - Some functions may only be available in specific simulation modes
 
-### Client
+### Client Configuration
+
+GRPC used in the client side is not effected by the Unreal Engine. So you can use any language that supports GRPC. We provide the Python and C++ client for the VCCSim. You can find the client code in the `Client` directory.
 
 #### Python
 
-Wait for the update.
+[Python Client](Client\PyClient\Readme.md)
 
 #### C++
 
-Wait for the update.
+[Cpp Client](Client\CppClient\Readme.md)
