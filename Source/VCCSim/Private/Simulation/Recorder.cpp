@@ -277,56 +277,59 @@ bool FRecorderWorker::SaveLidarData(const FLidarData& LidarData, const FString& 
 
 bool FRecorderWorker::SaveDepthData(const FDepthCameraData& DepthData, const FString& Directory)
 {
-    const FString Filename = FString::Printf(
+    if (DepthData.Data.Num() > 0)
+    {
+        const FString Filename = FString::Printf(
         TEXT("%s_%d.png"),
         *FString::Printf(TEXT("%.9f"), DepthData.Timestamp),
         DepthData.SensorIndex
-    );
+        );
 
-    const FString FilePath = FPaths::Combine(Directory, TEXT("Depth"), Filename);
+        const FString FilePath = FPaths::Combine(Directory, TEXT("Depth"), Filename);
 
-    auto* ImageBuffer = BufferPool.AcquireBuffer(DepthData.Width * DepthData.Height);
-    if (!ImageBuffer) return false;
+        auto* ImageBuffer = BufferPool.AcquireBuffer(DepthData.Width * DepthData.Height);
+        if (!ImageBuffer) return false;
 
-    // Find depth range and convert to grayscale in single pass
-    float MinDepth = FLT_MAX;
-    float MaxDepth = -FLT_MAX;
+        // Find depth range and convert to grayscale in single pass
+        float MinDepth = FLT_MAX;
+        float MaxDepth = -FLT_MAX;
 
-    for (float Depth : DepthData.Data)
-    {
-        MinDepth = FMath::Min(MinDepth, Depth);
-        MaxDepth = FMath::Max(MaxDepth, Depth);
+        for (float Depth : DepthData.Data)
+        {
+            MinDepth = FMath::Min(MinDepth, Depth);
+            MaxDepth = FMath::Max(MaxDepth, Depth);
+        }
+
+        const float Range = MaxDepth - MinDepth;
+        const float Scale = Range > 0.0f ? 255.0f / Range : 0.0f;
+
+        ImageBuffer->SetNum(DepthData.Data.Num());
+
+        // Vectorizable loop
+        for (int32 i = 0; i < DepthData.Data.Num(); ++i)
+        {
+            (*ImageBuffer)[i] = FMath::RoundToInt((DepthData.Data[i] - MinDepth) * Scale);
+        }
+
+        // Use cached wrapper
+        bool bSuccess = false;
+        auto* PNGWrapper = FImageWrapperCache::Get().GetPNGWrapper();
+
+        if (PNGWrapper && PNGWrapper->SetRaw(
+            ImageBuffer->GetData(),
+            ImageBuffer->Num(),
+            DepthData.Width,
+            DepthData.Height,
+            ERGBFormat::Gray,
+            8))
+        {
+            const TArray64<uint8>& PNGData = PNGWrapper->GetCompressed();
+            bSuccess = FFileHelper::SaveArrayToFile(PNGData, *FilePath);
+        }
+        BufferPool.ReleaseBuffer(ImageBuffer);
+        return bSuccess;
     }
-
-    const float Range = MaxDepth - MinDepth;
-    const float Scale = Range > 0.0f ? 255.0f / Range : 0.0f;
-
-    ImageBuffer->SetNum(DepthData.Data.Num());
-
-    // Vectorizable loop
-    for (int32 i = 0; i < DepthData.Data.Num(); ++i)
-    {
-        (*ImageBuffer)[i] = FMath::RoundToInt((DepthData.Data[i] - MinDepth) * Scale);
-    }
-
-    // Use cached wrapper
-    bool bSuccess = false;
-    auto* PNGWrapper = FImageWrapperCache::Get().GetPNGWrapper();
-
-    if (PNGWrapper && PNGWrapper->SetRaw(
-        ImageBuffer->GetData(),
-        ImageBuffer->Num(),
-        DepthData.Width,
-        DepthData.Height,
-        ERGBFormat::Gray,
-        8))
-    {
-        const TArray64<uint8>& PNGData = PNGWrapper->GetCompressed();
-        bSuccess = FFileHelper::SaveArrayToFile(PNGData, *FilePath);
-    }
-
-    BufferPool.ReleaseBuffer(ImageBuffer);
-    return bSuccess;
+    return false;
 }
 
 bool FRecorderWorker::SaveRGBData(const FRGBCameraData& RGBData, const FString& Directory)
