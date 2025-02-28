@@ -81,3 +81,7 @@ Client/PyClient/GRPC/VCCSim_pb2.py
 .vscode/settings.json
 /Client/PyClient/VCCSim/__pycache__/*
 Client/PyClient/rgb_camera_image.png
+Client/CppClient/include/VCCSim.grpc.pb.h
+Client/CppClient/include/VCCSim.pb.h
+Client/CppClient/source/VCCSim.grpc.pb.cc
+Client/CppClient/source/VCCSim.pb.cc
