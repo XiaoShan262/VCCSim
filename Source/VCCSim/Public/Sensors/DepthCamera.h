@@ -56,7 +56,7 @@ public:
     // For grpc server
     void AsyncGetPointCloudData(TFunction<void(TArray<FDCPoint>)> Callback);
     void AsyncGetDepthImageData(TFunction<void(TArray<float>)> Callback);
-
+    
 protected:
     virtual void BeginPlay() override;
     virtual void OnComponentCreated() override;
@@ -65,9 +65,10 @@ protected:
     
     void InitializeRenderTargets();
     void ProcessDepthTexture();
+    void OnDepthDataProcessed();
     TArray<FDCPoint> GeneratePointCloud();
     TArray<float> GetDepthImage();
-
+    
 public:
     // Configuration Properties
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DepthCamera|Config")
@@ -112,4 +113,9 @@ private:
     float RecordInterval = -1.f;
     bool RecordState = false;
     float TimeSinceLastCapture;
+
+    // Double-buffered data: one for the rendering thread to write to, the other for the main thread to read from
+    TArray<FFloat16Color> DepthDataBuffers[2];
+    std::atomic<int32> CurrentWriteBufferIndex = 0;
+    std::atomic<bool> bDataReady = false;
 };

@@ -3,7 +3,7 @@
 #include "RenderingThread.h"
 #include "Async/AsyncWork.h"
 #include "Windows/WindowsHWrapper.h"
-
+#include "RHI.h"
 
 UDepthCameraComponent::UDepthCameraComponent()
     : FOV(90.0f)
@@ -36,6 +36,8 @@ void UDepthCameraComponent::RConfigure(
         RecorderPtr = Recorder;
         RecordInterval = Config.RecordInterval;
         RecordState = Recorder->RecordState;
+        // UE_LOG(LogTemp, Display, TEXT("RecordState: %d"),RecordState);
+        
         Recorder->OnRecordStateChanged.AddDynamic(this,
             &UDepthCameraComponent::SetRecordState);
         SetComponentTickEnabled(true);
@@ -45,7 +47,6 @@ void UDepthCameraComponent::RConfigure(
     {
         SetComponentTickEnabled(false);
     }
-
     bBPConfigured = true;
 }
 
@@ -59,6 +60,7 @@ void UDepthCameraComponent::SetCaptureComponent() const
         CaptureComponent->OrthoWidth = OrthoWidth;
         CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_SceneDepth;
         CaptureComponent->bCaptureEveryFrame = false;
+        CaptureComponent->bCaptureOnMovement = true;
     }
     else 
     {
@@ -126,6 +128,14 @@ void UDepthCameraComponent::InitializeRenderTargets()
     
     DepthRenderTarget->UpdateResource();
     CaptureComponent->TextureTarget = DepthRenderTarget;
+    if (CaptureComponent==nullptr)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Capture component not initialized!"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Log, TEXT("Capture component initialized success!"));
+    }
 }
 
 bool UDepthCameraComponent::CheckComponentAndRenderTarget() const
@@ -145,6 +155,8 @@ TArray<FDCPoint> UDepthCameraComponent::GetPointCloudDataGameThread()
     
     if (CheckComponentAndRenderTarget()) return {};
 
+    UE_LOG(LogTemp, Warning, TEXT("Depth camera data ready!"));
+    
     CaptureComponent->CaptureScene();
     ProcessDepthTexture();
     return GeneratePointCloud();
@@ -158,6 +170,7 @@ TArray<float> UDepthCameraComponent::GetDepthImageDataGameThread()
 
     CaptureComponent->CaptureScene();
     ProcessDepthTexture();
+    
     return GetDepthImage();
 }
 
@@ -176,9 +189,57 @@ void UDepthCameraComponent::CaptureDepthScene()
     PointCloudData = GeneratePointCloud();
 }
 
+// void UDepthCameraComponent::ProcessDepthTexture()
+// {
+//     FTextureRenderTargetResource* RenderTargetResource =
+//         DepthRenderTarget->GameThread_GetRenderTargetResource();
+//     
+//     if (!RenderTargetResource)
+//     {
+//         UE_LOG(LogTemp, Error, TEXT("Failed to get render target resource!"));
+//         return;
+//     }
+//     DepthData.Empty(Width * Height);
+//     
+//     struct FReadSurfaceContext
+//     {
+//         TArray<FFloat16Color>* OutData;
+//         FTextureRenderTargetResource* RenderTarget;
+//         FIntRect Rect;
+//         FReadSurfaceDataFlags Flags;
+//     };
+//
+//     FReadSurfaceContext Context = {
+//         &DepthData,
+//         RenderTargetResource,
+//         FIntRect(0, 0, Width, Height),
+//         FReadSurfaceDataFlags(RCM_MinMax, CubeFace_MAX)
+//     };
+//     // UE_LOG(LogTemp,Log,"")
+//     ENQUEUE_RENDER_COMMAND(ReadSurfaceCommand)(
+//         [Context](FRHICommandListImmediate& RHICmdList)
+//         {
+//             RHICmdList.ReadSurfaceFloatData(
+//                 Context.RenderTarget->GetRenderTargetTexture(),
+//                 Context.Rect,
+//                 *Context.OutData,
+//                 ECubeFace::CubeFace_PosX,
+//                 0,
+//                 0
+//             );
+//         });
+//     
+//     // Wait for the rendering thread to finish
+//     FlushRenderingCommands();
+//     
+//     // Check success 
+//     // UE_LOG(LogTemp, Warning, TEXT("ProcessDepthTexture Success!"));
+// }
+
 void UDepthCameraComponent::ProcessDepthTexture()
 {
-    FTextureRenderTargetResource* RenderTargetResource =
+    // Get the render target resource
+    FTextureRenderTargetResource* RenderTargetResource = 
         DepthRenderTarget->GameThread_GetRenderTargetResource();
     
     if (!RenderTargetResource)
@@ -187,8 +248,12 @@ void UDepthCameraComponent::ProcessDepthTexture()
         return;
     }
 
-    DepthData.Empty(Width * Height);
-    
+    // Get the current write buffer index
+    const int32 WriteBufferIndex = CurrentWriteBufferIndex.load();
+    TArray<FFloat16Color>& WriteBuffer = DepthDataBuffers[WriteBufferIndex];
+    WriteBuffer.Empty(Width * Height);
+
+    // Define context for reading surface data
     struct FReadSurfaceContext
     {
         TArray<FFloat16Color>* OutData;
@@ -198,34 +263,63 @@ void UDepthCameraComponent::ProcessDepthTexture()
     };
 
     FReadSurfaceContext Context = {
-        &DepthData,
+        &WriteBuffer,
         RenderTargetResource,
         FIntRect(0, 0, Width, Height),
         FReadSurfaceDataFlags(RCM_MinMax, CubeFace_MAX)
     };
-
-    ENQUEUE_RENDER_COMMAND(ReadSurfaceCommand)(
-        [Context](FRHICommandListImmediate& RHICmdList)
+    
+    // Submit the render thread command
+    ENQUEUE_RENDER_COMMAND(ReadSurfaceCommand)([Context, this, WriteBufferIndex](FRHICommandListImmediate& RHICmdList)
+    {
+        // The render thread performs the data read
+        RHICmdList.ReadSurfaceFloatData(
+            Context.RenderTarget->GetRenderTargetTexture(),
+            Context.Rect,
+            *Context.OutData,
+            ECubeFace::CubeFace_PosX,
+            0,
+            0
+        );
+        // Switch the buffer index (atomic operation)
+        const int32 NewBufferIndex = (WriteBufferIndex + 1) % 2;
+        CurrentWriteBufferIndex.store(NewBufferIndex);
+        // Mark data as ready
+        bDataReady.store(true);
+        // Dispatch the data processing task to the main thread
+        FFunctionGraphTask::CreateAndDispatchWhenReady([this]()
         {
-            RHICmdList.ReadSurfaceFloatData(
-                Context.RenderTarget->GetRenderTargetTexture(),
-                Context.Rect,
-                *Context.OutData,
-                ECubeFace::CubeFace_PosX,
-                0,
-                0
-            );
-        });
-
-    // Wait for the rendering thread to finish
-    FlushRenderingCommands();
+            if (bDataReady.load())
+            {
+                this->OnDepthDataProcessed();
+                bDataReady.store(false);
+            }
+        },
+        TStatId(),
+        nullptr,
+        ENamedThreads::GameThread);
+    });
 }
+
+void UDepthCameraComponent::OnDepthDataProcessed()
+{
+    // Get the index of the buffer to be read (atomic operation)
+    const int32 ReadBufferIndex = (CurrentWriteBufferIndex.load() + 1) % 2;
+    const TArray<FFloat16Color>& ReadBuffer = DepthDataBuffers[ReadBufferIndex];
+
+    // Lock to protect DepthData writes
+    FScopeLock Lock(&DataLock);
+
+    // Copy double-buffered data to the main thread's DepthData
+    DepthData = ReadBuffer; 
+}
+
 
 TArray<FDCPoint> UDepthCameraComponent::GeneratePointCloud()
 {
     if (DepthData.Num() == 0) 
     {
-        UE_LOG(LogTemp, Error, TEXT("No depth data available!"));
+        UE_LOG(LogTemp, Error, TEXT("GeneratePointCloud: No depth data available!"));
         return {};
     }
 
@@ -291,7 +385,7 @@ TArray<FDCPoint> UDepthCameraComponent::GeneratePointCloud()
         }
     }
     // Clear the depth data
-    DepthData.Empty(Width * Height);
+    // DepthData.Empty(Width * Height);
 
     return tPointCloudData;
 }
@@ -304,10 +398,13 @@ TArray<float> UDepthCameraComponent::GetDepthImage()
     // Wait if depth data hasn't been processed yet
     if (DepthData.Num() == 0)
     {
-        UE_LOG(LogTemp, Warning, TEXT("No depth data available!"));
+        UE_LOG(LogTemp, Warning, TEXT("GetDepthImage: No depth data available!"));
         return DepthImage;
     }
-
+    
+    // Check success: Depth Data always be empty
+    // UE_LOG(LogTemp, Log, TEXT("GetDepthImage: Depth data is available!!"));
+    
     // Convert FFloat16Color to float depth values
     for (const FFloat16Color& Color : DepthData)
     {
