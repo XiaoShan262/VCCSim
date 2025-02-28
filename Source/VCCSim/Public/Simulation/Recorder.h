@@ -101,7 +101,7 @@ struct FRGBCameraData final : public FSensorData
     int32 Width;
     int32 Height;
     int32 SensorIndex;
-    TArray<FColor> Data;
+    TArray<FLinearColor> Data;
 };
 
 // Buffer pool for efficient memory management

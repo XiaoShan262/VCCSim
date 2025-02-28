@@ -281,23 +281,29 @@ private:
     static IImageWrapperModule* ImageWrapperModule;
     TSharedPtr<IImageWrapper> ImageWrapper;
     
-    TArray<uint8> ConvertToPNG(const TArray<FColor>& ImageData, int32 Width, int32 Height) 
+    TArray<uint8> ConvertToPNG(const TArray<FLinearColor>& ImageData, int32 Width, int32 Height) 
     {
         TArray<uint8> PNGData;
-        
+    
         if (ImageWrapper.IsValid())
         {
-            // Convert FColor array to raw BGRA
+            // Convert FLinearColor array to raw BGRA with proper HDR->LDR conversion
             TArray<uint8> RawBGRA;
             RawBGRA.SetNum(ImageData.Num() * 4);
+        
             for (int32 i = 0; i < ImageData.Num(); i++) 
             {
-                RawBGRA[4*i] = ImageData[i].B;
-                RawBGRA[4*i + 1] = ImageData[i].G;
-                RawBGRA[4*i + 2] = ImageData[i].R;
-                RawBGRA[4*i + 3] = ImageData[i].A;
-            }
+                // Convert from LinearColor (which can have values outside 0-1) 
+                // to standard 8-bit per channel color
+                FColor SDRColor = ImageData[i].ToFColor(true); // Apply sRGB conversion
             
+                // Store in BGRA order
+                RawBGRA[4*i] = SDRColor.B;
+                RawBGRA[4*i + 1] = SDRColor.G;
+                RawBGRA[4*i + 2] = SDRColor.R;
+                RawBGRA[4*i + 3] = SDRColor.A;
+            }
+        
             if (ImageWrapper->SetRaw(RawBGRA.GetData(), RawBGRA.Num(),
                 Width, Height, ERGBFormat::BGRA, 8)) 
             {
@@ -315,7 +321,7 @@ private:
             UE_LOG(LogTemp, Error, TEXT("RGBIndexedCameraImageDataCall:"
                                         "Failed to create PNG image wrapper"));
         }
-        
+    
         return PNGData;
     }
 };

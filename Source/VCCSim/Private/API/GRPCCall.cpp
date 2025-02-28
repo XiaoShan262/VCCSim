@@ -483,7 +483,7 @@ void RGBIndexedCameraImageDataCall::ProcessRequest()
     }
 
     // Use the callback version with PNG conversion
-    RGBCamera->AsyncGetRGBImageData([this, RGBCamera](const TArray<FColor>& ImageData)
+    RGBCamera->AsyncGetRGBImageData([this, RGBCamera](const TArray<FLinearColor>& ImageData)
     {
         // Convert to PNG in a background thread
         AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [this, ImageData, RGBCamera]()

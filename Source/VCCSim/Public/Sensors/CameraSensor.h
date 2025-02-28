@@ -45,7 +45,7 @@ public:
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
-    FOnRGBImageCaptured, const TArray<FColor>&, ImageData);
+    FOnRGBImageCaptured, const TArray<FLinearColor>&, ImageData);
 
 UCLASS(ClassGroup = (VCCSIM), meta = (BlueprintSpawnableComponent))
 class VCCSIM_API URGBCameraComponent : public UPrimitiveComponent
@@ -65,13 +65,13 @@ public:
     void InitializeRenderTargets();
     
     void ProcessRGBTextureAsyncRaw();
-    void ProcessRGBTextureAsync(TFunction<void(const TArray<FColor>&)> OnComplete);
+    void ProcessRGBTextureAsync(TFunction<void(const TArray<FLinearColor>&)> OnComplete);
 
     UFUNCTION(BlueprintCallable, Category = "RGBCamera")
     void CaptureRGBScene();
     
     // For GRPC call
-    void AsyncGetRGBImageData(TFunction<void(const TArray<FColor>&)> Callback);
+    void AsyncGetRGBImageData(TFunction<void(const TArray<FLinearColor>&)> Callback);
 
 protected:
     virtual void BeginPlay() override;
@@ -112,7 +112,7 @@ private:
 
     struct FReadSurfaceContext
     {
-        TArray<FColor>* OutData;
+        TArray<FLinearColor>* OutData;
         FTextureRenderTargetResource* RenderTarget;
         FIntRect Rect;
         FReadSurfaceDataFlags Flags;
@@ -120,7 +120,7 @@ private:
     
     UPROPERTY()
     USceneCaptureComponent2D* CaptureComponent = nullptr;
-    TArray<FColor> RGBData;
+    TArray<FLinearColor> RGBData;
     FCriticalSection DataLock;
 
     UPROPERTY()

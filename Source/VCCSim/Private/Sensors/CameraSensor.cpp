@@ -136,6 +136,7 @@ void URGBCameraComponent::SetCaptureComponent() const
         ShowFlags.SetAtmosphere(true);
         ShowFlags.SetAntiAliasing(true);
         ShowFlags.SetDynamicShadows(true);
+        // Disable motion blur for programmatically moved cameras
         ShowFlags.SetMotionBlur(false);
         ShowFlags.SetBloom(true);
         ShowFlags.SetAmbientOcclusion(true);
@@ -144,12 +145,13 @@ void URGBCameraComponent::SetCaptureComponent() const
         ShowFlags.SetTonemapper(true);
         ShowFlags.SetPostProcessing(true);
         ShowFlags.SetAmbientCubemap(true);
-        ShowFlags.SetTemporalAA(true);  // Enable temporal AA for better quality
 
         // Capture settings
         CaptureComponent->bCaptureEveryFrame = false;
         CaptureComponent->bCaptureOnMovement = false;
         CaptureComponent->bAlwaysPersistRenderingState = true;
+
+        // Enhanced post-processing settings compatible with UE 5.4
         
         // Ambient Occlusion
         CaptureComponent->PostProcessSettings.bOverride_AmbientOcclusionIntensity = true;
@@ -169,9 +171,15 @@ void URGBCameraComponent::SetCaptureComponent() const
         CaptureComponent->PostProcessSettings.bOverride_ColorContrast = true;
         CaptureComponent->PostProcessSettings.ColorContrast = FVector4(1.05f, 1.05f, 1.05f, 1.0f);
         
-        // Enhanced sharpening
-        CaptureComponent->PostProcessSettings.bOverride_SceneColorTint = true;
-        CaptureComponent->PostProcessSettings.SceneColorTint = FLinearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        // Motion blur explicitly disabled for programmatically moved cameras
+        CaptureComponent->PostProcessSettings.bOverride_MotionBlurAmount = true;
+        CaptureComponent->PostProcessSettings.MotionBlurAmount = 0.0f;
+        
+        // Standard screen space reflections enhancements
+        CaptureComponent->PostProcessSettings.bOverride_ScreenSpaceReflectionQuality = true;
+        CaptureComponent->PostProcessSettings.ScreenSpaceReflectionQuality = 100.0f;
+        CaptureComponent->PostProcessSettings.bOverride_ScreenSpaceReflectionIntensity = true; 
+        CaptureComponent->PostProcessSettings.ScreenSpaceReflectionIntensity = 100.0f;
     }
     else 
     {
@@ -203,7 +211,7 @@ void URGBCameraComponent::CaptureRGBScene()
     CaptureComponent->CaptureScene();
 }
 
-void URGBCameraComponent::AsyncGetRGBImageData(TFunction<void(const TArray<FColor>&)> Callback)
+void URGBCameraComponent::AsyncGetRGBImageData(TFunction<void(const TArray<FLinearColor>&)> Callback)
 {
     AsyncTask(ENamedThreads::GameThread, [this, Callback = MoveTemp(Callback)]()
     {
@@ -214,7 +222,7 @@ void URGBCameraComponent::AsyncGetRGBImageData(TFunction<void(const TArray<FColo
         
         CaptureComponent->CaptureScene();
         
-        ProcessRGBTextureAsync([Callback](const TArray<FColor>& ColorData)
+        ProcessRGBTextureAsync([Callback](const TArray<FLinearColor>& ColorData)
         {
             Callback(ColorData);
         });
@@ -259,7 +267,7 @@ void URGBCameraComponent::ProcessRGBTextureAsyncRaw()
 }
 
 void URGBCameraComponent::ProcessRGBTextureAsync(
-    TFunction<void(const TArray<FColor>&)> OnComplete)
+    TFunction<void(const TArray<FLinearColor>&)> OnComplete)
 {
     FTextureRenderTargetResource* RenderTargetResource = 
         RGBRenderTarget->GameThread_GetRenderTargetResource();
@@ -285,7 +293,7 @@ void URGBCameraComponent::ProcessRGBTextureAsync(
     };
 
     auto SharedCallback = MakeShared<
-        TFunction<void(const TArray<FColor>&)>>(MoveTemp(OnComplete));
+        TFunction<void(const TArray<FLinearColor>&)>>(MoveTemp(OnComplete));
     // Capture the OnComplete callback in the render command
     ENQUEUE_RENDER_COMMAND(ReadSurfaceCommand)(
         [Context, SharedCallback](FRHICommandListImmediate& RHICmdList)
@@ -323,7 +331,7 @@ void URGBCameraComponent::CaptureRGBImageAsync()
     
     CaptureComponent->CaptureScene();
     
-    ProcessRGBTextureAsync([this](const TArray<FColor>& ColorData)
+    ProcessRGBTextureAsync([this](const TArray<FLinearColor>& ColorData)
     {
         OnRGBImageCaptured.Broadcast(ColorData);
     });
