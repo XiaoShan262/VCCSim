@@ -85,3 +85,5 @@ Client/CppClient/include/VCCSim.grpc.pb.h
 Client/CppClient/include/VCCSim.pb.h
 Client/CppClient/source/VCCSim.grpc.pb.cc
 Client/CppClient/source/VCCSim.pb.cc
+Client/PyClient/test_scripts/ouhuang_3.txt
+flash_test.log

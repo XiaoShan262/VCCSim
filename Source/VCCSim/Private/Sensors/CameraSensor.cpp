@@ -129,6 +129,9 @@ void URGBCameraComponent::SetCaptureComponent() const
         CaptureComponent->FOVAngle = FOV;
         CaptureComponent->OrthoWidth = OrthoWidth;
 
+        // Change the capture source to HDR for better quality
+        CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorHDR;
+        
         FEngineShowFlags& ShowFlags = CaptureComponent->ShowFlags;
         ShowFlags.SetAtmosphere(true);
         ShowFlags.SetAntiAliasing(true);
@@ -141,14 +144,14 @@ void URGBCameraComponent::SetCaptureComponent() const
         ShowFlags.SetTonemapper(true);
         ShowFlags.SetPostProcessing(true);
         ShowFlags.SetAmbientCubemap(true);
+        ShowFlags.SetTemporalAA(true);  // Enable temporal AA for better quality
 
         // Capture settings
-        CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
         CaptureComponent->bCaptureEveryFrame = false;
         CaptureComponent->bCaptureOnMovement = false;
         CaptureComponent->bAlwaysPersistRenderingState = true;
-
-        // Post Process Settings
+        
+        // Ambient Occlusion
         CaptureComponent->PostProcessSettings.bOverride_AmbientOcclusionIntensity = true;
         CaptureComponent->PostProcessSettings.AmbientOcclusionIntensity = 1.0f;
         CaptureComponent->PostProcessSettings.bOverride_AmbientOcclusionRadius = true;
@@ -159,6 +162,16 @@ void URGBCameraComponent::SetCaptureComponent() const
         // Enhanced indirect lighting
         CaptureComponent->PostProcessSettings.bOverride_IndirectLightingIntensity = true;
         CaptureComponent->PostProcessSettings.IndirectLightingIntensity = 1.2f;
+        
+        // Enhanced color grading
+        CaptureComponent->PostProcessSettings.bOverride_ColorGamma = true;
+        CaptureComponent->PostProcessSettings.ColorGamma = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
+        CaptureComponent->PostProcessSettings.bOverride_ColorContrast = true;
+        CaptureComponent->PostProcessSettings.ColorContrast = FVector4(1.05f, 1.05f, 1.05f, 1.0f);
+        
+        // Enhanced sharpening
+        CaptureComponent->PostProcessSettings.bOverride_SceneColorTint = true;
+        CaptureComponent->PostProcessSettings.SceneColorTint = FLinearColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
     else 
     {
@@ -169,8 +182,12 @@ void URGBCameraComponent::SetCaptureComponent() const
 void URGBCameraComponent::InitializeRenderTargets()
 {
     RGBRenderTarget = NewObject<UTextureRenderTarget2D>(this);
+    // Use higher quality format with HDR support
     RGBRenderTarget->InitCustomFormat(Width, Height,
-        PF_B8G8R8A8, false);
+        PF_FloatRGBA, true);  
+    
+    // Enable MipMapping for better quality
+    RGBRenderTarget->bAutoGenerateMips = true;
     
     RGBRenderTarget->UpdateResource();
     CaptureComponent->TextureTarget = RGBRenderTarget;

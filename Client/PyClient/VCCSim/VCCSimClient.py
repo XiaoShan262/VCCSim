@@ -6,14 +6,21 @@ from typing import List, Optional, Tuple
 class VCCSimClient:
     """Client for interacting with VCCSim services."""
     
-    def __init__(self, host: str = "localhost", port: int = 50996):
+    def __init__(self, host: str = "localhost", port: int = 50996, max_message_length: int = 20 * 1024 * 1024):
         """Initialize the VCCSim client.
         
         Args:
             host: Server hostname
             port: Server port number
+            max_message_length: Maximum message length in bytes (default: 20MB)
         """
-        self.channel = grpc.insecure_channel(f"{host}:{port}")
+        # Configure channel options to handle larger messages
+        options = [
+            ('grpc.max_send_message_length', max_message_length),
+            ('grpc.max_receive_message_length', max_message_length)
+        ]
+        
+        self.channel = grpc.insecure_channel(f"{host}:{port}", options=options)
         
         # Initialize service stubs
         self.lidar_service = VCCSim_pb2_grpc.LidarServiceStub(self.channel)
@@ -21,7 +28,7 @@ class VCCSimClient:
         self.rgb_camera_service = VCCSim_pb2_grpc.RGBCameraServiceStub(self.channel)
         self.drone_service = VCCSim_pb2_grpc.DroneServiceStub(self.channel)
         self.car_service = VCCSim_pb2_grpc.CarServiceStub(self.channel)
-        self.flash_service = VCCSim_pb2_grpc.FlashServiceStub(self.channel)  # Added Flash service
+        self.flash_service = VCCSim_pb2_grpc.FlashServiceStub(self.channel)
         self.mesh_service = VCCSim_pb2_grpc.MeshServiceStub(self.channel)
         self.point_cloud_service = VCCSim_pb2_grpc.PointCloudServiceStub(self.channel)
 
