@@ -12,7 +12,7 @@ float AsinD(float value)
 }
 
 ACarPawn::ACarPawn()
-{
+{	
 	PrimaryActorTick.bCanEverTick = true;
 	Chassis = CreateDefaultSubobject<UChildActorComponent>(TEXT("Chassis"));
 	RootComponent = Chassis;
@@ -44,7 +44,7 @@ void ACarPawn::OnConstruction(const FTransform& Transform)
 	Laps = 1.f;
 	
 	SetTraceIgnores();
-	CarMeshSetup();
+	// CarMeshSetup();
 	CalculateDistance();
 	FollowThePathAndSteer();
 	ActorGroundTrace();
@@ -104,23 +104,23 @@ void ACarPawn::SetTraceIgnores()
 	}
 }
 
-void ACarPawn::CarMeshSetup()
-{
-	if (BodyMesh)
-	{
-		Body->SetStaticMesh(BodyMesh);
-	}
-	if (FrontWheelsMesh)
-	{
-		WheelFL->SetStaticMesh(FrontWheelsMesh);
-		WheelFR->SetStaticMesh(FrontWheelsMesh);
-	}
-	if (RearWheelsMesh)
-	{
-		WheelRL->SetStaticMesh(RearWheelsMesh);
-		WheelRR->SetStaticMesh(RearWheelsMesh);
-	}
-}
+// void ACarPawn::CarMeshSetup()
+// {
+// 	if (BodyMesh)
+// 	{
+// 		Body->SetStaticMesh(BodyMesh);
+// 	}
+// 	if (FrontWheelsMesh)
+// 	{
+// 		WheelFL->SetStaticMesh(FrontWheelsMesh);
+// 		WheelFR->SetStaticMesh(FrontWheelsMesh);
+// 	}
+// 	if (RearWheelsMesh)
+// 	{
+// 		WheelRL->SetStaticMesh(RearWheelsMesh);
+// 		WheelRR->SetStaticMesh(RearWheelsMesh);
+// 	}
+// }
 
 void ACarPawn::CalculateDistance()
 {
@@ -265,8 +265,17 @@ void ACarPawn::WheelsGroundTrace()
 		}
 		else
 		{
-			Wheel->SetWorldLocation({CurrentPosition.X, CurrentPosition.Y,
-				0.95 * Wheel->GetStaticMesh()->GetBoundingBox().Max.Z * UpVector.Z});
+			UStaticMesh* StaticMesh = Wheel->GetStaticMesh();
+			if (StaticMesh)
+			{
+				Wheel->SetWorldLocation({CurrentPosition.X, CurrentPosition.Y,
+					0.95 * StaticMesh->GetBoundingBox().Max.Z * UpVector.Z});
+			}
+			else
+			{
+				// Fallback if static mesh is null
+				Wheel->SetWorldLocation({CurrentPosition.X, CurrentPosition.Y, 20.0f * UpVector.Z}); // Use a default value
+			}
 		}
 	}
 }

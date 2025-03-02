@@ -15,7 +15,7 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	
 	void SetTraceIgnores();
-	void CarMeshSetup();
+	// void CarMeshSetup();
 	void CalculateDistance();
 	void FollowThePathAndSteer();
 	void ActorGroundTrace();
@@ -62,12 +62,12 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="Default")
 	TObjectPtr<UStaticMeshComponent> WheelRR;	
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="Car Setup")
-	TObjectPtr<UStaticMesh> BodyMesh;
-    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="Car Setup")
-	TObjectPtr<UStaticMesh> FrontWheelsMesh;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="Car Setup")
-	TObjectPtr<UStaticMesh> RearWheelsMesh;
+	// UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="Car Setup")
+	// TObjectPtr<UStaticMesh> BodyMesh;
+ //    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="Car Setup")
+	// TObjectPtr<UStaticMesh> FrontWheelsMesh;
+	// UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="Car Setup")
+	// TObjectPtr<UStaticMesh> RearWheelsMesh;
 
 	UPROPERTY(BlueprintReadWrite, EditInstanceOnly, Category="Driving", Interp)
 	TObjectPtr<AVCCSimPath> Path;
