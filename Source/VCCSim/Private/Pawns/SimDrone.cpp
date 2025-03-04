@@ -3,6 +3,7 @@
 #include "Simulation/Recorder.h"
 #include "Components/BoxComponent.h"
 #include "EnhancedInputComponent.h"
+#include "Components/SplineComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "InputAction.h"
@@ -59,77 +60,82 @@ void ASimDrone::BeginPlay()
 void ASimDrone::Tick(float DeltaTime)
 {
     
-    Super::Tick(DeltaTime);
-
-    // Handle recording if enabled
-    if (bRecorded && RecordState)
+    AActor::Tick(DeltaTime);
+if (IfAutoMove)
     {
-        TimeSinceLastCapture += DeltaTime;
-        if (TimeSinceLastCapture >= RecordInterval)
+        AutoMove(DeltaTime);
+        CalculateDistance();
+        ASimDrone::FollowThePathAndSteer(DeltaTime);
+    }else
+    {
+        if (bRecorded && RecordState)
         {
-            TimeSinceLastCapture = 0.0f;
-            FPoseData PoseData;
-            PoseData.Location = GetActorLocation();
-            PoseData.Rotation = GetActorRotation();
-            PoseData.Timestamp = FPlatformTime::Seconds();
-            Recorder->SubmitPoseData(this, MoveTemp(PoseData));
-        }
-    }
-
-    if (bUseTarget)
-    {
-        MoveToTarget(DeltaTime);
-    }
-    else
-    {
-        // Apply manual input controls
-        FVector CurrentLocation = GetActorLocation();
-        FRotator CurrentRotation = GetActorRotation();
-        
-        // Handle Pitch & Roll
-        // Negative when moving forward, positive when moving backward
-        float TargetPitch = -MovementInput.Y * MaxPitchAngle;
-        
-        // Negative when moving left, positive when moving right
-        float TargetRoll = MovementInput.X * MaxRollAngle;  
-
-        // Smooth interpolation for more natural tilting (simulates physical inertia)
-        CurrentRotation.Pitch = FMath::FInterpTo(CurrentRotation.Pitch, TargetPitch, DeltaTime, TiltInterpSpeed);
-        CurrentRotation.Roll = FMath::FInterpTo(CurrentRotation.Roll, TargetRoll, DeltaTime, TiltInterpSpeed);
-
-        // Handle vertical movement
-        CurrentLocation.Z += VerticalInput * MovementSpeed * DeltaTime;
-        
-        // Handle horizontal movement with rotation-based direction
-        FRotator YawRotation(0.0f, CurrentRotation.Yaw, 0.0f);
-        FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-        FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-        
-        // physical simulation 
-        if (bEnablePhysical == true)
-        {
-            // if there is input,TargetSpeed will be set to MovementSpeed; else be zero.
-            float TargetSpeed = (MovementInput.Size() > 0) ? MovementSpeed : 0.0f;
-            CurrentMoveSpeed = FMath::FInterpTo(CurrentMoveSpeed, TargetSpeed, DeltaTime, AccelerationSpeed);
-            if (MovementInput.Size() > 0)
+            TimeSinceLastCapture += DeltaTime;
+            if (TimeSinceLastCapture >= RecordInterval)
             {
-                LastMoveDirection = (ForwardDirection * MovementInput.Y + RightDirection * MovementInput.X).GetSafeNormal();
+                TimeSinceLastCapture = 0.0f;
+                FPoseData PoseData;
+                PoseData.Location = GetActorLocation();
+                PoseData.Rotation = GetActorRotation();
+                PoseData.Timestamp = FPlatformTime::Seconds();
+                Recorder->SubmitPoseData(this, MoveTemp(PoseData));
             }
-            CurrentLocation += LastMoveDirection * CurrentMoveSpeed * DeltaTime;
         }
-        else  
-        {
-            // moving without physical
-            CurrentLocation += (ForwardDirection * MovementInput.Y + RightDirection * MovementInput.X) 
-                              * MovementSpeed * DeltaTime;
-        }
-        // Handle yaw rotation
-        CurrentRotation.Yaw += YawInput * RotationSpeed * DeltaTime;
         
-        // Apply the new position and rotation
-        SetActorLocationAndRotation(CurrentLocation, CurrentRotation);
+        if (bUseTarget)
+        {
+            MoveToTarget(DeltaTime);
+        }
+        else
+        {
+            // Apply manual input controls
+            FVector CurrentLocation = GetActorLocation();
+            FRotator CurrentRotation = GetActorRotation();
+            
+            // Handle Pitch & Roll
+            // Negative when moving forward, positive when moving backward
+            float TargetPitch = -MovementInput.Y * MaxPitchAngle;
+            
+            // Negative when moving left, positive when moving right
+            float TargetRoll = MovementInput.X * MaxRollAngle;  
+        
+            // Smooth interpolation for more natural tilting (simulates physical inertia)
+            CurrentRotation.Pitch = FMath::FInterpTo(CurrentRotation.Pitch, TargetPitch, DeltaTime, TiltInterpSpeed);
+            CurrentRotation.Roll = FMath::FInterpTo(CurrentRotation.Roll, TargetRoll, DeltaTime, TiltInterpSpeed);
+        
+            // Handle vertical movement
+            CurrentLocation.Z += VerticalInput * MovementSpeed * DeltaTime;
+            
+            // Handle horizontal movement with rotation-based direction
+            FRotator YawRotation(0.0f, CurrentRotation.Yaw, 0.0f);
+            FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+            FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+            
+            // physical simulation 
+            if (bEnablePhysical == true)
+            {
+                // if there is input,TargetSpeed will be set to MovementSpeed; else be zero.
+                float TargetSpeed = (MovementInput.Size() > 0) ? MovementSpeed : 0.0f;
+                CurrentMoveSpeed = FMath::FInterpTo(CurrentMoveSpeed, TargetSpeed, DeltaTime, AccelerationSpeed);
+                if (MovementInput.Size() > 0)
+                {
+                    LastMoveDirection = (ForwardDirection * MovementInput.Y + RightDirection * MovementInput.X).GetSafeNormal();
+                }
+                CurrentLocation += LastMoveDirection * CurrentMoveSpeed * DeltaTime;
+            }
+            else  
+            {
+                // moving without physical
+                CurrentLocation += (ForwardDirection * MovementInput.Y + RightDirection * MovementInput.X) 
+                                  * MovementSpeed * DeltaTime;
+            }
+            // Handle yaw rotation
+            CurrentRotation.Yaw += YawInput * RotationSpeed * DeltaTime;
+            
+            // Apply the new position and rotation
+            SetActorLocationAndRotation(CurrentLocation, CurrentRotation);
+        }
     }
-
     // Always rotate the rotors
     RotateRotors(DeltaTime);
 }
@@ -185,6 +191,44 @@ bool ASimDrone::IfCloseToTarget(FVector Location, FRotator Rotation) const
     
     return PositionOK && YawOK && PitchOK && RollOK;
 }
+
+void ASimDrone::FollowThePathAndSteer(float DeltaTime)
+{
+    if (Path)
+    {
+        const auto NewLocation = Path->Spline->GetLocationAtDistanceAlongSpline(
+            CourseDistance, ESplineCoordinateSpace::World);
+        
+        const auto NextRotation = Path->Spline->GetRotationAtDistanceAlongSpline(
+            CourseDistance, ESplineCoordinateSpace::World);
+        
+        const auto NewRotation = FMath::RInterpTo(GetActorRotation(), NextRotation,
+            DeltaTime, 8.f);
+        
+        if (bEnablePhysical)
+        {
+            FVector CurrentLocation = GetActorLocation();
+            FVector Delta = NewLocation - CurrentLocation;
+            float HorizontalDistance = FVector(Delta.X, Delta.Y, 0.f).Size();
+            
+            float Speed = HorizontalDistance / DeltaTime;
+            
+            const float MaxHorizontalSpeed = 120.f; 
+            
+            float CalculatedPitch = -FMath::Clamp((Speed / MaxHorizontalSpeed) * MaxPitchAngle, 0.f, MaxPitchAngle);
+            
+            SetActorLocationAndRotation(NewLocation,
+                FRotator(CalculatedPitch, NewRotation.Yaw, NewRotation.Roll));
+            // UE_LOG(LogTemp,Log,TEXT("Speed: %f Pitch: %f"),Speed, CalculatedPitch);
+        }
+        else
+        {
+            SetActorLocationAndRotation(NewLocation,
+                FRotator(0, NewRotation.Yaw, NewRotation.Roll));
+        }
+    }
+}
+
 
 void ASimDrone::HandleThrottleInput(const FInputActionValue& Value)
 {

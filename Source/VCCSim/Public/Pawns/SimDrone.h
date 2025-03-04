@@ -22,7 +22,7 @@ public:
 		class UInputComponent* PlayerInputComponent) override;
     
 	virtual bool IfCloseToTarget(FVector Location, FRotator Rotation) const override;
-    
+	virtual void FollowThePathAndSteer(float DeltaTime) override;
 	// Movement parameters
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
 	float MovementSpeed = 500.0f;
@@ -46,7 +46,7 @@ protected:
 
 	// Maximum Pitch Angle
 	UPROPERTY(EditAnywhere, Category = "VCCSim|Physics")
-	float MaxPitchAngle = 15.0f;  
+	float MaxPitchAngle = 25.0f;  
 	// Maximum roll angle
 	UPROPERTY(EditAnywhere, Category = "VCCSim|Physics")
 	float MaxRollAngle = 15.0f;   
