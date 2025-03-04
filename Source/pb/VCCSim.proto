@@ -23,6 +23,12 @@ message PointCloudWithColor {
 message EmptyRequest {
 }
 
+message Position {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
 message Pose {
   float x = 1;
   float y = 2;
@@ -200,3 +206,8 @@ service PointCloudService {
   rpc SendPointCloudWithColor (PointCloudWithColor) returns (Status);
 }
 
+service SafeCheckService {
+  rpc CheckSafetyPawn (RobotName) returns (Status);  // todo
+  rpc CheckSafetyPosition (Position) returns (Status);  // todo
+  rpc CheckSafetyPath (Pose) returns (Status);  // todo
+}
