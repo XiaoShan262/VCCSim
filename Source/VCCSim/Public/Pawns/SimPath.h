@@ -38,7 +38,7 @@ class VCCSIM_API AVCCSimPath : public AActor
 public:	
 	AVCCSimPath();
 	virtual void OnConstruction(const FTransform& Transform) override; 
-	
+
 	UFUNCTION(BlueprintCallable, Category="Default")
 	void DiscoverTraceIgnores();
 

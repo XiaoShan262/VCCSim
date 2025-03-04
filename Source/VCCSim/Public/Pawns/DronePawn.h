@@ -25,6 +25,7 @@
 #include "CoreMinimal.h"
 #include "Pawns/PawnBase.h"
 #include "InputActionValue.h"
+#include "SimPath.h"
 #include "DronePawn.generated.h"
 
 class ARecorder;
@@ -37,8 +38,16 @@ class VCCSIM_API ADronePawn : public APawnBase
 public:
 
     UFUNCTION()
+	virtual void OnConstruction(const FTransform& Transform) override;
+	virtual void Tick(float DeltaSeconds) override;
     void AddMapContext();
-    
+
+	void CalculateDistance();
+	
+	virtual void FollowThePathAndSteer(float DeltaTime);
+	
+	void AutoMove(double DeltaSeconds);
+	
     UFUNCTION(BlueprintCallable, Category = "API")
     void SetTarget(FVector Location, FRotator Rotation);
     virtual bool IfCloseToTarget(FVector Location, FRotator Rotation) const;
@@ -79,4 +88,17 @@ public:
 
     UPROPERTY(VisibleAnywhere)
     class UEnhancedInputComponent* EnhancedInputComponent;
+
+	UPROPERTY(BlueprintReadWrite, EditInstanceOnly, Category="Driving", Interp)
+	TObjectPtr<AVCCSimPath> Path;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Driving", Interp, meta=(UIMin="0", ClampMin="0"))
+	float DistanceTraveled;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Driving")
+	bool IfAutoMove;
+
+	float CourseDistance;
+	float LastCourseDistance;
+	float Laps;
 };
