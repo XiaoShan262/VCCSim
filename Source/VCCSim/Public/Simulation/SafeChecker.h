@@ -9,10 +9,10 @@ class AFChecker : public AActor
 
 public:
 
-	AFChecker();
-
-	// rpc call
-	bool SafeCheck();
+	// AFChecker();
+	//
+	// // rpc call
+	// bool SafeCheck();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SafeChecker")
 	float SafeDistance = 500.0f;
@@ -49,4 +49,9 @@ private:
 	// 	ECC_Visibility,
 	// 	QueryParams
 	// );
+
+
+	// Make pawnbase as the parent class of carpawn
+	// Pawn base beginplay found class component? hud.cpp line 287
+	// Path spline -> viewer spline
 };
