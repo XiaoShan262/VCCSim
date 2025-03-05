@@ -52,6 +52,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "API")
     void SetTarget(FVector Location, FRotator Rotation);
     virtual bool IfCloseToTarget(FVector Location, FRotator Rotation) const;
+	bool SetPath(TArray<FVector> Positions, TArray<FRotator> Rotations);
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Target")
     FVector TargetLocation;

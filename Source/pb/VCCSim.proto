@@ -179,7 +179,7 @@ service RGBCameraService {
 service DroneService {
   rpc GetDronePose (RobotName) returns (Pose);
   rpc SendDronePose (DronePose) returns (Status);
-  rpc SendDronePath (DronePath) returns (Status); //todo
+  rpc SendDronePath (DronePath) returns (Status);
 }
 
 service CarService {

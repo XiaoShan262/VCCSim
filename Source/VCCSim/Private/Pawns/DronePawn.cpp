@@ -75,6 +75,25 @@ bool ADronePawn::IfCloseToTarget(FVector Location, FRotator Rotation) const
     return PositionError.Size() < PositionThreshold &&
            RotationError.Vector().Size() < RotationThreshold;
 }
+
+bool ADronePawn::SetPath(
+    TArray<FVector> Positions, TArray<FRotator> Rotations)
+{
+    if (!Path)
+    {
+        AsyncTask(ENamedThreads::GameThread, [this ,Positions, Rotations]()
+           {
+                Path = GetWorld()->SpawnActor<AVCCSimPath>();
+                Path->SetNewTrajectory(Positions, Rotations);
+           });
+
+        return true;
+    }
+
+    Path->SetNewTrajectory(Positions, Rotations);
+    return true;
+}
+
 void ADronePawn::CalculateDistance()
 {
     if (Path)

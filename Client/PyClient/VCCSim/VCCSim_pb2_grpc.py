@@ -502,8 +502,7 @@ class DroneServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def SendDronePath(self, request, context):
-        """todo
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -1242,6 +1241,167 @@ class PointCloudService(object):
             target,
             '/VCCSim.PointCloudService/SendPointCloudWithColor',
             VCCSim__pb2.PointCloudWithColor.SerializeToString,
+            VCCSim__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
+class SafeCheckServiceStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.CheckSafetyPawn = channel.unary_unary(
+                '/VCCSim.SafeCheckService/CheckSafetyPawn',
+                request_serializer=VCCSim__pb2.RobotName.SerializeToString,
+                response_deserializer=VCCSim__pb2.Status.FromString,
+                _registered_method=True)
+        self.CheckSafetyPosition = channel.unary_unary(
+                '/VCCSim.SafeCheckService/CheckSafetyPosition',
+                request_serializer=VCCSim__pb2.Position.SerializeToString,
+                response_deserializer=VCCSim__pb2.Status.FromString,
+                _registered_method=True)
+        self.CheckSafetyPath = channel.unary_unary(
+                '/VCCSim.SafeCheckService/CheckSafetyPath',
+                request_serializer=VCCSim__pb2.Pose.SerializeToString,
+                response_deserializer=VCCSim__pb2.Status.FromString,
+                _registered_method=True)
+
+
+class SafeCheckServiceServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def CheckSafetyPawn(self, request, context):
+        """todo
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CheckSafetyPosition(self, request, context):
+        """todo
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CheckSafetyPath(self, request, context):
+        """todo
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_SafeCheckServiceServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'CheckSafetyPawn': grpc.unary_unary_rpc_method_handler(
+                    servicer.CheckSafetyPawn,
+                    request_deserializer=VCCSim__pb2.RobotName.FromString,
+                    response_serializer=VCCSim__pb2.Status.SerializeToString,
+            ),
+            'CheckSafetyPosition': grpc.unary_unary_rpc_method_handler(
+                    servicer.CheckSafetyPosition,
+                    request_deserializer=VCCSim__pb2.Position.FromString,
+                    response_serializer=VCCSim__pb2.Status.SerializeToString,
+            ),
+            'CheckSafetyPath': grpc.unary_unary_rpc_method_handler(
+                    servicer.CheckSafetyPath,
+                    request_deserializer=VCCSim__pb2.Pose.FromString,
+                    response_serializer=VCCSim__pb2.Status.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'VCCSim.SafeCheckService', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('VCCSim.SafeCheckService', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class SafeCheckService(object):
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def CheckSafetyPawn(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.SafeCheckService/CheckSafetyPawn',
+            VCCSim__pb2.RobotName.SerializeToString,
+            VCCSim__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CheckSafetyPosition(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.SafeCheckService/CheckSafetyPosition',
+            VCCSim__pb2.Position.SerializeToString,
+            VCCSim__pb2.Status.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CheckSafetyPath(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.SafeCheckService/CheckSafetyPath',
+            VCCSim__pb2.Pose.SerializeToString,
             VCCSim__pb2.Status.FromString,
             options,
             channel_credentials,

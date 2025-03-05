@@ -777,6 +777,57 @@ void SendDronePoseCall::ProcessRequest()
     }
 }
 
+SendDronePathCall::SendDronePathCall(
+    VCCSim::DroneService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, ADronePawn*> rcmap)
+        : AsyncCallTemplateM(service, cq, rcmap)
+{
+    Proceed(true);
+}
+
+void SendDronePathCall::PrepareNextCall()
+{
+    new SendDronePathCall(service_, cq_, RCMap_);
+}
+
+void SendDronePathCall::InitializeRequest()
+{
+    service_->RequestSendDronePath(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void SendDronePathCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        if (ADronePawn* Drone = RCMap_[request_.name()])
+        {
+            TArray<FVector> Positions;
+            TArray<FRotator> Rotations;
+            for (const auto& Point : request_.path())
+            {
+                Positions.Add(FVector(Point.x(), Point.y(), Point.z()));
+                Rotations.Add(FRotator(Point.pitch(), Point.yaw(), Point.roll()));
+            }
+            Drone->SetPath(Positions, Rotations);
+            response_.set_status(true);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("SendDronePathCall: "
+                                          "AQuadcopterDrone not found!"));
+            response_.set_status(false);
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SendDronePathCall: "
+                                      "Drone not found!"));
+        response_.set_status(false);
+    }
+}
+
 GetFlashPoseCall::GetFlashPoseCall(
     VCCSim::FlashService::AsyncService* service,
     grpc::ServerCompletionQueue* cq,

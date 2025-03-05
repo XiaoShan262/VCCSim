@@ -170,7 +170,8 @@ FRotator AVCCSimPath::GetRotationAtSplinePoint(int32 Index) const
 	return Spline->GetRotationAtSplinePoint(Index, ESplineCoordinateSpace::World);
 }
 
-void AVCCSimPath::SetNewTrajectory(const TArray<FVector>& Positions, const TArray<FRotator>& Rotations)
+void AVCCSimPath::SetNewTrajectory(
+	const TArray<FVector>& Positions, const TArray<FRotator>& Rotations)
 {
     // Store the data for deferred processing
     PendingPositions = Positions;
@@ -210,6 +211,7 @@ void AVCCSimPath::ProcessPendingTrajectory()
             
             Spline->AddSplinePoint(PendingPositions[Index],
                 ESplineCoordinateSpace::World, false);
+        	// todo:
             Spline->SetRotationAtSplinePoint(SplineIndex,
                 PendingRotations[Index], ESplineCoordinateSpace::World, false);
         }

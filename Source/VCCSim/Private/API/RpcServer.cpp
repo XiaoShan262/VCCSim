@@ -119,6 +119,7 @@ public:
         		}
         		new GetDronePoseCall(&DroneService, CompletionQueue.get(), DroneMap);
         		new SendDronePoseCall(&DroneService, CompletionQueue.get(), DroneMap);
+        		new SendDronePathCall(&DroneService, CompletionQueue.get(), DroneMap);
         	}
         	if (!RGrpcMaps.RMaps.FlashMap.empty())
 			{

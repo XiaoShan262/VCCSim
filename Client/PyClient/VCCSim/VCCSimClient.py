@@ -134,6 +134,13 @@ class VCCSimClient:
         request = VCCSim_pb2.DronePath(name=name, path=path_poses)
         response = self.drone_service.SendDronePath(request)
         return response.status
+    
+    def send_drone_path(self, name: str, poses: List[Tuple[float, float, float, float, float, float]]) -> bool:
+        """Send drone path as a list of poses."""
+        path_poses = [self._create_pose(*pose) for pose in poses]
+        request = VCCSim_pb2.DronePath(name=name, path=path_poses)
+        response = self.drone_service.SendDronePath(request)
+        return response.status
 
     # Car Service Methods
     def get_car_odom(self, robot_name: str) -> VCCSim_pb2.Odometry:

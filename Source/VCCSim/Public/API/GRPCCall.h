@@ -412,6 +412,20 @@ protected:
     virtual void ProcessRequest() override final;
 };
 
+class SendDronePathCall : public AsyncCallTemplateM<VCCSim::DronePath,
+    VCCSim::Status, VCCSim::DroneService::AsyncService,
+    std::map<std::string, ADronePawn*>>
+{
+public:
+    SendDronePathCall(VCCSim::DroneService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        std::map<std::string, ADronePawn*> rcmap);
+protected:
+    virtual void PrepareNextCall() override final;
+    virtual void InitializeRequest() override final;
+    virtual void ProcessRequest() override final;
+};
+
 /* --------------------------Flash Handler--------------------------------- */
 
 class GetFlashPoseCall final: public AsyncCallTemplateM<VCCSim::RobotName,
