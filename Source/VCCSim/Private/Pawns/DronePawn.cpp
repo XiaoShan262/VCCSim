@@ -28,10 +28,9 @@
 void ADronePawn::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
-	
     DistanceTraveled = 0.f;
     CourseDistance = 0.f;
-    LastCourseDistance = 0.f;
+    LastCourseDistance = 0.f; 
     Laps = 1.f;
     CalculateDistance();
     FollowThePathAndSteer(1);
@@ -40,9 +39,9 @@ void ADronePawn::OnConstruction(const FTransform& Transform)
 void ADronePawn::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
-    AutoMove(DeltaSeconds);
     CalculateDistance();
     FollowThePathAndSteer(DeltaSeconds);
+    AutoMove(DeltaSeconds);
 }
 void ADronePawn::AddMapContext()
 {

@@ -40,12 +40,13 @@ public:
     UFUNCTION()
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void Tick(float DeltaSeconds) override;
+
+	UFUNCTION()
     void AddMapContext();
 
 	void CalculateDistance();
 	
 	virtual void FollowThePathAndSteer(float DeltaTime);
-	
 	void AutoMove(double DeltaSeconds);
 	
     UFUNCTION(BlueprintCallable, Category = "API")
@@ -97,7 +98,7 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Driving")
 	bool IfAutoMove;
-
+	
 	float CourseDistance;
 	float LastCourseDistance;
 	float Laps;

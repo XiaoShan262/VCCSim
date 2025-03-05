@@ -7,10 +7,12 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "InputAction.h"
+#include "Kismet/GameplayStatics.h"
 #include "PostProcess/PostProcessMaterialInputs.h"
 
 ASimDrone::ASimDrone()
 {
+
     PrimaryActorTick.bCanEverTick = true;
 
     // Create root component
@@ -48,25 +50,20 @@ ASimDrone::ASimDrone()
 
 void ASimDrone::BeginPlay()
 {
-    // set Pawn's UE Tag
-    if (Tags.Num() == 0) 
-    {
-        Tags.Add(FName(TEXT("Mavic")));  
-    }
     Super::BeginPlay();
     AddMapContext();
 }
 
 void ASimDrone::Tick(float DeltaTime)
 {
-    
-    AActor::Tick(DeltaTime);
-if (IfAutoMove)
+    Super::Tick(DeltaTime);
+    if (IfAutoMove)
     {
         AutoMove(DeltaTime);
         CalculateDistance();
         ASimDrone::FollowThePathAndSteer(DeltaTime);
-    }else
+    }
+    else
     {
         if (bRecorded && RecordState)
         {
@@ -88,6 +85,7 @@ if (IfAutoMove)
         }
         else
         {
+            UE_LOG(LogTemp, Log, TEXT("Moving by input "));
             // Apply manual input controls
             FVector CurrentLocation = GetActorLocation();
             FRotator CurrentRotation = GetActorRotation();
@@ -111,6 +109,7 @@ if (IfAutoMove)
             FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
             FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
             
+            UE_LOG(LogTemp, Display, TEXT("New Rotation: %u"), bEnablePhysical);
             // physical simulation 
             if (bEnablePhysical == true)
             {
@@ -139,7 +138,6 @@ if (IfAutoMove)
     // Always rotate the rotors
     RotateRotors(DeltaTime);
 }
-
 
 void ASimDrone::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -204,9 +202,10 @@ void ASimDrone::FollowThePathAndSteer(float DeltaTime)
         
         const auto NewRotation = FMath::RInterpTo(GetActorRotation(), NextRotation,
             DeltaTime, 8.f);
-        
+        UE_LOG(LogTemp, Display, TEXT("New Rotation: %u"), bEnablePhysical);
         if (bEnablePhysical)
         {
+            
             FVector CurrentLocation = GetActorLocation();
             FVector Delta = NewLocation - CurrentLocation;
             float HorizontalDistance = FVector(Delta.X, Delta.Y, 0.f).Size();
@@ -219,7 +218,7 @@ void ASimDrone::FollowThePathAndSteer(float DeltaTime)
             
             SetActorLocationAndRotation(NewLocation,
                 FRotator(CalculatedPitch, NewRotation.Yaw, NewRotation.Roll));
-            // UE_LOG(LogTemp,Log,TEXT("Speed: %f Pitch: %f"),Speed, CalculatedPitch);
+            UE_LOG(LogTemp,Log,TEXT("Speed: %f Pitch: %f"),Speed, CalculatedPitch);
         }
         else
         {
