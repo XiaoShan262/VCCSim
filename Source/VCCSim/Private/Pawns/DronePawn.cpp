@@ -22,7 +22,27 @@
 
 #include "Pawns/DronePawn.h"
 #include "EnhancedInputSubsystems.h"
+#include "Components/SplineComponent.h"
+#include "Pawns/SimPath.h"
 
+void ADronePawn::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+    DistanceTraveled = 0.f;
+    CourseDistance = 0.f;
+    LastCourseDistance = 0.f; 
+    Laps = 1.f;
+    CalculateDistance();
+    FollowThePathAndSteer(1);
+    
+}
+void ADronePawn::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+    CalculateDistance();
+    FollowThePathAndSteer(DeltaSeconds);
+    AutoMove(DeltaSeconds);
+}
 void ADronePawn::AddMapContext()
 {
     if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -54,4 +74,39 @@ bool ADronePawn::IfCloseToTarget(FVector Location, FRotator Rotation) const
     
     return PositionError.Size() < PositionThreshold &&
            RotationError.Vector().Size() < RotationThreshold;
+}
+void ADronePawn::CalculateDistance()
+{
+    if (Path)
+    {
+        Laps = FMath::Floor(DistanceTraveled / Path->Spline->GetSplineLength());
+        CourseDistance = DistanceTraveled - Laps * Path->Spline->GetSplineLength();
+    }
+    else
+    {
+        CourseDistance = DistanceTraveled;
+    }
+}
+
+void ADronePawn::FollowThePathAndSteer(float DeltaTime)
+{
+    if (Path)
+    {
+        const auto NewLocation = Path->Spline->GetLocationAtDistanceAlongSpline(
+            CourseDistance, ESplineCoordinateSpace::World);
+        const auto NextRotation = Path->Spline->GetRotationAtDistanceAlongSpline(
+            CourseDistance, ESplineCoordinateSpace::World);
+        const auto NewRotation = FMath::RInterpTo(GetActorRotation(), NextRotation,
+            DeltaTime, 8.f);
+        SetActorLocationAndRotation(NewLocation,
+                FRotator(0, NewRotation.Yaw, 0));
+    }
+}
+
+void ADronePawn::AutoMove(double DeltaSeconds)
+{
+    if (IfAutoMove)
+    {
+        DistanceTraveled += DeltaSeconds * 100;
+    }
 }
