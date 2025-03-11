@@ -54,6 +54,6 @@ def main():
         save_rgb_image(image_data, f"test/flash_images/image_{index}.png")
         lidar_data = client.get_lidar_data("Mavic")
         index += 1
-
+# qaq
 if __name__ == "__main__":
     main()
