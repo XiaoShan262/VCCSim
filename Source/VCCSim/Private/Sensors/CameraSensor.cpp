@@ -114,6 +114,50 @@ void URGBCameraComponent::RConfigure(
     bBPConfigured = true;
 }
 
+FMatrix ComputeIntrinsicMatrix(USceneCaptureComponent2D* SceneCapture)
+{
+    if (!SceneCapture)
+    {
+        return FMatrix::Identity;
+    }
+
+    // Get the field of view in radians (UE uses degrees)
+    float FOVRadians = FMath::DegreesToRadians(SceneCapture->FOVAngle);
+    
+    // Get the render target if available
+    UTextureRenderTarget2D* RenderTarget = SceneCapture->TextureTarget;
+    if (!RenderTarget)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No render target assigned to scene capture component"));
+        return FMatrix::Identity;
+    }
+    
+    // Get image dimensions
+    int32 Width = RenderTarget->SizeX;
+    int32 Height = RenderTarget->SizeY;
+    
+    // Calculate focal length based on FOV and image width
+    float FocalLength = (Width / 2.0f) / FMath::Tan(FOVRadians / 2.0f);
+    
+    // Calculate aspect ratio
+    float AspectRatio = Width / (float)Height;
+    
+    // Create the intrinsic matrix
+    FMatrix IntrinsicMatrix = FMatrix::Identity;
+    
+    // Standard pinhole camera intrinsic matrix structure
+    //    [fx  0  cx]
+    //    [0  fy  cy]
+    //    [0   0   1]
+    
+    IntrinsicMatrix.M[0][0] = FocalLength;  // fx
+    IntrinsicMatrix.M[1][1] = FocalLength;  // fy (same as fx for square pixels)
+    IntrinsicMatrix.M[0][2] = Width / 2.0f; // cx (principal point x)
+    IntrinsicMatrix.M[1][2] = Height / 2.0f; // cy (principal point y)
+    
+    return IntrinsicMatrix;
+}
+
 void URGBCameraComponent::SetCaptureComponent() const
 {
     if (CaptureComponent)
@@ -175,6 +219,18 @@ void URGBCameraComponent::SetCaptureComponent() const
         CaptureComponent->PostProcessSettings.ScreenSpaceReflectionQuality = 100.0f;
         CaptureComponent->PostProcessSettings.bOverride_ScreenSpaceReflectionIntensity = true; 
         CaptureComponent->PostProcessSettings.ScreenSpaceReflectionIntensity = 100.0f;
+
+        // if (CaptureComponent->bUseCustomProjectionMatrix)
+        // {
+        //     const auto Matrix = CaptureComponent->CustomProjectionMatrix;
+        //     UE_LOG(LogTemp, Warning, TEXT("CaptureComponent->CustomProjectionMatrix: %s"),
+        //         *Matrix.ToString());
+        // }
+        // else
+        // {
+        //     FMatrix Matrix = ComputeIntrinsicMatrix(CaptureComponent);
+        //     UE_LOG(LogTemp, Warning, TEXT("Intrinsic matrix: %s"), *Matrix.ToString());
+        // }
     }
     else 
     {

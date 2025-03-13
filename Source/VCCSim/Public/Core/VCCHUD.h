@@ -81,4 +81,6 @@ private:
 	ARecorder* Recorder;
 	UPROPERTY()
 	UFMeshManager* MeshManager = nullptr;
+
+	AActor* FindPawnInTagAndName(const std::string& Target, TArray<AActor*> FoundPawns);
 };

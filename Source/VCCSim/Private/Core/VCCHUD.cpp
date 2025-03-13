@@ -213,26 +213,11 @@ void AVCCHUD::SetupWidgetsAndLS(const FVCCSimConfig& Config)
 
 void AVCCHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> FoundPawns)
 {
-    UGameplayStatics::GetAllActorsOfClass(GetWorld(), APawn::StaticClass(), FoundPawns);
-    
-    for (AActor* Actor : FoundPawns)
+    MainCharacter = Cast<APawn>(FindPawnInTagAndName(Config.VCCSim.MainCharacter, FoundPawns));
+
+    if (Config.Robots.size() == 1 && !MainCharacter)
     {
-        if (Actor->ActorHasTag(Config.VCCSim.MainCharacter.c_str()))
-        {
-            MainCharacter = Cast<APawn>(Actor);
-            break;
-        }
-    }
-    if (!MainCharacter)
-    {
-        for (AActor* Actor : FoundPawns)
-        {
-            if (Actor->GetName().Contains(Config.VCCSim.MainCharacter.c_str()))
-            {
-                MainCharacter = Cast<APawn>(Actor);
-                break;
-            }
-        }
+        MainCharacter = Cast<APawn>(FindPawnInTagAndName(Config.Robots[0].UETag, FoundPawns));
     }
     
     if (!MainCharacter)
@@ -319,26 +304,8 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
     
     for (const FRobot& Robot : Config.Robots)
     {
-        APawn* RobotPawn = nullptr;
-        for (AActor* Actor : FoundPawns)
-        {
-            if (Actor->ActorHasTag(Robot.UETag.c_str()))
-            {
-                RobotPawn = Cast<APawn>(Actor);
-                break;
-            }
-        }
-        if (!RobotPawn)
-        {
-            for (AActor* Actor : FoundPawns)
-            {
-                if (Actor->GetName().Contains(Robot.UETag.c_str()))
-                {
-                    RobotPawn = Cast<APawn>(Actor);
-                    break;
-                }
-            }
-        }
+        APawn* RobotPawn = Cast<APawn>(FindPawnInTagAndName(Robot.UETag, FoundPawns));
+            
         if (!RobotPawn)
         {
             UE_LOG(LogTemp, Warning, TEXT("Robot %s not found! Creating a new one"),
@@ -524,4 +491,33 @@ APawn* AVCCHUD::CreatePawn(const FVCCSimConfig& Config, const FRobot& Robot)
     
     RobotPawn->Tags.Add(FName(Robot.UETag.c_str()));
     return RobotPawn;
+}
+
+
+AActor* AVCCHUD::FindPawnInTagAndName(const std::string& Target, TArray<AActor*> FoundPawns)
+{
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), APawn::StaticClass(), FoundPawns);
+
+    AActor* Ans = nullptr;
+    
+    for (AActor* Actor : FoundPawns)
+    {
+        if (Actor->ActorHasTag(Target.c_str()))
+        {
+            Ans = Actor;
+            break;
+        }
+    }
+    if (!Ans)
+    {
+        for (AActor* Actor : FoundPawns)
+        {
+            if (Actor->GetName().Contains(Target.c_str()))
+            {
+                Ans = Actor;
+                break;
+            }
+        }
+    }
+    return Ans;
 }

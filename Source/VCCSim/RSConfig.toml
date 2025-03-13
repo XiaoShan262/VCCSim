@@ -9,7 +9,9 @@
 IP = "0.0.0.0"
 Port = 50996
 
-MainCharacter = "Mavic"                         # Name or Tag, but tag is recommended.
+# Name or Tag, but tag is recommended.
+# If there is only one robot, the tag is not necessary.
+MainCharacter = "Flash"                         
 StaticMeshActor = ["MFMesh", "CompanionCube"]   # Name or Tag
 
 SubWindows = ["Lit", "Unit", "PointCloud"]
@@ -43,8 +45,8 @@ bVisualizePoints = true
 [Robots.ComponentConfigs.RGBCamera]
 RecordInterval = 0.5
 FOV = 90
-Width = 1500
-Height = 800
+Width = 512
+Height = 512
 bOrthographic = false
 
 #[Robots.ComponentConfigs.DepthCamera]
