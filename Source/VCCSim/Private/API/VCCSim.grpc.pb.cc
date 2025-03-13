@@ -1139,5 +1139,150 @@ PointCloudService::Service::~Service() {
 }
 
 
+static const char* SafeCheckService_method_names[] = {
+  "/VCCSim.SafeCheckService/CheckSafetyPawn",
+  "/VCCSim.SafeCheckService/CheckSafetyPosition",
+  "/VCCSim.SafeCheckService/CheckSafetyPath",
+};
+
+std::unique_ptr< SafeCheckService::Stub> SafeCheckService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
+  (void)options;
+  std::unique_ptr< SafeCheckService::Stub> stub(new SafeCheckService::Stub(channel, options));
+  return stub;
+}
+
+SafeCheckService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
+  : channel_(channel), rpcmethod_CheckSafetyPawn_(SafeCheckService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_CheckSafetyPosition_(SafeCheckService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_CheckSafetyPath_(SafeCheckService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  {}
+
+::grpc::Status SafeCheckService::Stub::CheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Status* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::RobotName, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_CheckSafetyPawn_, context, request, response);
+}
+
+void SafeCheckService::Stub::async::CheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::RobotName, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CheckSafetyPawn_, context, request, response, std::move(f));
+}
+
+void SafeCheckService::Stub::async::CheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CheckSafetyPawn_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* SafeCheckService::Stub::PrepareAsyncCheckSafetyPawnRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Status, ::VCCSim::RobotName, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_CheckSafetyPawn_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* SafeCheckService::Stub::AsyncCheckSafetyPawnRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncCheckSafetyPawnRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status SafeCheckService::Stub::CheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::VCCSim::Status* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::Position, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_CheckSafetyPosition_, context, request, response);
+}
+
+void SafeCheckService::Stub::async::CheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::Position, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CheckSafetyPosition_, context, request, response, std::move(f));
+}
+
+void SafeCheckService::Stub::async::CheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CheckSafetyPosition_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* SafeCheckService::Stub::PrepareAsyncCheckSafetyPositionRaw(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Status, ::VCCSim::Position, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_CheckSafetyPosition_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* SafeCheckService::Stub::AsyncCheckSafetyPositionRaw(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncCheckSafetyPositionRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status SafeCheckService::Stub::CheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::VCCSim::Status* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::Pose, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_CheckSafetyPath_, context, request, response);
+}
+
+void SafeCheckService::Stub::async::CheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::Pose, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CheckSafetyPath_, context, request, response, std::move(f));
+}
+
+void SafeCheckService::Stub::async::CheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CheckSafetyPath_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* SafeCheckService::Stub::PrepareAsyncCheckSafetyPathRaw(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Status, ::VCCSim::Pose, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_CheckSafetyPath_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* SafeCheckService::Stub::AsyncCheckSafetyPathRaw(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncCheckSafetyPathRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+SafeCheckService::Service::Service() {
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SafeCheckService_method_names[0],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SafeCheckService::Service, ::VCCSim::RobotName, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](SafeCheckService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::RobotName* req,
+             ::VCCSim::Status* resp) {
+               return service->CheckSafetyPawn(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SafeCheckService_method_names[1],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SafeCheckService::Service, ::VCCSim::Position, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](SafeCheckService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::Position* req,
+             ::VCCSim::Status* resp) {
+               return service->CheckSafetyPosition(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SafeCheckService_method_names[2],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SafeCheckService::Service, ::VCCSim::Pose, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](SafeCheckService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::Pose* req,
+             ::VCCSim::Status* resp) {
+               return service->CheckSafetyPath(ctx, req, resp);
+             }, this)));
+}
+
+SafeCheckService::Service::~Service() {
+}
+
+::grpc::Status SafeCheckService::Service::CheckSafetyPawn(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SafeCheckService::Service::CheckSafetyPosition(::grpc::ServerContext* context, const ::VCCSim::Position* request, ::VCCSim::Status* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SafeCheckService::Service::CheckSafetyPath(::grpc::ServerContext* context, const ::VCCSim::Pose* request, ::VCCSim::Status* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+
 }  // namespace VCCSim
 

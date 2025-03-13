@@ -67,9 +67,16 @@ message RobotName {
   string name = 1;
 }
 
+enum Format {
+  PNG = 0;              // PNG compressed
+  JPEG = 1;             // JPEG compressed
+  RAW = 2;              // RAW uncompressed
+}
+
 message IndexedCamera{
     RobotName robot_name = 1;
     uint32 index = 2;
+    Format format = 3;
 }
 
 // Mesh:
@@ -109,14 +116,8 @@ message RGBCameraImageData {
   uint32 width = 1;
   uint32 height = 2;
   bytes data = 3;         // Raw RGB data or compressed image data
-  enum Format {
-    RGB = 0;              // Raw RGB format (3 bytes per pixel)
-    BGR = 1;              // Raw BGR format (3 bytes per pixel)
-    JPEG = 2;             // JPEG compressed
-    PNG = 3;              // PNG compressed
-  }
   Format format = 4;       // Image format
-  uint32 timestamp = 5;    // todo: it's useless for now
+  uint32 timestamp = 5;    
 
   // Optional fields for additional metadata
   optional uint32 bytes_per_pixel = 6;  // Usually 3 for RGB/BGR

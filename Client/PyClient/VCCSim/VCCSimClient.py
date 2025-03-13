@@ -2,6 +2,9 @@ import grpc
 from . import VCCSim_pb2
 from . import VCCSim_pb2_grpc
 from typing import List, Optional, Tuple
+import numpy as np
+from PIL import Image
+import io
 
 class VCCSimClient:
     """Client for interacting with VCCSim services."""
@@ -102,17 +105,46 @@ class VCCSimClient:
         request = self._create_robot_name(robot_name)
         return self.rgb_camera_service.GetRGBCameraOdom(request)
 
-    def get_rgb_indexed_camera_image_data(self, robot_name: str, index: int) -> VCCSim_pb2.RGBCameraImageData:
+    def get_rgb_indexed_camera_image_data(self, robot_name: str, index: int, 
+                                         format: VCCSim_pb2.Format = VCCSim_pb2.Format.PNG) -> VCCSim_pb2.RGBCameraImageData:
         """Get RGB camera image data for a specific camera index.
+        
+        Args:
+            robot_name: The name of the robot
+            index: Camera index
+            format: Image format (PNG, JPEG, or RAW). Default is PNG.
         
         Returns:
             RGBCameraImageData object with width, height, data, format and optional metadata
         """
         request = VCCSim_pb2.IndexedCamera(
             robot_name=self._create_robot_name(robot_name),
-            index=index
+            index=index,
+            format=format
         )
         return self.rgb_camera_service.GetRGBIndexedCameraImageData(request)
+    
+    def save_rgb_image(self, image_data: VCCSim_pb2.RGBCameraImageData, 
+                      output_path: str) -> bool:
+        """Save RGB camera image data to a file.
+        
+        Args:
+            image_data: RGBCameraImageData object 
+            output_path: File path to save the image
+            
+        Returns:
+            True if saving was successful, False otherwise
+        """
+        try:
+            # Open file in binary write mode
+            with open(output_path, 'wb') as f:
+                # Write raw data directly to file
+                f.write(image_data.data)
+                
+            return True
+        except Exception as e:
+            print(f"Error saving image: {e}")
+            return False
 
     # Drone Service Methods
     def get_drone_pose(self, robot_name: str) -> VCCSim_pb2.Pose:
@@ -128,13 +160,6 @@ class VCCSimClient:
         response = self.drone_service.SendDronePose(request)
         return response.status
 
-    def send_drone_path(self, name: str, poses: List[Tuple[float, float, float, float, float, float]]) -> bool:
-        """Send drone path as a list of poses."""
-        path_poses = [self._create_pose(*pose) for pose in poses]
-        request = VCCSim_pb2.DronePath(name=name, path=path_poses)
-        response = self.drone_service.SendDronePath(request)
-        return response.status
-    
     def send_drone_path(self, name: str, poses: List[Tuple[float, float, float, float, float, float]]) -> bool:
         """Send drone path as a list of poses."""
         path_poses = [self._create_pose(*pose) for pose in poses]
@@ -257,3 +282,83 @@ class VCCSimClient:
         request = VCCSim_pb2.PointCloudWithColor(data=point_data)
         response = self.point_cloud_service.SendPointCloudWithColor(request)
         return response.status
+    
+class RGBImageUtils:
+    """Utility class for handling RGB image data from VCCSim."""
+    
+    @staticmethod
+    def process_rgb_image_data(image_data: VCCSim_pb2.RGBCameraImageData) -> np.ndarray:
+        """Process RGB camera image data into a NumPy array.
+        
+        Args:
+            image_data: RGBCameraImageData object from the gRPC call
+            
+        Returns:
+            NumPy array of the image in RGB format (height, width, 3)
+        """
+        # Handle different image formats
+        if image_data.format == VCCSim_pb2.Format.PNG or image_data.format == VCCSim_pb2.Format.JPEG:
+            # Handle compressed formats using PIL
+            img = Image.open(io.BytesIO(image_data.data))
+            return np.array(img)
+        
+        elif image_data.format == VCCSim_pb2.Format.RAW:
+            # Handle raw format (RGB byte array)
+            width = image_data.width
+            height = image_data.height
+            bytes_per_pixel = image_data.bytes_per_pixel if image_data.bytes_per_pixel else 3
+            
+            # Reshape the flat byte array into a 3D array (height, width, channels)
+            img_array = np.frombuffer(image_data.data, dtype=np.uint8)
+            return img_array.reshape((height, width, bytes_per_pixel))
+        
+        else:
+            raise ValueError(f"Unsupported image format: {image_data.format}")
+    
+    @staticmethod
+    def save_rgb_image(image_data: VCCSim_pb2.RGBCameraImageData, output_path: str) -> bool:
+        """Save RGB camera image data to a file.
+        
+        Args:
+            image_data: RGBCameraImageData object 
+            output_path: File path to save the image
+            
+        Returns:
+            True if saving was successful, False otherwise
+        """
+        try:
+            # For PNG and JPEG, we can write directly
+            if image_data.format in [VCCSim_pb2.Format.PNG, VCCSim_pb2.Format.JPEG]:
+                with open(output_path, 'wb') as f:
+                    f.write(image_data.data)
+                return True
+            
+            # For RAW format, convert to a standard image format
+            elif image_data.format == VCCSim_pb2.Format.RAW:
+                img_array = RGBImageUtils.process_rgb_image_data(image_data)
+                img = Image.fromarray(img_array)
+                img.save(output_path)
+                return True
+                
+            else:
+                raise ValueError(f"Unsupported image format: {image_data.format}")
+                
+        except Exception as e:
+            print(f"Error saving image: {e}")
+            return False
+    
+    @staticmethod
+    def convert_to_cv2_format(image_data: VCCSim_pb2.RGBCameraImageData) -> np.ndarray:
+        """Convert RGB camera image data to OpenCV compatible format (BGR).
+        
+        Args:
+            image_data: RGBCameraImageData object
+            
+        Returns:
+            NumPy array in BGR format suitable for OpenCV functions
+        """
+        # First get the RGB numpy array
+        rgb_array = RGBImageUtils.process_rgb_image_data(image_data)
+        
+        # Convert RGB to BGR (OpenCV uses BGR)
+        return rgb_array[..., ::-1].copy()  # Reverse the color channel order

@@ -260,64 +260,106 @@ public:
         VCCSim::RGBCameraService::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
         std::map<std::string, URGBCameraComponent*> rrgbcmap);
+
     static void InitializeImageModule()
     {
         // Load module once at startup
         if (!ImageWrapperModule)
         {
-            ImageWrapperModule = &FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+            ImageWrapperModule = &FModuleManager::LoadModuleChecked<
+                IImageWrapperModule>(FName("ImageWrapper"));
         }
     }
+
 protected:
     virtual void PrepareNextCall() override final;
     virtual void InitializeRequest() override final;
     virtual void ProcessRequest() override final;
+
 private:
     static IImageWrapperModule* ImageWrapperModule;
     TSharedPtr<IImageWrapper> ImageWrapper;
     
-    TArray<uint8> ConvertToPNG(const TArray<FLinearColor>& ImageData, int32 Width, int32 Height) 
+    // Convert LinearColor array to raw BGRA
+    TArray<uint8> ConvertToBGRA(
+        const TArray<FLinearColor>& ImageData, int32 Width, int32 Height)
     {
-        TArray<uint8> PNGData;
-    
-        if (ImageWrapper.IsValid())
+        TArray<uint8> RawBGRA;
+        RawBGRA.SetNum(ImageData.Num() * 4);
+        
+        for (int32 i = 0; i < ImageData.Num(); i++) 
         {
-            // Convert FLinearColor array to raw BGRA with proper HDR->LDR conversion
-            TArray<uint8> RawBGRA;
-            RawBGRA.SetNum(ImageData.Num() * 4);
-        
-            for (int32 i = 0; i < ImageData.Num(); i++) 
-            {
-                // Convert from LinearColor (which can have values outside 0-1) 
-                // to standard 8-bit per channel color
-                FColor SDRColor = ImageData[i].ToFColor(true); // Apply sRGB conversion
+            // Convert from LinearColor (which can have values outside 0-1) 
+            // to standard 8-bit per channel color
+            FColor SDRColor = ImageData[i].ToFColor(true); // Apply sRGB conversion
             
-                // Store in BGRA order
-                RawBGRA[4*i] = SDRColor.B;
-                RawBGRA[4*i + 1] = SDRColor.G;
-                RawBGRA[4*i + 2] = SDRColor.R;
-                RawBGRA[4*i + 3] = SDRColor.A;
-            }
+            // Store in BGRA order
+            RawBGRA[4*i] = SDRColor.B;
+            RawBGRA[4*i + 1] = SDRColor.G;
+            RawBGRA[4*i + 2] = SDRColor.R;
+            RawBGRA[4*i + 3] = SDRColor.A;
+        }
         
-            if (ImageWrapper->SetRaw(RawBGRA.GetData(), RawBGRA.Num(),
+        return RawBGRA;
+    }
+    
+    // Convert to RGB raw format (uncompressed)
+    TArray<uint8> ConvertToRGB(const TArray<FLinearColor>& ImageData)
+    {
+        TArray<uint8> RawRGB;
+        RawRGB.SetNum(ImageData.Num() * 3);
+        
+        for (int32 i = 0; i < ImageData.Num(); i++) 
+        {
+            // Convert from LinearColor to standard 8-bit per channel color
+            FColor SDRColor = ImageData[i].ToFColor(true);
+            
+            // Store in RGB order
+            RawRGB[3*i] = SDRColor.R;
+            RawRGB[3*i + 1] = SDRColor.G;
+            RawRGB[3*i + 2] = SDRColor.B;
+        }
+        
+        return RawRGB;
+    }
+    
+    // Convert to compressed format (PNG or JPEG)
+    TArray<uint8> ConvertToCompressedFormat(
+        const TArray<FLinearColor>& ImageData, 
+        int32 Width, 
+        int32 Height,
+        EImageFormat Format)
+    {
+        TArray<uint8> CompressedData;
+        
+        // Create appropriate image wrapper for the requested format
+        TSharedPtr<IImageWrapper> FormatWrapper =
+            ImageWrapperModule->CreateImageWrapper(Format);
+        
+        if (FormatWrapper.IsValid())
+        {
+            // Get BGRA data first
+            TArray<uint8> RawBGRA = ConvertToBGRA(ImageData, Width, Height);
+            
+            if (FormatWrapper->SetRaw(RawBGRA.GetData(), RawBGRA.Num(),
                 Width, Height, ERGBFormat::BGRA, 8)) 
             {
-                const TArray64<uint8>& CompressedData = ImageWrapper->GetCompressed();
-                PNGData.Append(CompressedData.GetData(), CompressedData.Num());
+                const TArray64<uint8>& TempCompressedData = FormatWrapper->GetCompressed();
+                CompressedData.Append(TempCompressedData.GetData(), TempCompressedData.Num());
             }
             else
             {
                 UE_LOG(LogTemp, Error, TEXT("RGBIndexedCameraImageDataCall:"
-                                            "Failed to set raw image data for PNG conversion"));
+                                            " Failed to set raw image data for compression"));
             }
         }
         else
         {
             UE_LOG(LogTemp, Error, TEXT("RGBIndexedCameraImageDataCall:"
-                                        "Failed to create PNG image wrapper"));
+                                        " Failed to create image wrapper"));
         }
-    
-        return PNGData;
+        
+        return CompressedData;
     }
 };
 

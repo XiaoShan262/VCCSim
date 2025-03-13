@@ -1466,7 +1466,6 @@ class DroneService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> PrepareAsyncSendDronePath(::grpc::ClientContext* context, const ::VCCSim::DronePath& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(PrepareAsyncSendDronePathRaw(context, request, cq));
     }
-    // todo
     class async_interface {
      public:
       virtual ~async_interface() {}
@@ -1476,7 +1475,6 @@ class DroneService final {
       virtual void SendDronePose(::grpc::ClientContext* context, const ::VCCSim::DronePose* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void SendDronePath(::grpc::ClientContext* context, const ::VCCSim::DronePath* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SendDronePath(::grpc::ClientContext* context, const ::VCCSim::DronePath* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      // todo
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
@@ -1552,7 +1550,6 @@ class DroneService final {
     virtual ::grpc::Status GetDronePose(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Pose* response);
     virtual ::grpc::Status SendDronePose(::grpc::ServerContext* context, const ::VCCSim::DronePose* request, ::VCCSim::Status* response);
     virtual ::grpc::Status SendDronePath(::grpc::ServerContext* context, const ::VCCSim::DronePath* request, ::VCCSim::Status* response);
-    // todo
   };
   template <class BaseClass>
   class WithAsyncMethod_GetDronePose : public BaseClass {
@@ -4052,6 +4049,536 @@ class PointCloudService final {
   typedef WithStreamedUnaryMethod_SendPointCloudWithColor<Service > StreamedUnaryService;
   typedef Service SplitStreamedService;
   typedef WithStreamedUnaryMethod_SendPointCloudWithColor<Service > StreamedService;
+};
+
+class SafeCheckService final {
+ public:
+  static constexpr char const* service_full_name() {
+    return "VCCSim.SafeCheckService";
+  }
+  class StubInterface {
+   public:
+    virtual ~StubInterface() {}
+    virtual ::grpc::Status CheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Status* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> AsyncCheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(AsyncCheckSafetyPawnRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> PrepareAsyncCheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(PrepareAsyncCheckSafetyPawnRaw(context, request, cq));
+    }
+    // todo
+    virtual ::grpc::Status CheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::VCCSim::Status* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> AsyncCheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(AsyncCheckSafetyPositionRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> PrepareAsyncCheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(PrepareAsyncCheckSafetyPositionRaw(context, request, cq));
+    }
+    // todo
+    virtual ::grpc::Status CheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::VCCSim::Status* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> AsyncCheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(AsyncCheckSafetyPathRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> PrepareAsyncCheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(PrepareAsyncCheckSafetyPathRaw(context, request, cq));
+    }
+    // todo
+    class async_interface {
+     public:
+      virtual ~async_interface() {}
+      virtual void CheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void CheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      // todo
+      virtual void CheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void CheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      // todo
+      virtual void CheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void CheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      // todo
+    };
+    typedef class async_interface experimental_async_interface;
+    virtual class async_interface* async() { return nullptr; }
+    class async_interface* experimental_async() { return async(); }
+   private:
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* AsyncCheckSafetyPawnRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* PrepareAsyncCheckSafetyPawnRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* AsyncCheckSafetyPositionRaw(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* PrepareAsyncCheckSafetyPositionRaw(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* AsyncCheckSafetyPathRaw(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>* PrepareAsyncCheckSafetyPathRaw(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::grpc::CompletionQueue* cq) = 0;
+  };
+  class Stub final : public StubInterface {
+   public:
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
+    ::grpc::Status CheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Status* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>> AsyncCheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>>(AsyncCheckSafetyPawnRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>> PrepareAsyncCheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>>(PrepareAsyncCheckSafetyPawnRaw(context, request, cq));
+    }
+    ::grpc::Status CheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::VCCSim::Status* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>> AsyncCheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>>(AsyncCheckSafetyPositionRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>> PrepareAsyncCheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>>(PrepareAsyncCheckSafetyPositionRaw(context, request, cq));
+    }
+    ::grpc::Status CheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::VCCSim::Status* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>> AsyncCheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>>(AsyncCheckSafetyPathRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>> PrepareAsyncCheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>>(PrepareAsyncCheckSafetyPathRaw(context, request, cq));
+    }
+    class async final :
+      public StubInterface::async_interface {
+     public:
+      void CheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) override;
+      void CheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void CheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) override;
+      void CheckSafetyPosition(::grpc::ClientContext* context, const ::VCCSim::Position* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void CheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) override;
+      void CheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) override;
+     private:
+      friend class Stub;
+      explicit async(Stub* stub): stub_(stub) { }
+      Stub* stub() { return stub_; }
+      Stub* stub_;
+    };
+    class async* async() override { return &async_stub_; }
+
+   private:
+    std::shared_ptr< ::grpc::ChannelInterface> channel_;
+    class async async_stub_{this};
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* AsyncCheckSafetyPawnRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* PrepareAsyncCheckSafetyPawnRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* AsyncCheckSafetyPositionRaw(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* PrepareAsyncCheckSafetyPositionRaw(::grpc::ClientContext* context, const ::VCCSim::Position& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* AsyncCheckSafetyPathRaw(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* PrepareAsyncCheckSafetyPathRaw(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::grpc::CompletionQueue* cq) override;
+    const ::grpc::internal::RpcMethod rpcmethod_CheckSafetyPawn_;
+    const ::grpc::internal::RpcMethod rpcmethod_CheckSafetyPosition_;
+    const ::grpc::internal::RpcMethod rpcmethod_CheckSafetyPath_;
+  };
+  static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
+
+  class Service : public ::grpc::Service {
+   public:
+    Service();
+    virtual ~Service();
+    virtual ::grpc::Status CheckSafetyPawn(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response);
+    // todo
+    virtual ::grpc::Status CheckSafetyPosition(::grpc::ServerContext* context, const ::VCCSim::Position* request, ::VCCSim::Status* response);
+    // todo
+    virtual ::grpc::Status CheckSafetyPath(::grpc::ServerContext* context, const ::VCCSim::Pose* request, ::VCCSim::Status* response);
+    // todo
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_CheckSafetyPawn : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_CheckSafetyPawn() {
+      ::grpc::Service::MarkMethodAsync(0);
+    }
+    ~WithAsyncMethod_CheckSafetyPawn() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPawn(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestCheckSafetyPawn(::grpc::ServerContext* context, ::VCCSim::RobotName* request, ::grpc::ServerAsyncResponseWriter< ::VCCSim::Status>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_CheckSafetyPosition : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_CheckSafetyPosition() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
+    ~WithAsyncMethod_CheckSafetyPosition() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPosition(::grpc::ServerContext* /*context*/, const ::VCCSim::Position* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestCheckSafetyPosition(::grpc::ServerContext* context, ::VCCSim::Position* request, ::grpc::ServerAsyncResponseWriter< ::VCCSim::Status>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_CheckSafetyPath : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_CheckSafetyPath() {
+      ::grpc::Service::MarkMethodAsync(2);
+    }
+    ~WithAsyncMethod_CheckSafetyPath() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPath(::grpc::ServerContext* /*context*/, const ::VCCSim::Pose* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestCheckSafetyPath(::grpc::ServerContext* context, ::VCCSim::Pose* request, ::grpc::ServerAsyncResponseWriter< ::VCCSim::Status>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_CheckSafetyPawn<WithAsyncMethod_CheckSafetyPosition<WithAsyncMethod_CheckSafetyPath<Service > > > AsyncService;
+  template <class BaseClass>
+  class WithCallbackMethod_CheckSafetyPawn : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_CheckSafetyPawn() {
+      ::grpc::Service::MarkMethodCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::VCCSim::RobotName, ::VCCSim::Status>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Status* response) { return this->CheckSafetyPawn(context, request, response); }));}
+    void SetMessageAllocatorFor_CheckSafetyPawn(
+        ::grpc::MessageAllocator< ::VCCSim::RobotName, ::VCCSim::Status>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::VCCSim::RobotName, ::VCCSim::Status>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_CheckSafetyPawn() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPawn(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* CheckSafetyPawn(
+      ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Status* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithCallbackMethod_CheckSafetyPosition : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_CheckSafetyPosition() {
+      ::grpc::Service::MarkMethodCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::VCCSim::Position, ::VCCSim::Status>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::VCCSim::Position* request, ::VCCSim::Status* response) { return this->CheckSafetyPosition(context, request, response); }));}
+    void SetMessageAllocatorFor_CheckSafetyPosition(
+        ::grpc::MessageAllocator< ::VCCSim::Position, ::VCCSim::Status>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::VCCSim::Position, ::VCCSim::Status>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_CheckSafetyPosition() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPosition(::grpc::ServerContext* /*context*/, const ::VCCSim::Position* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* CheckSafetyPosition(
+      ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::Position* /*request*/, ::VCCSim::Status* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithCallbackMethod_CheckSafetyPath : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_CheckSafetyPath() {
+      ::grpc::Service::MarkMethodCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::VCCSim::Pose, ::VCCSim::Status>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::VCCSim::Pose* request, ::VCCSim::Status* response) { return this->CheckSafetyPath(context, request, response); }));}
+    void SetMessageAllocatorFor_CheckSafetyPath(
+        ::grpc::MessageAllocator< ::VCCSim::Pose, ::VCCSim::Status>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::VCCSim::Pose, ::VCCSim::Status>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_CheckSafetyPath() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPath(::grpc::ServerContext* /*context*/, const ::VCCSim::Pose* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* CheckSafetyPath(
+      ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::Pose* /*request*/, ::VCCSim::Status* /*response*/)  { return nullptr; }
+  };
+  typedef WithCallbackMethod_CheckSafetyPawn<WithCallbackMethod_CheckSafetyPosition<WithCallbackMethod_CheckSafetyPath<Service > > > CallbackService;
+  typedef CallbackService ExperimentalCallbackService;
+  template <class BaseClass>
+  class WithGenericMethod_CheckSafetyPawn : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_CheckSafetyPawn() {
+      ::grpc::Service::MarkMethodGeneric(0);
+    }
+    ~WithGenericMethod_CheckSafetyPawn() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPawn(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_CheckSafetyPosition : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_CheckSafetyPosition() {
+      ::grpc::Service::MarkMethodGeneric(1);
+    }
+    ~WithGenericMethod_CheckSafetyPosition() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPosition(::grpc::ServerContext* /*context*/, const ::VCCSim::Position* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_CheckSafetyPath : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_CheckSafetyPath() {
+      ::grpc::Service::MarkMethodGeneric(2);
+    }
+    ~WithGenericMethod_CheckSafetyPath() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPath(::grpc::ServerContext* /*context*/, const ::VCCSim::Pose* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_CheckSafetyPawn : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_CheckSafetyPawn() {
+      ::grpc::Service::MarkMethodRaw(0);
+    }
+    ~WithRawMethod_CheckSafetyPawn() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPawn(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestCheckSafetyPawn(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_CheckSafetyPosition : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_CheckSafetyPosition() {
+      ::grpc::Service::MarkMethodRaw(1);
+    }
+    ~WithRawMethod_CheckSafetyPosition() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPosition(::grpc::ServerContext* /*context*/, const ::VCCSim::Position* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestCheckSafetyPosition(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_CheckSafetyPath : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_CheckSafetyPath() {
+      ::grpc::Service::MarkMethodRaw(2);
+    }
+    ~WithRawMethod_CheckSafetyPath() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPath(::grpc::ServerContext* /*context*/, const ::VCCSim::Pose* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestCheckSafetyPath(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_CheckSafetyPawn : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_CheckSafetyPawn() {
+      ::grpc::Service::MarkMethodRawCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->CheckSafetyPawn(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_CheckSafetyPawn() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPawn(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* CheckSafetyPawn(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_CheckSafetyPosition : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_CheckSafetyPosition() {
+      ::grpc::Service::MarkMethodRawCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->CheckSafetyPosition(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_CheckSafetyPosition() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPosition(::grpc::ServerContext* /*context*/, const ::VCCSim::Position* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* CheckSafetyPosition(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_CheckSafetyPath : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_CheckSafetyPath() {
+      ::grpc::Service::MarkMethodRawCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->CheckSafetyPath(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_CheckSafetyPath() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status CheckSafetyPath(::grpc::ServerContext* /*context*/, const ::VCCSim::Pose* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* CheckSafetyPath(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_CheckSafetyPawn : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_CheckSafetyPawn() {
+      ::grpc::Service::MarkMethodStreamed(0,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::VCCSim::RobotName, ::VCCSim::Status>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::VCCSim::RobotName, ::VCCSim::Status>* streamer) {
+                       return this->StreamedCheckSafetyPawn(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_CheckSafetyPawn() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status CheckSafetyPawn(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedCheckSafetyPawn(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::RobotName,::VCCSim::Status>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_CheckSafetyPosition : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_CheckSafetyPosition() {
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::VCCSim::Position, ::VCCSim::Status>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::VCCSim::Position, ::VCCSim::Status>* streamer) {
+                       return this->StreamedCheckSafetyPosition(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_CheckSafetyPosition() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status CheckSafetyPosition(::grpc::ServerContext* /*context*/, const ::VCCSim::Position* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedCheckSafetyPosition(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::Position,::VCCSim::Status>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_CheckSafetyPath : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_CheckSafetyPath() {
+      ::grpc::Service::MarkMethodStreamed(2,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::VCCSim::Pose, ::VCCSim::Status>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::VCCSim::Pose, ::VCCSim::Status>* streamer) {
+                       return this->StreamedCheckSafetyPath(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_CheckSafetyPath() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status CheckSafetyPath(::grpc::ServerContext* /*context*/, const ::VCCSim::Pose* /*request*/, ::VCCSim::Status* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedCheckSafetyPath(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::Pose,::VCCSim::Status>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_CheckSafetyPawn<WithStreamedUnaryMethod_CheckSafetyPosition<WithStreamedUnaryMethod_CheckSafetyPath<Service > > > StreamedUnaryService;
+  typedef Service SplitStreamedService;
+  typedef WithStreamedUnaryMethod_CheckSafetyPawn<WithStreamedUnaryMethod_CheckSafetyPosition<WithStreamedUnaryMethod_CheckSafetyPath<Service > > > StreamedService;
 };
 
 }  // namespace VCCSim

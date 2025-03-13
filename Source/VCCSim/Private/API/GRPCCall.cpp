@@ -443,7 +443,6 @@ RGBIndexedCameraImageDataCall::RGBIndexedCameraImageDataCall(
         : AsyncCallTemplateImage(service, cq, rrgbcmap)
 {
     Proceed(true);
-    ImageWrapper = ImageWrapperModule->CreateImageWrapper(EImageFormat::PNG);
 }
 
 void RGBIndexedCameraImageDataCall::PrepareNextCall()
@@ -464,34 +463,72 @@ void RGBIndexedCameraImageDataCall::ProcessRequest()
 
     if (!RCMap_.contains(CameraName))
     {
-        UE_LOG(LogTemp, Warning, TEXT("RGBCameraGetImageDataCall: "
-                                    "RGB Camera component not found!"));
+        UE_LOG(LogTemp, Warning, TEXT("RGBCameraGetImageDataCall:"
+                                      " RGB Camera component not found!"));
         return;
     }
 
     auto* RGBCamera = RCMap_[CameraName];
     if (!RGBCamera)
     {
-        UE_LOG(LogTemp, Warning, TEXT("RGBCameraGetImageDataCall: "
-                                    "Invalid RGB Camera reference!"));
+        UE_LOG(LogTemp, Warning, TEXT("RGBCameraGetImageDataCall:"
+                                      " Invalid RGB Camera reference!"));
         return;
     }
 
-    // Use the callback version with PNG conversion
-    RGBCamera->AsyncGetRGBImageData([this, RGBCamera](const TArray<FLinearColor>& ImageData)
+    // Get the requested format from the client
+    VCCSim::Format requestedFormat = request_.format();
+    
+    // Use the callback version to get image data
+    RGBCamera->AsyncGetRGBImageData(
+        [this, RGBCamera, requestedFormat](const TArray<FLinearColor>& ImageData)
     {
-        // Convert to PNG in a background thread
-        AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [this, ImageData, RGBCamera]()
+        // Process the image in a background thread
+        AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask,
+            [this, ImageData, RGBCamera, requestedFormat]()
         {
-            // Convert to PNG
-            TArray<uint8> PNGData = ConvertToPNG(ImageData, RGBCamera->Width, RGBCamera->Height);
-            
+            // Set common properties
             response_.set_width(RGBCamera->Width);
             response_.set_height(RGBCamera->Height);
-            response_.set_format(VCCSim::RGBCameraImageData_Format_PNG);
-            response_.set_is_compressed(true);
-            response_.set_data(PNGData.GetData(), PNGData.Num());
             response_.set_timestamp(FDateTime::UtcNow().ToUnixTimestamp());
+            
+            // Handle different formats
+            switch (requestedFormat)
+            {
+                case VCCSim::Format::PNG:
+                {
+                    TArray<uint8> PNGData = ConvertToCompressedFormat(
+                        ImageData, RGBCamera->Width, RGBCamera->Height, EImageFormat::PNG);
+                    
+                    response_.set_format(VCCSim::Format::PNG);
+                    response_.set_data(PNGData.GetData(), PNGData.Num());
+                    response_.set_is_compressed(true);
+                    break;
+                }
+                case VCCSim::Format::JPEG:
+                {
+                    TArray<uint8> JPEGData = ConvertToCompressedFormat(
+                        ImageData, RGBCamera->Width, RGBCamera->Height, EImageFormat::JPEG);
+                    
+                    response_.set_format(VCCSim::Format::JPEG);
+                    response_.set_data(JPEGData.GetData(), JPEGData.Num());
+                    response_.set_is_compressed(true);
+                    break;
+                }
+                case VCCSim::Format::RAW:
+                default:
+                {
+                    // Use RGB format for raw data (3 bytes per pixel)
+                    TArray<uint8> RawRGBData = ConvertToRGB(ImageData);
+                    
+                    response_.set_format(VCCSim::Format::RAW);
+                    response_.set_data(RawRGBData.GetData(), RawRGBData.Num());
+                    response_.set_is_compressed(false);
+                    response_.set_bytes_per_pixel(3);  // RGB = 3 bytes
+                    response_.set_stride(RGBCamera->Width * 3);  // Width * 3 bytes per pixel
+                    break;
+                }
+            }
 
             status_ = FINISH;
             responder_.Finish(response_, grpc::Status::OK, this);

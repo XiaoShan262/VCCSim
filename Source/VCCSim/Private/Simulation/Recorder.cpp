@@ -282,7 +282,8 @@ bool FRecorderWorker::SaveDepthData(const FDepthCameraData& DepthData, const FSt
 
         const FString FilePath = FPaths::Combine(Directory, TEXT("Depth"), Filename);
 
-        auto* ImageBuffer = BufferPool.AcquireBuffer(DepthData.Width * DepthData.Height);
+        auto* ImageBuffer =
+            BufferPool.AcquireBuffer(DepthData.Width * DepthData.Height);
         if (!ImageBuffer) return false;
 
         // Find depth range and convert to grayscale in single pass

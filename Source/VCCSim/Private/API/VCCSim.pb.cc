@@ -116,7 +116,7 @@ inline constexpr RGBCameraImageData::Impl_::Impl_(
             ::_pbi::ConstantInitialized()),
         width_{0u},
         height_{0u},
-        format_{static_cast< ::VCCSim::RGBCameraImageData_Format >(0)},
+        format_{static_cast< ::VCCSim::Format >(0)},
         timestamp_{0u},
         bytes_per_pixel_{0u},
         stride_{0u},
@@ -141,6 +141,33 @@ struct RGBCameraImageDataDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 RGBCameraImageDataDefaultTypeInternal _RGBCameraImageData_default_instance_;
+
+inline constexpr Position::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : x_{0},
+        y_{0},
+        z_{0},
+        _cached_size_{0} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR Position::Position(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(::_pbi::ConstantInitialized()) {
+}
+struct PositionDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR PositionDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~PositionDefaultTypeInternal() {}
+  union {
+    Position _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 PositionDefaultTypeInternal _Position_default_instance_;
 
 inline constexpr PoseOnlyYaw::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
@@ -407,7 +434,8 @@ inline constexpr IndexedCamera::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
         robot_name_{nullptr},
-        index_{0u} {}
+        index_{0u},
+        format_{static_cast< ::VCCSim::Format >(0)} {}
 
 template <typename>
 PROTOBUF_CONSTEXPR IndexedCamera::IndexedCamera(::_pbi::ConstantInitialized)
@@ -720,6 +748,17 @@ const ::uint32_t
         ~0u,  // no _split_
         ~0u,  // no sizeof(Split)
         ~0u,  // no _has_bits_
+        PROTOBUF_FIELD_OFFSET(::VCCSim::Position, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::VCCSim::Position, _impl_.x_),
+        PROTOBUF_FIELD_OFFSET(::VCCSim::Position, _impl_.y_),
+        PROTOBUF_FIELD_OFFSET(::VCCSim::Position, _impl_.z_),
+        ~0u,  // no _has_bits_
         PROTOBUF_FIELD_OFFSET(::VCCSim::Pose, _internal_metadata_),
         ~0u,  // no _extensions_
         ~0u,  // no _oneof_case_
@@ -799,7 +838,9 @@ const ::uint32_t
         ~0u,  // no sizeof(Split)
         PROTOBUF_FIELD_OFFSET(::VCCSim::IndexedCamera, _impl_.robot_name_),
         PROTOBUF_FIELD_OFFSET(::VCCSim::IndexedCamera, _impl_.index_),
+        PROTOBUF_FIELD_OFFSET(::VCCSim::IndexedCamera, _impl_.format_),
         0,
+        ~0u,
         ~0u,
         PROTOBUF_FIELD_OFFSET(::VCCSim::MeshData, _impl_._has_bits_),
         PROTOBUF_FIELD_OFFSET(::VCCSim::MeshData, _internal_metadata_),
@@ -965,32 +1006,34 @@ static const ::_pbi::MigrationSchema
         {11, 21, -1, sizeof(::VCCSim::PointWithColor)},
         {23, -1, -1, sizeof(::VCCSim::PointCloudWithColor)},
         {32, -1, -1, sizeof(::VCCSim::EmptyRequest)},
-        {40, -1, -1, sizeof(::VCCSim::Pose)},
-        {54, -1, -1, sizeof(::VCCSim::PoseOnlyYaw)},
-        {66, -1, -1, sizeof(::VCCSim::twist)},
-        {80, 90, -1, sizeof(::VCCSim::Odometry)},
-        {92, -1, -1, sizeof(::VCCSim::Status)},
-        {101, -1, -1, sizeof(::VCCSim::RobotName)},
-        {110, 120, -1, sizeof(::VCCSim::IndexedCamera)},
-        {122, 135, -1, sizeof(::VCCSim::MeshData)},
-        {140, -1, -1, sizeof(::VCCSim::MeshID)},
-        {149, -1, -1, sizeof(::VCCSim::LidarData)},
-        {158, 168, -1, sizeof(::VCCSim::LidarDataAndOdom)},
-        {170, -1, -1, sizeof(::VCCSim::DepthCameraPointData)},
-        {179, -1, -1, sizeof(::VCCSim::DepthCameraImageData)},
-        {188, 204, -1, sizeof(::VCCSim::RGBCameraImageData)},
-        {212, 222, -1, sizeof(::VCCSim::DronePose)},
-        {224, -1, -1, sizeof(::VCCSim::DronePath)},
-        {234, 244, -1, sizeof(::VCCSim::CarPose)},
-        {246, -1, -1, sizeof(::VCCSim::CarPath)},
-        {256, 266, -1, sizeof(::VCCSim::FlashPose)},
-        {268, -1, -1, sizeof(::VCCSim::FlashPath)},
+        {40, -1, -1, sizeof(::VCCSim::Position)},
+        {51, -1, -1, sizeof(::VCCSim::Pose)},
+        {65, -1, -1, sizeof(::VCCSim::PoseOnlyYaw)},
+        {77, -1, -1, sizeof(::VCCSim::twist)},
+        {91, 101, -1, sizeof(::VCCSim::Odometry)},
+        {103, -1, -1, sizeof(::VCCSim::Status)},
+        {112, -1, -1, sizeof(::VCCSim::RobotName)},
+        {121, 132, -1, sizeof(::VCCSim::IndexedCamera)},
+        {135, 148, -1, sizeof(::VCCSim::MeshData)},
+        {153, -1, -1, sizeof(::VCCSim::MeshID)},
+        {162, -1, -1, sizeof(::VCCSim::LidarData)},
+        {171, 181, -1, sizeof(::VCCSim::LidarDataAndOdom)},
+        {183, -1, -1, sizeof(::VCCSim::DepthCameraPointData)},
+        {192, -1, -1, sizeof(::VCCSim::DepthCameraImageData)},
+        {201, 217, -1, sizeof(::VCCSim::RGBCameraImageData)},
+        {225, 235, -1, sizeof(::VCCSim::DronePose)},
+        {237, -1, -1, sizeof(::VCCSim::DronePath)},
+        {247, 257, -1, sizeof(::VCCSim::CarPose)},
+        {259, -1, -1, sizeof(::VCCSim::CarPath)},
+        {269, 279, -1, sizeof(::VCCSim::FlashPose)},
+        {281, -1, -1, sizeof(::VCCSim::FlashPath)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::VCCSim::_Point_default_instance_._instance,
     &::VCCSim::_PointWithColor_default_instance_._instance,
     &::VCCSim::_PointCloudWithColor_default_instance_._instance,
     &::VCCSim::_EmptyRequest_default_instance_._instance,
+    &::VCCSim::_Position_default_instance_._instance,
     &::VCCSim::_Pose_default_instance_._instance,
     &::VCCSim::_PoseOnlyYaw_default_instance_._instance,
     &::VCCSim::_twist_default_instance_._instance,
@@ -1019,92 +1062,97 @@ const char descriptor_table_protodef_VCCSim_2eproto[] ABSL_ATTRIBUTE_SECTION_VAR
     "or\022\034\n\005point\030\001 \001(\0132\r.VCCSim.Point\022\r\n\005colo"
     "r\030\002 \001(\r\";\n\023PointCloudWithColor\022$\n\004data\030\001"
     " \003(\0132\026.VCCSim.PointWithColor\"\016\n\014EmptyReq"
-    "uest\"Q\n\004Pose\022\t\n\001x\030\001 \001(\002\022\t\n\001y\030\002 \001(\002\022\t\n\001z\030"
-    "\003 \001(\002\022\014\n\004roll\030\004 \001(\002\022\r\n\005pitch\030\005 \001(\002\022\013\n\003ya"
-    "w\030\006 \001(\002\";\n\013PoseOnlyYaw\022\t\n\001x\030\001 \001(\002\022\t\n\001y\030\002"
-    " \001(\002\022\t\n\001z\030\003 \001(\002\022\013\n\003yaw\030\004 \001(\002\"v\n\005twist\022\020\n"
-    "\010linear_x\030\001 \001(\002\022\020\n\010linear_y\030\002 \001(\002\022\020\n\010lin"
-    "ear_z\030\003 \001(\002\022\021\n\tangular_x\030\004 \001(\002\022\021\n\tangula"
-    "r_y\030\005 \001(\002\022\021\n\tangular_z\030\006 \001(\002\"D\n\010Odometry"
-    "\022\032\n\004pose\030\001 \001(\0132\014.VCCSim.Pose\022\034\n\005twist\030\002 "
-    "\001(\0132\r.VCCSim.twist\"\030\n\006Status\022\016\n\006status\030\001"
-    " \001(\010\"\031\n\tRobotName\022\014\n\004name\030\001 \001(\t\"E\n\rIndex"
-    "edCamera\022%\n\nrobot_name\030\001 \001(\0132\021.VCCSim.Ro"
-    "botName\022\r\n\005index\030\002 \001(\r\"n\n\010MeshData\022\014\n\004da"
-    "ta\030\001 \001(\014\022\016\n\006format\030\002 \001(\r\022\017\n\007version\030\003 \001("
-    "\r\022\022\n\nsimplified\030\004 \001(\010\022\037\n\ttransform\030\005 \001(\013"
-    "2\014.VCCSim.Pose\"\024\n\006MeshID\022\n\n\002id\030\001 \001(\r\"(\n\t"
-    "LidarData\022\033\n\004data\030\001 \003(\0132\r.VCCSim.Point\"S"
-    "\n\020LidarDataAndOdom\022\037\n\004data\030\001 \001(\0132\021.VCCSi"
-    "m.LidarData\022\036\n\004odom\030\002 \001(\0132\020.VCCSim.Odome"
-    "try\"3\n\024DepthCameraPointData\022\033\n\004data\030\001 \003("
-    "\0132\r.VCCSim.Point\"$\n\024DepthCameraImageData"
-    "\022\014\n\004data\030\001 \003(\002\"\266\002\n\022RGBCameraImageData\022\r\n"
-    "\005width\030\001 \001(\r\022\016\n\006height\030\002 \001(\r\022\014\n\004data\030\003 \001"
-    "(\014\0221\n\006format\030\004 \001(\0162!.VCCSim.RGBCameraIma"
-    "geData.Format\022\021\n\ttimestamp\030\005 \001(\r\022\034\n\017byte"
-    "s_per_pixel\030\006 \001(\rH\000\210\001\001\022\023\n\006stride\030\007 \001(\rH\001"
-    "\210\001\001\022\032\n\ris_compressed\030\010 \001(\010H\002\210\001\001\"-\n\006Forma"
-    "t\022\007\n\003RGB\020\000\022\007\n\003BGR\020\001\022\010\n\004JPEG\020\002\022\007\n\003PNG\020\003B\022"
-    "\n\020_bytes_per_pixelB\t\n\007_strideB\020\n\016_is_com"
-    "pressed\"5\n\tDronePose\022\014\n\004name\030\001 \001(\t\022\032\n\004po"
-    "se\030\002 \001(\0132\014.VCCSim.Pose\"5\n\tDronePath\022\014\n\004n"
-    "ame\030\001 \001(\t\022\032\n\004path\030\002 \003(\0132\014.VCCSim.Pose\":\n"
-    "\007CarPose\022\014\n\004name\030\001 \001(\t\022!\n\004pose\030\002 \001(\0132\023.V"
-    "CCSim.PoseOnlyYaw\":\n\007CarPath\022\014\n\004name\030\001 \001"
-    "(\t\022!\n\004path\030\002 \003(\0132\023.VCCSim.PoseOnlyYaw\"5\n"
-    "\tFlashPose\022\014\n\004name\030\001 \001(\t\022\032\n\004pose\030\002 \001(\0132\014"
-    ".VCCSim.Pose\"5\n\tFlashPath\022\014\n\004name\030\001 \001(\t\022"
-    "\032\n\004path\030\002 \003(\0132\014.VCCSim.Pose2\275\001\n\014LidarSer"
-    "vice\0224\n\014GetLiDARData\022\021.VCCSim.RobotName\032"
-    "\021.VCCSim.LidarData\0223\n\014GetLiDAROdom\022\021.VCC"
-    "Sim.RobotName\032\020.VCCSim.Odometry\022B\n\023GetLi"
-    "DARDataAndOdom\022\021.VCCSim.RobotName\032\030.VCCS"
-    "im.LidarDataAndOdom2\347\001\n\022DepthCameraServi"
-    "ce\022J\n\027GetDepthCameraPointData\022\021.VCCSim.R"
-    "obotName\032\034.VCCSim.DepthCameraPointData\022J"
-    "\n\027GetDepthCameraImageData\022\021.VCCSim.Robot"
-    "Name\032\034.VCCSim.DepthCameraImageData\0229\n\022Ge"
-    "tDepthCameraOdom\022\021.VCCSim.RobotName\032\020.VC"
-    "CSim.Odometry2\236\001\n\020RGBCameraService\0227\n\020Ge"
-    "tRGBCameraOdom\022\021.VCCSim.RobotName\032\020.VCCS"
-    "im.Odometry\022Q\n\034GetRGBIndexedCameraImageD"
-    "ata\022\025.VCCSim.IndexedCamera\032\032.VCCSim.RGBC"
-    "ameraImageData2\247\001\n\014DroneService\022/\n\014GetDr"
-    "onePose\022\021.VCCSim.RobotName\032\014.VCCSim.Pose"
-    "\0222\n\rSendDronePose\022\021.VCCSim.DronePose\032\016.V"
-    "CCSim.Status\0222\n\rSendDronePath\022\021.VCCSim.D"
-    "ronePath\032\016.VCCSim.Status2\237\001\n\nCarService\022"
-    "1\n\nGetCarOdom\022\021.VCCSim.RobotName\032\020.VCCSi"
-    "m.Odometry\022.\n\013SendCarPose\022\017.VCCSim.CarPo"
-    "se\032\016.VCCSim.Status\022.\n\013SendCarPath\022\017.VCCS"
-    "im.CarPath\032\016.VCCSim.Status2\216\002\n\014FlashServ"
-    "ice\022/\n\014GetFlashPose\022\021.VCCSim.RobotName\032\014"
-    ".VCCSim.Pose\0222\n\rSendFlashPose\022\021.VCCSim.F"
-    "lashPose\032\016.VCCSim.Status\0222\n\rSendFlashPat"
-    "h\022\021.VCCSim.FlashPath\032\016.VCCSim.Status\0224\n\017"
-    "CheckFlashReady\022\021.VCCSim.RobotName\032\016.VCC"
-    "Sim.Status\022/\n\nMoveToNext\022\021.VCCSim.RobotN"
-    "ame\032\016.VCCSim.Status2\243\001\n\013MeshService\022,\n\010S"
-    "endMesh\022\020.VCCSim.MeshData\032\016.VCCSim.Statu"
-    "s\0222\n\016SendGlobalMesh\022\020.VCCSim.MeshData\032\016."
-    "VCCSim.MeshID\0222\n\020RemoveGlobalMesh\022\016.VCCS"
-    "im.MeshID\032\016.VCCSim.Status2[\n\021PointCloudS"
-    "ervice\022F\n\027SendPointCloudWithColor\022\033.VCCS"
-    "im.PointCloudWithColor\032\016.VCCSim.Statusb\006"
-    "proto3"
+    "uest\"+\n\010Position\022\t\n\001x\030\001 \001(\002\022\t\n\001y\030\002 \001(\002\022\t"
+    "\n\001z\030\003 \001(\002\"Q\n\004Pose\022\t\n\001x\030\001 \001(\002\022\t\n\001y\030\002 \001(\002\022"
+    "\t\n\001z\030\003 \001(\002\022\014\n\004roll\030\004 \001(\002\022\r\n\005pitch\030\005 \001(\002\022"
+    "\013\n\003yaw\030\006 \001(\002\";\n\013PoseOnlyYaw\022\t\n\001x\030\001 \001(\002\022\t"
+    "\n\001y\030\002 \001(\002\022\t\n\001z\030\003 \001(\002\022\013\n\003yaw\030\004 \001(\002\"v\n\005twi"
+    "st\022\020\n\010linear_x\030\001 \001(\002\022\020\n\010linear_y\030\002 \001(\002\022\020"
+    "\n\010linear_z\030\003 \001(\002\022\021\n\tangular_x\030\004 \001(\002\022\021\n\ta"
+    "ngular_y\030\005 \001(\002\022\021\n\tangular_z\030\006 \001(\002\"D\n\010Odo"
+    "metry\022\032\n\004pose\030\001 \001(\0132\014.VCCSim.Pose\022\034\n\005twi"
+    "st\030\002 \001(\0132\r.VCCSim.twist\"\030\n\006Status\022\016\n\006sta"
+    "tus\030\001 \001(\010\"\031\n\tRobotName\022\014\n\004name\030\001 \001(\t\"e\n\r"
+    "IndexedCamera\022%\n\nrobot_name\030\001 \001(\0132\021.VCCS"
+    "im.RobotName\022\r\n\005index\030\002 \001(\r\022\036\n\006format\030\003 "
+    "\001(\0162\016.VCCSim.Format\"n\n\010MeshData\022\014\n\004data\030"
+    "\001 \001(\014\022\016\n\006format\030\002 \001(\r\022\017\n\007version\030\003 \001(\r\022\022"
+    "\n\nsimplified\030\004 \001(\010\022\037\n\ttransform\030\005 \001(\0132\014."
+    "VCCSim.Pose\"\024\n\006MeshID\022\n\n\002id\030\001 \001(\r\"(\n\tLid"
+    "arData\022\033\n\004data\030\001 \003(\0132\r.VCCSim.Point\"S\n\020L"
+    "idarDataAndOdom\022\037\n\004data\030\001 \001(\0132\021.VCCSim.L"
+    "idarData\022\036\n\004odom\030\002 \001(\0132\020.VCCSim.Odometry"
+    "\"3\n\024DepthCameraPointData\022\033\n\004data\030\001 \003(\0132\r"
+    ".VCCSim.Point\"$\n\024DepthCameraImageData\022\014\n"
+    "\004data\030\001 \003(\002\"\364\001\n\022RGBCameraImageData\022\r\n\005wi"
+    "dth\030\001 \001(\r\022\016\n\006height\030\002 \001(\r\022\014\n\004data\030\003 \001(\014\022"
+    "\036\n\006format\030\004 \001(\0162\016.VCCSim.Format\022\021\n\ttimes"
+    "tamp\030\005 \001(\r\022\034\n\017bytes_per_pixel\030\006 \001(\rH\000\210\001\001"
+    "\022\023\n\006stride\030\007 \001(\rH\001\210\001\001\022\032\n\ris_compressed\030\010"
+    " \001(\010H\002\210\001\001B\022\n\020_bytes_per_pixelB\t\n\007_stride"
+    "B\020\n\016_is_compressed\"5\n\tDronePose\022\014\n\004name\030"
+    "\001 \001(\t\022\032\n\004pose\030\002 \001(\0132\014.VCCSim.Pose\"5\n\tDro"
+    "nePath\022\014\n\004name\030\001 \001(\t\022\032\n\004path\030\002 \003(\0132\014.VCC"
+    "Sim.Pose\":\n\007CarPose\022\014\n\004name\030\001 \001(\t\022!\n\004pos"
+    "e\030\002 \001(\0132\023.VCCSim.PoseOnlyYaw\":\n\007CarPath\022"
+    "\014\n\004name\030\001 \001(\t\022!\n\004path\030\002 \003(\0132\023.VCCSim.Pos"
+    "eOnlyYaw\"5\n\tFlashPose\022\014\n\004name\030\001 \001(\t\022\032\n\004p"
+    "ose\030\002 \001(\0132\014.VCCSim.Pose\"5\n\tFlashPath\022\014\n\004"
+    "name\030\001 \001(\t\022\032\n\004path\030\002 \003(\0132\014.VCCSim.Pose*$"
+    "\n\006Format\022\007\n\003PNG\020\000\022\010\n\004JPEG\020\001\022\007\n\003RAW\020\0022\275\001\n"
+    "\014LidarService\0224\n\014GetLiDARData\022\021.VCCSim.R"
+    "obotName\032\021.VCCSim.LidarData\0223\n\014GetLiDARO"
+    "dom\022\021.VCCSim.RobotName\032\020.VCCSim.Odometry"
+    "\022B\n\023GetLiDARDataAndOdom\022\021.VCCSim.RobotNa"
+    "me\032\030.VCCSim.LidarDataAndOdom2\347\001\n\022DepthCa"
+    "meraService\022J\n\027GetDepthCameraPointData\022\021"
+    ".VCCSim.RobotName\032\034.VCCSim.DepthCameraPo"
+    "intData\022J\n\027GetDepthCameraImageData\022\021.VCC"
+    "Sim.RobotName\032\034.VCCSim.DepthCameraImageD"
+    "ata\0229\n\022GetDepthCameraOdom\022\021.VCCSim.Robot"
+    "Name\032\020.VCCSim.Odometry2\236\001\n\020RGBCameraServ"
+    "ice\0227\n\020GetRGBCameraOdom\022\021.VCCSim.RobotNa"
+    "me\032\020.VCCSim.Odometry\022Q\n\034GetRGBIndexedCam"
+    "eraImageData\022\025.VCCSim.IndexedCamera\032\032.VC"
+    "CSim.RGBCameraImageData2\247\001\n\014DroneService"
+    "\022/\n\014GetDronePose\022\021.VCCSim.RobotName\032\014.VC"
+    "CSim.Pose\0222\n\rSendDronePose\022\021.VCCSim.Dron"
+    "ePose\032\016.VCCSim.Status\0222\n\rSendDronePath\022\021"
+    ".VCCSim.DronePath\032\016.VCCSim.Status2\237\001\n\nCa"
+    "rService\0221\n\nGetCarOdom\022\021.VCCSim.RobotNam"
+    "e\032\020.VCCSim.Odometry\022.\n\013SendCarPose\022\017.VCC"
+    "Sim.CarPose\032\016.VCCSim.Status\022.\n\013SendCarPa"
+    "th\022\017.VCCSim.CarPath\032\016.VCCSim.Status2\216\002\n\014"
+    "FlashService\022/\n\014GetFlashPose\022\021.VCCSim.Ro"
+    "botName\032\014.VCCSim.Pose\0222\n\rSendFlashPose\022\021"
+    ".VCCSim.FlashPose\032\016.VCCSim.Status\0222\n\rSen"
+    "dFlashPath\022\021.VCCSim.FlashPath\032\016.VCCSim.S"
+    "tatus\0224\n\017CheckFlashReady\022\021.VCCSim.RobotN"
+    "ame\032\016.VCCSim.Status\022/\n\nMoveToNext\022\021.VCCS"
+    "im.RobotName\032\016.VCCSim.Status2\243\001\n\013MeshSer"
+    "vice\022,\n\010SendMesh\022\020.VCCSim.MeshData\032\016.VCC"
+    "Sim.Status\0222\n\016SendGlobalMesh\022\020.VCCSim.Me"
+    "shData\032\016.VCCSim.MeshID\0222\n\020RemoveGlobalMe"
+    "sh\022\016.VCCSim.MeshID\032\016.VCCSim.Status2[\n\021Po"
+    "intCloudService\022F\n\027SendPointCloudWithCol"
+    "or\022\033.VCCSim.PointCloudWithColor\032\016.VCCSim"
+    ".Status2\262\001\n\020SafeCheckService\0224\n\017CheckSaf"
+    "etyPawn\022\021.VCCSim.RobotName\032\016.VCCSim.Stat"
+    "us\0227\n\023CheckSafetyPosition\022\020.VCCSim.Posit"
+    "ion\032\016.VCCSim.Status\022/\n\017CheckSafetyPath\022\014"
+    ".VCCSim.Pose\032\016.VCCSim.Statusb\006proto3"
 };
 static ::absl::once_flag descriptor_table_VCCSim_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_VCCSim_2eproto = {
     false,
     false,
-    3126,
+    3356,
     descriptor_table_protodef_VCCSim_2eproto,
     "VCCSim.proto",
     &descriptor_table_VCCSim_2eproto_once,
     nullptr,
     0,
-    24,
+    25,
     schemas,
     file_default_instances,
     TableStruct_VCCSim_2eproto::offsets,
@@ -1112,28 +1160,15 @@ PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_VCCSim_2eproto
     file_level_service_descriptors_VCCSim_2eproto,
 };
 namespace VCCSim {
-const ::google::protobuf::EnumDescriptor* RGBCameraImageData_Format_descriptor() {
+const ::google::protobuf::EnumDescriptor* Format_descriptor() {
   ::google::protobuf::internal::AssignDescriptors(&descriptor_table_VCCSim_2eproto);
   return file_level_enum_descriptors_VCCSim_2eproto[0];
 }
-PROTOBUF_CONSTINIT const uint32_t RGBCameraImageData_Format_internal_data_[] = {
-    262144u, 0u, };
-bool RGBCameraImageData_Format_IsValid(int value) {
-  return 0 <= value && value <= 3;
+PROTOBUF_CONSTINIT const uint32_t Format_internal_data_[] = {
+    196608u, 0u, };
+bool Format_IsValid(int value) {
+  return 0 <= value && value <= 2;
 }
-#if (__cplusplus < 201703) && \
-  (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
-
-constexpr RGBCameraImageData_Format RGBCameraImageData::RGB;
-constexpr RGBCameraImageData_Format RGBCameraImageData::BGR;
-constexpr RGBCameraImageData_Format RGBCameraImageData::JPEG;
-constexpr RGBCameraImageData_Format RGBCameraImageData::PNG;
-constexpr RGBCameraImageData_Format RGBCameraImageData::Format_MIN;
-constexpr RGBCameraImageData_Format RGBCameraImageData::Format_MAX;
-constexpr int RGBCameraImageData::Format_ARRAYSIZE;
-
-#endif  // (__cplusplus < 201703) &&
-        // (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 // ===================================================================
 
 class Point::_Internal {
@@ -2024,6 +2059,266 @@ const ::_pbi::TcParseTable<0, 0, 0, 0, 2> EmptyRequest::_table_ = {
 
 ::google::protobuf::Metadata EmptyRequest::GetMetadata() const {
   return ::google::protobuf::internal::ZeroFieldsBase::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class Position::_Internal {
+ public:
+};
+
+Position::Position(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:VCCSim.Position)
+}
+Position::Position(
+    ::google::protobuf::Arena* arena, const Position& from)
+    : Position(arena) {
+  MergeFrom(from);
+}
+inline PROTOBUF_NDEBUG_INLINE Position::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0} {}
+
+inline void Position::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  ::memset(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, x_),
+           0,
+           offsetof(Impl_, z_) -
+               offsetof(Impl_, x_) +
+               sizeof(Impl_::z_));
+}
+Position::~Position() {
+  // @@protoc_insertion_point(destructor:VCCSim.Position)
+  SharedDtor(*this);
+}
+inline void Position::SharedDtor(MessageLite& self) {
+  Position& this_ = static_cast<Position&>(self);
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  this_._impl_.~Impl_();
+}
+
+inline void* Position::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) Position(arena);
+}
+constexpr auto Position::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(Position),
+                                            alignof(Position));
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull Position::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_Position_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &Position::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<Position>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &Position::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<Position>(), &Position::ByteSizeLong,
+            &Position::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(Position, _impl_._cached_size_),
+        false,
+    },
+    &Position::kDescriptorMethods,
+    &descriptor_table_VCCSim_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* Position::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<2, 3, 0, 0, 2> Position::_table_ = {
+  {
+    0,  // no _has_bits_
+    0, // no _extensions_
+    3, 24,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967288,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    3,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::VCCSim::Position>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+    // float x = 1;
+    {::_pbi::TcParser::FastF32S1,
+     {13, 63, 0, PROTOBUF_FIELD_OFFSET(Position, _impl_.x_)}},
+    // float y = 2;
+    {::_pbi::TcParser::FastF32S1,
+     {21, 63, 0, PROTOBUF_FIELD_OFFSET(Position, _impl_.y_)}},
+    // float z = 3;
+    {::_pbi::TcParser::FastF32S1,
+     {29, 63, 0, PROTOBUF_FIELD_OFFSET(Position, _impl_.z_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // float x = 1;
+    {PROTOBUF_FIELD_OFFSET(Position, _impl_.x_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kFloat)},
+    // float y = 2;
+    {PROTOBUF_FIELD_OFFSET(Position, _impl_.y_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kFloat)},
+    // float z = 3;
+    {PROTOBUF_FIELD_OFFSET(Position, _impl_.z_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kFloat)},
+  }},
+  // no aux_entries
+  {{
+  }},
+};
+
+PROTOBUF_NOINLINE void Position::Clear() {
+// @@protoc_insertion_point(message_clear_start:VCCSim.Position)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.x_, 0, static_cast<::size_t>(
+      reinterpret_cast<char*>(&_impl_.z_) -
+      reinterpret_cast<char*>(&_impl_.x_)) + sizeof(_impl_.z_));
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::uint8_t* Position::_InternalSerialize(
+            const MessageLite& base, ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) {
+          const Position& this_ = static_cast<const Position&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::uint8_t* Position::_InternalSerialize(
+            ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+          const Position& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(serialize_to_array_start:VCCSim.Position)
+          ::uint32_t cached_has_bits = 0;
+          (void)cached_has_bits;
+
+          // float x = 1;
+          if (::absl::bit_cast<::uint32_t>(this_._internal_x()) != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteFloatToArray(
+                1, this_._internal_x(), target);
+          }
+
+          // float y = 2;
+          if (::absl::bit_cast<::uint32_t>(this_._internal_y()) != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteFloatToArray(
+                2, this_._internal_y(), target);
+          }
+
+          // float z = 3;
+          if (::absl::bit_cast<::uint32_t>(this_._internal_z()) != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteFloatToArray(
+                3, this_._internal_z(), target);
+          }
+
+          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+            target =
+                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+          }
+          // @@protoc_insertion_point(serialize_to_array_end:VCCSim.Position)
+          return target;
+        }
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::size_t Position::ByteSizeLong(const MessageLite& base) {
+          const Position& this_ = static_cast<const Position&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::size_t Position::ByteSizeLong() const {
+          const Position& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(message_byte_size_start:VCCSim.Position)
+          ::size_t total_size = 0;
+
+          ::uint32_t cached_has_bits = 0;
+          // Prevent compiler warnings about cached_has_bits being unused
+          (void)cached_has_bits;
+
+          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+           {
+            // float x = 1;
+            if (::absl::bit_cast<::uint32_t>(this_._internal_x()) != 0) {
+              total_size += 5;
+            }
+            // float y = 2;
+            if (::absl::bit_cast<::uint32_t>(this_._internal_y()) != 0) {
+              total_size += 5;
+            }
+            // float z = 3;
+            if (::absl::bit_cast<::uint32_t>(this_._internal_z()) != 0) {
+              total_size += 5;
+            }
+          }
+          return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                                     &this_._impl_._cached_size_);
+        }
+
+void Position::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<Position*>(&to_msg);
+  auto& from = static_cast<const Position&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:VCCSim.Position)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (::absl::bit_cast<::uint32_t>(from._internal_x()) != 0) {
+    _this->_impl_.x_ = from._impl_.x_;
+  }
+  if (::absl::bit_cast<::uint32_t>(from._internal_y()) != 0) {
+    _this->_impl_.y_ = from._impl_.y_;
+  }
+  if (::absl::bit_cast<::uint32_t>(from._internal_z()) != 0) {
+    _this->_impl_.z_ = from._impl_.z_;
+  }
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void Position::CopyFrom(const Position& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:VCCSim.Position)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void Position::InternalSwap(Position* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::google::protobuf::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(Position, _impl_.z_)
+      + sizeof(Position::_impl_.z_)
+      - PROTOBUF_FIELD_OFFSET(Position, _impl_.x_)>(
+          reinterpret_cast<char*>(&_impl_.x_),
+          reinterpret_cast<char*>(&other->_impl_.x_));
+}
+
+::google::protobuf::Metadata Position::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // ===================================================================
 
@@ -3726,7 +4021,13 @@ IndexedCamera::IndexedCamera(
   _impl_.robot_name_ = (cached_has_bits & 0x00000001u) ? ::google::protobuf::Message::CopyConstruct<::VCCSim::RobotName>(
                               arena, *from._impl_.robot_name_)
                         : nullptr;
-  _impl_.index_ = from._impl_.index_;
+  ::memcpy(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, index_),
+           reinterpret_cast<const char *>(&from._impl_) +
+               offsetof(Impl_, index_),
+           offsetof(Impl_, format_) -
+               offsetof(Impl_, index_) +
+               sizeof(Impl_::format_));
 
   // @@protoc_insertion_point(copy_constructor:VCCSim.IndexedCamera)
 }
@@ -3740,9 +4041,9 @@ inline void IndexedCamera::SharedCtor(::_pb::Arena* arena) {
   ::memset(reinterpret_cast<char *>(&_impl_) +
                offsetof(Impl_, robot_name_),
            0,
-           offsetof(Impl_, index_) -
+           offsetof(Impl_, format_) -
                offsetof(Impl_, robot_name_) +
-               sizeof(Impl_::index_));
+               sizeof(Impl_::format_));
 }
 IndexedCamera::~IndexedCamera() {
   // @@protoc_insertion_point(destructor:VCCSim.IndexedCamera)
@@ -3792,15 +4093,15 @@ const ::google::protobuf::internal::ClassData* IndexedCamera::GetClassData() con
   return _class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<1, 2, 1, 0, 2> IndexedCamera::_table_ = {
+const ::_pbi::TcParseTable<2, 3, 1, 0, 2> IndexedCamera::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(IndexedCamera, _impl_._has_bits_),
     0, // no _extensions_
-    2, 8,  // max_field_number, fast_idx_mask
+    3, 24,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967292,  // skipmap
+    4294967288,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    2,  // num_field_entries
+    3,  // num_field_entries
     1,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     _class_data_.base(),
@@ -3810,12 +4111,16 @@ const ::_pbi::TcParseTable<1, 2, 1, 0, 2> IndexedCamera::_table_ = {
     ::_pbi::TcParser::GetTable<::VCCSim::IndexedCamera>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // uint32 index = 2;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(IndexedCamera, _impl_.index_), 63>(),
-     {16, 63, 0, PROTOBUF_FIELD_OFFSET(IndexedCamera, _impl_.index_)}},
+    {::_pbi::TcParser::MiniParse, {}},
     // .VCCSim.RobotName robot_name = 1;
     {::_pbi::TcParser::FastMtS1,
      {10, 0, 0, PROTOBUF_FIELD_OFFSET(IndexedCamera, _impl_.robot_name_)}},
+    // uint32 index = 2;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(IndexedCamera, _impl_.index_), 63>(),
+     {16, 63, 0, PROTOBUF_FIELD_OFFSET(IndexedCamera, _impl_.index_)}},
+    // .VCCSim.Format format = 3;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(IndexedCamera, _impl_.format_), 63>(),
+     {24, 63, 0, PROTOBUF_FIELD_OFFSET(IndexedCamera, _impl_.format_)}},
   }}, {{
     65535, 65535
   }}, {{
@@ -3825,6 +4130,9 @@ const ::_pbi::TcParseTable<1, 2, 1, 0, 2> IndexedCamera::_table_ = {
     // uint32 index = 2;
     {PROTOBUF_FIELD_OFFSET(IndexedCamera, _impl_.index_), -1, 0,
     (0 | ::_fl::kFcSingular | ::_fl::kUInt32)},
+    // .VCCSim.Format format = 3;
+    {PROTOBUF_FIELD_OFFSET(IndexedCamera, _impl_.format_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kOpenEnum)},
   }}, {{
     {::_pbi::TcParser::GetTable<::VCCSim::RobotName>()},
   }}, {{
@@ -3843,7 +4151,9 @@ PROTOBUF_NOINLINE void IndexedCamera::Clear() {
     ABSL_DCHECK(_impl_.robot_name_ != nullptr);
     _impl_.robot_name_->Clear();
   }
-  _impl_.index_ = 0u;
+  ::memset(&_impl_.index_, 0, static_cast<::size_t>(
+      reinterpret_cast<char*>(&_impl_.format_) -
+      reinterpret_cast<char*>(&_impl_.index_)) + sizeof(_impl_.format_));
   _impl_._has_bits_.Clear();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
 }
@@ -3876,6 +4186,13 @@ PROTOBUF_NOINLINE void IndexedCamera::Clear() {
             target = stream->EnsureSpace(target);
             target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
                 2, this_._internal_index(), target);
+          }
+
+          // .VCCSim.Format format = 3;
+          if (this_._internal_format() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteEnumToArray(
+                3, this_._internal_format(), target);
           }
 
           if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
@@ -3916,6 +4233,11 @@ PROTOBUF_NOINLINE void IndexedCamera::Clear() {
               total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
                   this_._internal_index());
             }
+            // .VCCSim.Format format = 3;
+            if (this_._internal_format() != 0) {
+              total_size += 1 +
+                            ::_pbi::WireFormatLite::EnumSize(this_._internal_format());
+            }
           }
           return this_.MaybeComputeUnknownFieldsSize(total_size,
                                                      &this_._impl_._cached_size_);
@@ -3943,6 +4265,9 @@ void IndexedCamera::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::g
   if (from._internal_index() != 0) {
     _this->_impl_.index_ = from._impl_.index_;
   }
+  if (from._internal_format() != 0) {
+    _this->_impl_.format_ = from._impl_.format_;
+  }
   _this->_impl_._has_bits_[0] |= cached_has_bits;
   _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
 }
@@ -3960,8 +4285,8 @@ void IndexedCamera::InternalSwap(IndexedCamera* PROTOBUF_RESTRICT other) {
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
   swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(IndexedCamera, _impl_.index_)
-      + sizeof(IndexedCamera::_impl_.index_)
+      PROTOBUF_FIELD_OFFSET(IndexedCamera, _impl_.format_)
+      + sizeof(IndexedCamera::_impl_.format_)
       - PROTOBUF_FIELD_OFFSET(IndexedCamera, _impl_.robot_name_)>(
           reinterpret_cast<char*>(&_impl_.robot_name_),
           reinterpret_cast<char*>(&other->_impl_.robot_name_));
@@ -5709,7 +6034,7 @@ const ::_pbi::TcParseTable<3, 8, 0, 0, 2> RGBCameraImageData::_table_ = {
     // bytes data = 3;
     {::_pbi::TcParser::FastBS1,
      {26, 63, 0, PROTOBUF_FIELD_OFFSET(RGBCameraImageData, _impl_.data_)}},
-    // .VCCSim.RGBCameraImageData.Format format = 4;
+    // .VCCSim.Format format = 4;
     {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(RGBCameraImageData, _impl_.format_), 63>(),
      {32, 63, 0, PROTOBUF_FIELD_OFFSET(RGBCameraImageData, _impl_.format_)}},
     // uint32 timestamp = 5;
@@ -5733,7 +6058,7 @@ const ::_pbi::TcParseTable<3, 8, 0, 0, 2> RGBCameraImageData::_table_ = {
     // bytes data = 3;
     {PROTOBUF_FIELD_OFFSET(RGBCameraImageData, _impl_.data_), -1, 0,
     (0 | ::_fl::kFcSingular | ::_fl::kBytes | ::_fl::kRepAString)},
-    // .VCCSim.RGBCameraImageData.Format format = 4;
+    // .VCCSim.Format format = 4;
     {PROTOBUF_FIELD_OFFSET(RGBCameraImageData, _impl_.format_), -1, 0,
     (0 | ::_fl::kFcSingular | ::_fl::kOpenEnum)},
     // uint32 timestamp = 5;
@@ -5810,7 +6135,7 @@ PROTOBUF_NOINLINE void RGBCameraImageData::Clear() {
             target = stream->WriteBytesMaybeAliased(3, _s, target);
           }
 
-          // .VCCSim.RGBCameraImageData.Format format = 4;
+          // .VCCSim.Format format = 4;
           if (this_._internal_format() != 0) {
             target = stream->EnsureSpace(target);
             target = ::_pbi::WireFormatLite::WriteEnumToArray(
@@ -5886,7 +6211,7 @@ PROTOBUF_NOINLINE void RGBCameraImageData::Clear() {
               total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
                   this_._internal_height());
             }
-            // .VCCSim.RGBCameraImageData.Format format = 4;
+            // .VCCSim.Format format = 4;
             if (this_._internal_format() != 0) {
               total_size += 1 +
                             ::_pbi::WireFormatLite::EnumSize(this_._internal_format());
