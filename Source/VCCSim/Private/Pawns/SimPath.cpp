@@ -194,7 +194,8 @@ void AVCCSimPath::ProcessPendingTrajectory()
     // Process points in batches
     const int32 BatchSize = 100; // Adjust based on your needs
     const int32 TotalPoints = FMath::Min(PendingPositions.Num(), PendingRotations.Num());
-    
+	
+
     if (ProcessedPoints < TotalPoints)
     {
         const int32 PointsToProcess = FMath::Min(BatchSize, TotalPoints - ProcessedPoints);
@@ -203,12 +204,14 @@ void AVCCSimPath::ProcessPendingTrajectory()
         {
             const int32 Index = ProcessedPoints + i;
             const int32 SplineIndex = ProcessedPoints + i; // This will be the spline point index
-            
+
             Spline->AddSplinePoint(PendingPositions[Index],
                 ESplineCoordinateSpace::World, false);
         	// todo:
             Spline->SetRotationAtSplinePoint(SplineIndex,
                 PendingRotations[Index], ESplineCoordinateSpace::World, false);
+
+			Spline->SetSplinePointType(SplineIndex, ESplinePointType::Curve, false);
         }
         
         ProcessedPoints += PointsToProcess;

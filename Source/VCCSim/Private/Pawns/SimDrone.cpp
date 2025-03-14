@@ -125,7 +125,6 @@ void ASimDrone::Tick(float DeltaTime)
             FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
             FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
             
-            UE_LOG(LogTemp, Display, TEXT("New Rotation: %u"), bEnablePhysical);
             // physical simulation 
             if (bEnablePhysical == true)
             {
@@ -218,7 +217,6 @@ void ASimDrone::FollowThePathAndSteer(float DeltaTime)
         
         const auto NewRotation = FMath::RInterpTo(GetActorRotation(), NextRotation,
             DeltaTime, 8.f);
-        UE_LOG(LogTemp, Display, TEXT("New Rotation: %u"), bEnablePhysical);
         if (bEnablePhysical)
         {
             
@@ -234,7 +232,6 @@ void ASimDrone::FollowThePathAndSteer(float DeltaTime)
             
             SetActorLocationAndRotation(NewLocation,
                 FRotator(CalculatedPitch, NewRotation.Yaw, NewRotation.Roll));
-            UE_LOG(LogTemp,Log,TEXT("Speed: %f Pitch: %f"),Speed, CalculatedPitch);
         }
         else
         {
