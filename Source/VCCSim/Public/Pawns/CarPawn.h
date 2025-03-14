@@ -17,12 +17,13 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#include "Pawns/PawnBase.h"
 #include "CarPawn.generated.h"
 
 class AVCCSimPath;
 
 UCLASS(HideCategories=("Animation"))
-class VCCSIM_API ACarPawn : public APawn
+class VCCSIM_API ACarPawn : public APawnBase
 {
 	GENERATED_BODY()
 public:
