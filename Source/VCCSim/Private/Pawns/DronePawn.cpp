@@ -29,7 +29,6 @@ void ADronePawn::OnConstruction(const FTransform& Transform)
     Laps = 1.f;
     CalculateDistance();
     FollowThePathAndSteer(1);
-    
 }
 void ADronePawn::Tick(float DeltaSeconds)
 {

@@ -16,7 +16,6 @@
 */
 
 #include "Pawns/CarPawn.h"
-
 #include "Components/SplineComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Pawns/SimPath.h"
