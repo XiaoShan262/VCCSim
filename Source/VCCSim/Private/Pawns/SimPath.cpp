@@ -207,10 +207,9 @@ void AVCCSimPath::ProcessPendingTrajectory()
 
             Spline->AddSplinePoint(PendingPositions[Index],
                 ESplineCoordinateSpace::World, false);
-        	// todo:
             Spline->SetRotationAtSplinePoint(SplineIndex,
                 PendingRotations[Index], ESplineCoordinateSpace::World, false);
-
+			// Setting Point Type, default type is linear, so it must be set "Curve" to make the path smoother.
 			Spline->SetSplinePointType(SplineIndex, ESplinePointType::Curve, false);
         }
         
