@@ -213,11 +213,25 @@ void AVCCHUD::SetupWidgetsAndLS(const FVCCSimConfig& Config)
 
 void AVCCHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> FoundPawns)
 {
+    FRobot MainRobotConfig;
+    
     MainCharacter = Cast<APawn>(FindPawnInTagAndName(Config.VCCSim.MainCharacter, FoundPawns));
 
     if (Config.Robots.size() == 1 && !MainCharacter)
     {
         MainCharacter = Cast<APawn>(FindPawnInTagAndName(Config.Robots[0].UETag, FoundPawns));
+        MainRobotConfig = Config.Robots[0];
+    }
+    else
+    {
+        for (const FRobot& Robot : Config.Robots)
+        {
+            if (Robot.UETag == Config.VCCSim.MainCharacter)
+            {
+                MainRobotConfig = Robot;
+                break;
+            }
+        }
     }
     
     if (!MainCharacter)
@@ -254,16 +268,7 @@ void AVCCHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> Fo
     {
         UE_LOG(LogTemp, Error, TEXT("Failed to possess MainCharacter!"));
     }
-
-    FRobot MainRobotConfig;
-    for (const FRobot& Robot : Config.Robots)
-    {
-        if (Robot.UETag == Config.VCCSim.MainCharacter)
-        {
-            MainRobotConfig = Robot;
-            break;
-        }
-    }
+    
     for (const auto& Component : MainRobotConfig.ComponentConfigs)
     {
         if (Component.first == ESensorType::DepthCamera)
@@ -492,7 +497,6 @@ APawn* AVCCHUD::CreatePawn(const FVCCSimConfig& Config, const FRobot& Robot)
     RobotPawn->Tags.Add(FName(Robot.UETag.c_str()));
     return RobotPawn;
 }
-
 
 AActor* AVCCHUD::FindPawnInTagAndName(const std::string& Target, TArray<AActor*> FoundPawns)
 {

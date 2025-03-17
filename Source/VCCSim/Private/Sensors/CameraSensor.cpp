@@ -90,9 +90,7 @@ void URGBCameraComponent::RConfigure(
     Height = Config.Height;
     bOrthographic = Config.bOrthographic;
     OrthoWidth = Config.OrthoWidth;
-    RGBRenderTarget->InitCustomFormat(Width, Height,
-        PF_B8G8R8A8, false);
-    RGBRenderTarget->UpdateResource();
+    InitializeRenderTargets();
     SetCaptureComponent();
     
     if (Config.RecordInterval > 0)
@@ -114,50 +112,6 @@ void URGBCameraComponent::RConfigure(
     bBPConfigured = true;
 }
 
-FMatrix ComputeIntrinsicMatrix(USceneCaptureComponent2D* SceneCapture)
-{
-    if (!SceneCapture)
-    {
-        return FMatrix::Identity;
-    }
-
-    // Get the field of view in radians (UE uses degrees)
-    float FOVRadians = FMath::DegreesToRadians(SceneCapture->FOVAngle);
-    
-    // Get the render target if available
-    UTextureRenderTarget2D* RenderTarget = SceneCapture->TextureTarget;
-    if (!RenderTarget)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("No render target assigned to scene capture component"));
-        return FMatrix::Identity;
-    }
-    
-    // Get image dimensions
-    int32 Width = RenderTarget->SizeX;
-    int32 Height = RenderTarget->SizeY;
-    
-    // Calculate focal length based on FOV and image width
-    float FocalLength = (Width / 2.0f) / FMath::Tan(FOVRadians / 2.0f);
-    
-    // Calculate aspect ratio
-    float AspectRatio = Width / (float)Height;
-    
-    // Create the intrinsic matrix
-    FMatrix IntrinsicMatrix = FMatrix::Identity;
-    
-    // Standard pinhole camera intrinsic matrix structure
-    //    [fx  0  cx]
-    //    [0  fy  cy]
-    //    [0   0   1]
-    
-    IntrinsicMatrix.M[0][0] = FocalLength;  // fx
-    IntrinsicMatrix.M[1][1] = FocalLength;  // fy (same as fx for square pixels)
-    IntrinsicMatrix.M[0][2] = Width / 2.0f; // cx (principal point x)
-    IntrinsicMatrix.M[1][2] = Height / 2.0f; // cy (principal point y)
-    
-    return IntrinsicMatrix;
-}
-
 void URGBCameraComponent::SetCaptureComponent() const
 {
     if (CaptureComponent)
@@ -169,68 +123,22 @@ void URGBCameraComponent::SetCaptureComponent() const
         CaptureComponent->OrthoWidth = OrthoWidth;
 
         // Change the capture source to HDR for better quality
-        CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorHDR;
+        CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
+        CaptureComponent->bCaptureEveryFrame = false;
+        CaptureComponent->bCaptureOnMovement = true;
+        CaptureComponent->bAlwaysPersistRenderingState = true;
         
         FEngineShowFlags& ShowFlags = CaptureComponent->ShowFlags;
-        ShowFlags.SetAtmosphere(true);
-        ShowFlags.SetAntiAliasing(true);
-        ShowFlags.SetDynamicShadows(true);
-        // Disable motion blur for programmatically moved cameras
-        ShowFlags.SetMotionBlur(false);
-        ShowFlags.SetBloom(true);
-        ShowFlags.SetAmbientOcclusion(true);
-        ShowFlags.SetGlobalIllumination(true);
-        ShowFlags.SetIndirectLightingCache(true);
-        ShowFlags.SetTonemapper(true);
+        ShowFlags.EnableAdvancedFeatures();
         ShowFlags.SetPostProcessing(true);
-        ShowFlags.SetAmbientCubemap(true);
-
-        // Capture settings
-        CaptureComponent->bCaptureEveryFrame = false;
-        CaptureComponent->bCaptureOnMovement = false;
-        CaptureComponent->bAlwaysPersistRenderingState = true;
-
-        // Enhanced post-processing settings compatible with UE 5.4
+        ShowFlags.SetTonemapper(true);
+        ShowFlags.SetBloom(true);
+        ShowFlags.SetColorGrading(true);
         
-        // Ambient Occlusion
-        CaptureComponent->PostProcessSettings.bOverride_AmbientOcclusionIntensity = true;
-        CaptureComponent->PostProcessSettings.AmbientOcclusionIntensity = 1.0f;
-        CaptureComponent->PostProcessSettings.bOverride_AmbientOcclusionRadius = true;
-        CaptureComponent->PostProcessSettings.AmbientOcclusionRadius = 100.0f;
-        CaptureComponent->PostProcessSettings.bOverride_AmbientOcclusionQuality = true;
-        CaptureComponent->PostProcessSettings.AmbientOcclusionQuality = 100.0f;
-
-        // Enhanced indirect lighting
-        CaptureComponent->PostProcessSettings.bOverride_IndirectLightingIntensity = true;
-        CaptureComponent->PostProcessSettings.IndirectLightingIntensity = 1.2f;
-        
-        // Enhanced color grading
-        CaptureComponent->PostProcessSettings.bOverride_ColorGamma = true;
-        CaptureComponent->PostProcessSettings.ColorGamma = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
-        CaptureComponent->PostProcessSettings.bOverride_ColorContrast = true;
-        CaptureComponent->PostProcessSettings.ColorContrast = FVector4(1.05f, 1.05f, 1.05f, 1.0f);
-        
-        // Motion blur explicitly disabled for programmatically moved cameras
-        CaptureComponent->PostProcessSettings.bOverride_MotionBlurAmount = true;
-        CaptureComponent->PostProcessSettings.MotionBlurAmount = 0.0f;
-        
-        // Standard screen space reflections enhancements
-        CaptureComponent->PostProcessSettings.bOverride_ScreenSpaceReflectionQuality = true;
-        CaptureComponent->PostProcessSettings.ScreenSpaceReflectionQuality = 100.0f;
-        CaptureComponent->PostProcessSettings.bOverride_ScreenSpaceReflectionIntensity = true; 
-        CaptureComponent->PostProcessSettings.ScreenSpaceReflectionIntensity = 100.0f;
-
-        // if (CaptureComponent->bUseCustomProjectionMatrix)
-        // {
-        //     const auto Matrix = CaptureComponent->CustomProjectionMatrix;
-        //     UE_LOG(LogTemp, Warning, TEXT("CaptureComponent->CustomProjectionMatrix: %s"),
-        //         *Matrix.ToString());
-        // }
-        // else
-        // {
-        //     FMatrix Matrix = ComputeIntrinsicMatrix(CaptureComponent);
-        //     UE_LOG(LogTemp, Warning, TEXT("Intrinsic matrix: %s"), *Matrix.ToString());
-        // }
+        ShowFlags.SetAntiAliasing(true);
+        ShowFlags.SetTemporalAA(true);
+        ShowFlags.SetEyeAdaptation(true);
+        ShowFlags.SetFog(false);
     }
     else 
     {
@@ -241,11 +149,9 @@ void URGBCameraComponent::SetCaptureComponent() const
 void URGBCameraComponent::InitializeRenderTargets()
 {
     RGBRenderTarget = NewObject<UTextureRenderTarget2D>(this);
-    // Use higher quality format with HDR support
     RGBRenderTarget->InitCustomFormat(Width, Height,
         PF_FloatRGBA, true);  
     
-    // Enable MipMapping for better quality
     RGBRenderTarget->bAutoGenerateMips = true;
     
     RGBRenderTarget->UpdateResource();
