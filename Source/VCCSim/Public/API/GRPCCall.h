@@ -30,6 +30,7 @@ class UMeshHandlerComponent;
 class UInsMeshHolder;
 class ADronePawn;
 class AFlashPawn;
+class ACarPawn;
 
 class AsyncCall
 {
@@ -457,6 +458,49 @@ public:
     SendDronePathCall(VCCSim::DroneService::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
         std::map<std::string, ADronePawn*> rcmap);
+protected:
+    virtual void PrepareNextCall() override final;
+    virtual void InitializeRequest() override final;
+    virtual void ProcessRequest() override final;
+};
+/* --------------------------Car Handler---------------------------------- */
+
+class GetCarOdomCall final : public AsyncCallTemplateM<VCCSim::RobotName,
+    VCCSim::Odometry, VCCSim::CarService::AsyncService,
+    std::map<std::string, ACarPawn*>>
+{
+public:
+    GetCarOdomCall(VCCSim::CarService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        std::map<std::string, ACarPawn*> rcmap);
+protected:
+    virtual void PrepareNextCall() override final;
+    virtual void InitializeRequest() override final;
+    virtual void ProcessRequest() override final;
+};
+
+class SendCarPoseCall : public AsyncCallTemplateM<VCCSim::CarPose,
+    VCCSim::Status, VCCSim::CarService::AsyncService,
+    std::map<std::string, ACarPawn*>>
+{
+public:
+    SendCarPoseCall(VCCSim::CarService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        std::map<std::string, ACarPawn*> rcmap);
+protected:
+    virtual void PrepareNextCall() override final;
+    virtual void InitializeRequest() override final;
+    virtual void ProcessRequest() override final;
+};
+
+class SendCarPathCall : public AsyncCallTemplateM<VCCSim::CarPath,
+    VCCSim::Status, VCCSim::CarService::AsyncService,
+    std::map<std::string, ACarPawn*>>
+{
+public:
+    SendCarPathCall(VCCSim::CarService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        std::map<std::string, ACarPawn*> rcmap);
 protected:
     virtual void PrepareNextCall() override final;
     virtual void InitializeRequest() override final;

@@ -23,6 +23,7 @@
 #include "Utils/InsMeshHolder.h"
 #include "Pawns/DronePawn.h"
 #include "Pawns/FlashPawn.h"
+#include "Pawns/CarPawn.h"
 #include "Simulation/MeshManager.h"
 
 LidarGetDataCall::LidarGetDataCall(
@@ -856,6 +857,166 @@ void SendDronePathCall::ProcessRequest()
     {
         UE_LOG(LogTemp, Warning, TEXT("SendDronePathCall: "
                                       "Drone not found!"));
+        response_.set_status(false);
+    }
+}
+
+GetCarOdomCall::GetCarOdomCall(
+    VCCSim::CarService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, ACarPawn*> rcmap)
+    : AsyncCallTemplateM(service, cq, rcmap)
+{
+    Proceed(true);
+}
+
+void GetCarOdomCall::PrepareNextCall()
+{
+    new GetCarOdomCall(service_, cq_, RCMap_);
+}
+
+void GetCarOdomCall::InitializeRequest()
+{
+    service_->RequestGetCarOdom(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void GetCarOdomCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        const auto Car = RCMap_[request_.name()];
+        const FVector Loc = Car->GetActorLocation();
+        const FRotator Rot = Car->GetActorRotation();
+
+        const FVector LinearVelocity = Car->GetPhysicsLinearVelocity();
+        const FVector AngularVelocity = Car->GetPhysicsAngularVelocityInDegrees();
+
+        VCCSim::Pose* PoseData = response_.mutable_pose();
+        PoseData->set_x(Loc.X);
+        PoseData->set_y(Loc.Y);
+        PoseData->set_z(Loc.Z);
+        PoseData->set_roll(Rot.Roll);
+        PoseData->set_pitch(Rot.Pitch);
+        PoseData->set_yaw(Rot.Yaw);
+
+        VCCSim::twist* TwistData = response_.mutable_twist();
+        TwistData->set_linear_x(LinearVelocity.X);
+        TwistData->set_linear_y(LinearVelocity.Y);
+        TwistData->set_linear_z(LinearVelocity.Z);
+        TwistData->set_angular_x(AngularVelocity.X);
+        TwistData->set_angular_y(AngularVelocity.Y);
+        TwistData->set_angular_z(AngularVelocity.Z);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("GetCarOdomCall: "
+            "Car not found!"));
+    }
+}
+
+
+SendCarPoseCall::SendCarPoseCall(
+    VCCSim::CarService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, ACarPawn*> rcmap)
+    : AsyncCallTemplateM(service, cq, rcmap)
+{
+    Proceed(true);
+}
+
+void SendCarPoseCall::PrepareNextCall()
+{
+    new SendCarPoseCall(service_, cq_, RCMap_);
+}
+
+void SendCarPoseCall::InitializeRequest()
+{
+    service_->RequestSendCarPose(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void SendCarPoseCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        if (ACarPawn* Car = RCMap_[request_.name()])
+        {
+            const FVector TargetLocation(
+                request_.pose().x(),
+                request_.pose().y(),
+                request_.pose().z()
+            );
+            const FRotator TargetRotation(
+                0.0f,
+                request_.pose().yaw(),
+                0.0f
+            );
+            Car->SetTarget(TargetLocation, TargetRotation);
+            response_.set_status(true);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("SendCarPoseCall: "
+                "Car not found!"));
+            response_.set_status(false);
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SendCarPoseCall: "
+            "Car not found!"));
+        response_.set_status(false);
+    }
+}
+
+SendCarPathCall::SendCarPathCall(
+    VCCSim::CarService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, ACarPawn*> rcmap)
+    : AsyncCallTemplateM(service, cq, rcmap)
+{
+    Proceed(true);
+}
+
+void SendCarPathCall::PrepareNextCall()
+{
+    new SendCarPathCall(service_, cq_, RCMap_);
+}
+
+void SendCarPathCall::InitializeRequest()
+{
+    service_->RequestSendCarPath(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void SendCarPathCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        if (ACarPawn* Car = RCMap_[request_.name()])
+        {
+            TArray<FVector> Positions;
+            TArray<FRotator> Rotations;
+            for (const auto& Point : request_.path())
+            {
+                Positions.Add(FVector(Point.x(), Point.y(), Point.z()));
+                Rotations.Add(FRotator(0.0f, Point.yaw(), 0.0f)); // Only Yaw is used
+            }
+            Car->SetPath(Positions, Rotations);
+            response_.set_status(true);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("SendCarPathCall: "
+                "Car not found!"));
+            response_.set_status(false);
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SendCarPathCall: "
+            "Car not found!"));
         response_.set_status(false);
     }
 }

@@ -55,7 +55,16 @@ public:
 	double CalculateWheelRotation(USceneComponent* WheelMesh, double Offset);
 	void SingleWheelVibration(USceneComponent* WheelMesh, double Offset);
 	double WheelVibration(double TimeOffset);
+
+	FVector GetPhysicsLinearVelocity() const;
+
+	FVector GetPhysicsAngularVelocityInDegrees() const;
+
+	bool SetTarget(const FVector& TargetPosition, const FRotator& Rotation);
+
+	bool SetPath(const TArray<FVector>& Positions, const TArray<FRotator>& Rotations);
 	
+
 public:
 	UPROPERTY(BlueprintReadWrite, EditInstanceOnly, Category="Hidden")
 	TArray<AActor*> ActorsToIgnore;
@@ -82,7 +91,7 @@ public:
 
 	// UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="Car Setup")
 	// TObjectPtr<UStaticMesh> BodyMesh;
- //    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="Car Setup")
+	//    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="Car Setup")
 	// TObjectPtr<UStaticMesh> FrontWheelsMesh;
 	// UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category="Car Setup")
 	// TObjectPtr<UStaticMesh> RearWheelsMesh;
@@ -140,7 +149,9 @@ public:
 	double BodyVibrationAmount;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Vibrations", Interp, meta=(ClampMin="0", UIMin="0"))
 	double BodyVibrationSpeed;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Target")
+	bool bUseTarget = false;
+	bool bUsePath = false;
 private:
 	float CourseDistance;
 	float LastCourseDistance;

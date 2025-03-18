@@ -20,6 +20,7 @@
 #include "Sensors/LidarSensor.h"
 #include "Sensors/DepthCamera.h"
 #include "Pawns/DronePawn.h"
+#include "Pawns/CarPawn.h"
 #include "Pawns/FlashPawn.h"
 #include "Utils/MeshHandlerComponent.h"
 #include "Async/AsyncWork.h"
@@ -60,6 +61,7 @@ public:
     	Builder.AddListeningPort(Config.VCCSim.Server, grpc::InsecureServerCredentials());
     	
     	VCCSim::DroneService::AsyncService DroneService;
+        VCCSim::CarService::AsyncService CarService;
     	VCCSim::LidarService::AsyncService LidarService;
     	VCCSim::FlashService::AsyncService FlashService;
     	VCCSim::DepthCameraService::AsyncService DepthCameraService;
@@ -67,13 +69,14 @@ public:
     	VCCSim::MeshService::AsyncService MeshService;
     	VCCSim::PointCloudService::AsyncService PointCloudService;
     	
+
     	if (!RGrpcMaps.RMaps.DroneMap.empty())
 		{
     		Builder.RegisterService(&DroneService);
 		}
     	if (!RGrpcMaps.RMaps.CarMap.empty())
     	{
-    		
+			Builder.RegisterService(&CarService);
     	}
     	if (!RGrpcMaps.RMaps.FlashMap.empty())
 		{
@@ -116,6 +119,19 @@ public:
         		new SendDronePoseCall(&DroneService, CompletionQueue.get(), DroneMap);
         		new SendDronePathCall(&DroneService, CompletionQueue.get(), DroneMap);
         	}
+
+            if (!RGrpcMaps.RMaps.CarMap.empty())
+            {
+                std::map<std::string, ACarPawn*> CarMap;
+                for (const auto& Pair : RGrpcMaps.RMaps.CarMap)
+                {
+                    CarMap[Pair.first] = Cast<ACarPawn>(Pair.second);
+                }
+                new GetCarOdomCall(&CarService, CompletionQueue.get(), CarMap);
+                new SendCarPoseCall(&CarService, CompletionQueue.get(), CarMap);
+                new SendCarPathCall(&CarService, CompletionQueue.get(), CarMap);
+            }
+
         	if (!RGrpcMaps.RMaps.FlashMap.empty())
 			{
 				std::map<std::string, AFlashPawn*> FlashMap;

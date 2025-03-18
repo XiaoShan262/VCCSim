@@ -88,7 +88,7 @@ void ACarPawn::OnConstruction(const FTransform& Transform)
 void ACarPawn::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
+	
 	AutoMove(DeltaSeconds);
 	SetTraceIgnores();
 	CalculateDistance();
@@ -157,9 +157,9 @@ void ACarPawn::FollowThePathAndSteer()
 	{
 		const auto NewLocation = Path->Spline->GetLocationAtDistanceAlongSpline(
 			CourseDistance, ESplineCoordinateSpace::World);
-		const auto TargetRotation = Path->Spline->GetRotationAtDistanceAlongSpline(
+		const auto NextRotation = Path->Spline->GetRotationAtDistanceAlongSpline(
 			CourseDistance, ESplineCoordinateSpace::World);
-		const auto NewRotation = FMath::RInterpTo(GetActorRotation(), TargetRotation,
+		const auto NewRotation = FMath::RInterpTo(GetActorRotation(), NextRotation,
 			1 / TickFPS, 8.f);
 		if (TraceGround)
 		{
@@ -418,4 +418,66 @@ double ACarPawn::WheelVibration(double TimeOffset)
 {
 	return PerlinNoise(TimeOffset, WheelsVibrationSpeed,
 		WheelsVibrationAmount, OverallVibrationMultiplier);
+}
+
+FVector ACarPawn::GetPhysicsLinearVelocity() const
+{
+	if (Body && Body->IsSimulatingPhysics())
+	{
+		return Body->GetPhysicsLinearVelocity();
+	}
+	return FVector::ZeroVector;
+}
+
+FVector ACarPawn::GetPhysicsAngularVelocityInDegrees() const
+{
+	if (Body && Body->IsSimulatingPhysics())
+	{
+		FVector AngularVelocityRad = Body->GetPhysicsAngularVelocityInRadians();
+		return FMath::RadiansToDegrees(AngularVelocityRad);
+	}
+	return FVector::ZeroVector;
+}
+
+bool ACarPawn::SetTarget(const FVector& TargetPosition, const FRotator& TargetRotation)
+{
+	FVector CurrentPosition = GetActorLocation();
+	FRotator CurrentRotation = GetActorRotation();
+
+	TArray<FVector> Positions;
+	TArray<FRotator> Rotations;
+
+	Positions.Add(CurrentPosition);
+	Rotations.Add(CurrentRotation);
+
+	Positions.Add(TargetPosition);
+	Rotations.Add(TargetRotation);
+
+	if (!Path)
+	{
+		AsyncTask(ENamedThreads::GameThread, [this, Positions, Rotations]()
+			{
+				Path = GetWorld()->SpawnActor<AVCCSimPath>();
+				Path->SetNewTrajectory(Positions, Rotations);
+			});
+		return true;
+	}
+
+	Path->SetNewTrajectory(Positions, Rotations);
+
+	return true;
+}
+bool ACarPawn::SetPath(const TArray<FVector>& Positions, const TArray<FRotator>& Rotations)
+{
+	if (!Path)
+	{
+		AsyncTask(ENamedThreads::GameThread, [this, Positions, Rotations]()
+			{
+				Path = GetWorld()->SpawnActor<AVCCSimPath>();
+				Path->SetNewTrajectory(Positions, Rotations);
+			});
+		return true;
+	}
+	Path->SetNewTrajectory(Positions, Rotations);
+	return true;
 }
