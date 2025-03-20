@@ -1,9 +1,11 @@
-#pragma once
+#ifndef VCCSIM_CLIENT_H
+#define VCCSIM_CLIENT_H
 
 #include <string>
 #include <memory>
 #include <vector>
 #include <tuple>
+#include <functional>
 
 // Forward declarations instead of direct includes
 namespace grpc {
@@ -17,17 +19,67 @@ namespace VCCSim {
     class RGBCameraImageData;
     class RobotName;
     class PoseOnlyYaw;
+    
+    // Forward declare the Format enum that will be defined in the protobuf-generated headers
+    enum Format : int;
 }
+
+// Image handling utility class
+class RGBImageUtils {
+public:
+    // Save RGB camera image data to a file
+    static bool SaveRGBImage(const VCCSim::RGBCameraImageData& image_data, const std::string& output_path);
+    
+    // Process raw image data (useful for custom image processing)
+    static std::vector<uint8_t> ProcessRGBImageData(const VCCSim::RGBCameraImageData& image_data);
+    
+    // Get image dimensions (width, height)
+    static std::tuple<int, int> GetImageDimensions(const VCCSim::RGBCameraImageData& image_data);
+};
 
 class VCCSimClient {
 public:
+
+    /**
+     * Get RGB camera image dimensions (width, height).
+     *
+     * @param robot_name Name of the robot
+     * @param index Index of the camera
+     * @return Tuple of (width, height)
+     */
+    std::tuple<int, int> GetRGBImageDimensions(const std::string& robot_name, int index);
+
+    /**
+     * Get RGB camera raw image data.
+     *
+     * @param robot_name Name of the robot
+     * @param index Index of the camera
+     * @param format Image format (PNG, JPEG, or RAW), default is PNG
+     * @return Vector of bytes containing the image data
+     */
+    std::vector<uint8_t> GetRGBImageData(const std::string& robot_name, int index, int format = 0);
+
+    /**
+     * Get RGB camera image data and save directly to a file.
+     *
+     * @param robot_name Name of the robot
+     * @param index Index of the camera
+     * @param output_path Path to save the image
+     * @param format Image format (PNG, JPEG, or RAW), default is PNG
+     * @return True if saving was successful, false otherwise
+     */
+    bool GetAndSaveRGBImage(const std::string& robot_name, int index, 
+                           const std::string& output_path, int format = 0);
+
     /**
      * Initialize the VCCSim client.
      *
      * @param host Server hostname
      * @param port Server port number
+     * @param max_message_length Maximum message length in bytes (default: 20MB)
      */
-    VCCSimClient(const std::string& host = "localhost", int port = 50996);
+    VCCSimClient(const std::string& host = "localhost", int port = 50996, 
+                int max_message_length = 20 * 1024 * 1024);
 
     /**
      * Destructor that closes the gRPC channel.
@@ -98,9 +150,20 @@ public:
      *
      * @param robot_name Name of the robot
      * @param index Index of the camera
+     * @param format Image format (PNG, JPEG, or RAW), default is PNG
      * @return RGB camera image data
      */
-    VCCSim::RGBCameraImageData GetRGBIndexedCameraImageData(const std::string& robot_name, int index);
+    VCCSim::RGBCameraImageData GetRGBIndexedCameraImageData(const std::string& robot_name, int index, 
+                                                          int format = 0); // Default to PNG (0)
+
+    /**
+     * Save RGB camera image to a file (convenience method).
+     *
+     * @param image_data RGB camera image data
+     * @param output_path Path to save the image
+     * @return True if saving was successful, false otherwise
+     */
+    bool SaveRGBImage(const VCCSim::RGBCameraImageData& image_data, const std::string& output_path);
 
     // Drone Service Methods
     /**
@@ -257,6 +320,11 @@ public:
      */
     bool SendPointCloudWithColor(const std::vector<std::tuple<float, float, float>>& points,
                                const std::vector<int>& colors);
+                               
+    /**
+     * Close the gRPC channel explicitly.
+     */
+    void Close();
 
 private:
     // Helper methods
@@ -268,3 +336,5 @@ private:
     class Impl;
     std::unique_ptr<Impl> pImpl;
 };
+
+#endif // VCCSIM_CLIENT_H

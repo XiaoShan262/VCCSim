@@ -3,15 +3,53 @@
 // Include the actual gRPC and protobuf headers only in the implementation file
 #include "VCCSim.pb.h"
 #include "VCCSim.grpc.pb.h"
+
+// Use the Format enum from the protobuf file for clarity in the implementation
+using Format = VCCSim::Format;
 #include <grpcpp/grpcpp.h>
+#include <fstream>
+#include <stdexcept>
+
+// RGBImageUtils implementation
+bool RGBImageUtils::SaveRGBImage(const VCCSim::RGBCameraImageData& image_data, const std::string& output_path) {
+    try {
+        // For PNG, JPEG, and RAW formats, we can write directly to file
+        std::ofstream file(output_path, std::ios::binary);
+        if (!file.is_open()) {
+            return false;
+        }
+        
+        file.write(image_data.data().c_str(), image_data.data().size());
+        file.close();
+        
+        return true;
+    } catch (const std::exception&) {
+        return false;
+    }
+}
+
+std::vector<uint8_t> RGBImageUtils::ProcessRGBImageData(const VCCSim::RGBCameraImageData& image_data) {
+    // Convert the image data string to a vector of bytes
+    std::vector<uint8_t> result(image_data.data().begin(), image_data.data().end());
+    return result;
+}
+
+std::tuple<int, int> RGBImageUtils::GetImageDimensions(const VCCSim::RGBCameraImageData& image_data) {
+    return std::make_tuple(image_data.width(), image_data.height());
+}
 
 // Private implementation class (PIMPL idiom)
 class VCCSimClient::Impl {
 public:
-    Impl(const std::string& host, int port) {
-        // Create the gRPC channel
+    Impl(const std::string& host, int port, int max_message_length) {
+        // Configure channel options for larger messages
+        grpc::ChannelArguments args;
+        args.SetMaxSendMessageSize(max_message_length);
+        args.SetMaxReceiveMessageSize(max_message_length);
+        
+        // Create the gRPC channel with options
         std::string server_address = host + ":" + std::to_string(port);
-        channel_ = grpc::CreateChannel(server_address, grpc::InsecureChannelCredentials());
+        channel_ = grpc::CreateCustomChannel(server_address, grpc::InsecureChannelCredentials(), args);
         
         // Initialize the service stubs
         lidar_service_ = std::unique_ptr<VCCSim::LidarService::Stub>(VCCSim::LidarService::NewStub(channel_).release());
@@ -25,7 +63,17 @@ public:
     }
     
     ~Impl() {
-        // Channel gets cleaned up automatically
+        // Close channel if needed
+        if (channel_) {
+            channel_.reset();
+        }
+    }
+    
+    void Close() {
+        // Explicitly shut down the channel
+        if (channel_) {
+            channel_.reset();
+        }
     }
     
     // Helper methods
@@ -68,12 +116,33 @@ public:
 };
 
 // Constructor
-VCCSimClient::VCCSimClient(const std::string& host, int port)
-    : pImpl(std::make_unique<Impl>(host, port)) {
+VCCSimClient::VCCSimClient(const std::string& host, int port, int max_message_length)
+    : pImpl(std::make_unique<Impl>(host, port, max_message_length)) {
 }
 
 // Destructor
 VCCSimClient::~VCCSimClient() = default;
+
+// Close method
+void VCCSimClient::Close() {
+    pImpl->Close();
+}
+
+std::tuple<int, int> VCCSimClient::GetRGBImageDimensions(const std::string& robot_name, int index) {
+    VCCSim::RGBCameraImageData response = GetRGBIndexedCameraImageData(robot_name, index);
+    return std::make_tuple(response.width(), response.height());
+}
+
+std::vector<uint8_t> VCCSimClient::GetRGBImageData(const std::string& robot_name, int index, int format) {
+    VCCSim::RGBCameraImageData response = GetRGBIndexedCameraImageData(robot_name, index, format);
+    return std::vector<uint8_t>(response.data().begin(), response.data().end());
+}
+
+bool VCCSimClient::GetAndSaveRGBImage(const std::string& robot_name, int index, 
+                                    const std::string& output_path, int format) {
+    VCCSim::RGBCameraImageData response = GetRGBIndexedCameraImageData(robot_name, index, format);
+    return SaveRGBImage(response, output_path);
+}
 
 // LiDAR Service Methods
 std::vector<std::tuple<float, float, float>> VCCSimClient::GetLidarData(const std::string& robot_name) {
@@ -89,6 +158,7 @@ std::vector<std::tuple<float, float, float>> VCCSimClient::GetLidarData(const st
     // Convert response to vector of tuples
     std::vector<std::tuple<float, float, float>> points;
     if (status.ok()) {
+        points.reserve(response.data_size());
         for (const auto& point : response.data()) {
             points.emplace_back(point.x(), point.y(), point.z());
         }
@@ -125,6 +195,7 @@ VCCSimClient::GetLidarDataAndOdom(const std::string& robot_name) {
     // Convert points to vector of tuples
     std::vector<std::tuple<float, float, float>> points;
     if (status.ok()) {
+        points.reserve(response.data().data_size());
         for (const auto& point : response.data().data()) {
             points.emplace_back(point.x(), point.y(), point.z());
         }
@@ -147,6 +218,7 @@ std::vector<std::tuple<float, float, float>> VCCSimClient::GetDepthCameraPointDa
     // Convert response to vector of tuples
     std::vector<std::tuple<float, float, float>> points;
     if (status.ok()) {
+        points.reserve(response.data_size());
         for (const auto& point : response.data()) {
             points.emplace_back(point.x(), point.y(), point.z());
         }
@@ -204,7 +276,8 @@ VCCSim::Odometry VCCSimClient::GetRGBCameraOdom(const std::string& robot_name) {
     return response;
 }
 
-VCCSim::RGBCameraImageData VCCSimClient::GetRGBIndexedCameraImageData(const std::string& robot_name, int index) {
+VCCSim::RGBCameraImageData VCCSimClient::GetRGBIndexedCameraImageData(const std::string& robot_name, int index, 
+                                                                    int format) {
     VCCSim::RGBCameraImageData response;
     grpc::ClientContext context;
     
@@ -213,11 +286,17 @@ VCCSim::RGBCameraImageData VCCSimClient::GetRGBIndexedCameraImageData(const std:
     auto* robot = request.mutable_robot_name();
     robot->set_name(robot_name);
     request.set_index(index);
+    request.set_format(static_cast<VCCSim::Format>(format));  // Cast int to Format enum
     
     // Call gRPC method
     grpc::Status status = pImpl->rgb_camera_service_->GetRGBIndexedCameraImageData(&context, request, &response);
     
     return response;
+}
+
+bool VCCSimClient::SaveRGBImage(const VCCSim::RGBCameraImageData& image_data, const std::string& output_path) {
+    // Forward to the utility class
+    return RGBImageUtils::SaveRGBImage(image_data, output_path);
 }
 
 // Drone Service Methods
@@ -495,6 +574,11 @@ bool VCCSimClient::RemoveGlobalMesh(int mesh_id) {
 // Point Cloud Service Methods
 bool VCCSimClient::SendPointCloudWithColor(const std::vector<std::tuple<float, float, float>>& points,
                                          const std::vector<int>& colors) {
+    if (points.size() != colors.size()) {
+        // Number of points must match number of colors
+        return false;
+    }
+
     VCCSim::Status response;
     grpc::ClientContext context;
     
@@ -502,7 +586,7 @@ bool VCCSimClient::SendPointCloudWithColor(const std::vector<std::tuple<float, f
     VCCSim::PointCloudWithColor request;
     
     // Add points and colors
-    for (size_t i = 0; i < points.size() && i < colors.size(); ++i) {
+    for (size_t i = 0; i < points.size(); ++i) {
         auto* point_with_color = request.add_data();
         auto* point = point_with_color->mutable_point();
         point->set_x(std::get<0>(points[i]));
