@@ -3,40 +3,9 @@
 // Include the actual gRPC and protobuf headers only in the implementation file
 #include "VCCSim.pb.h"
 #include "VCCSim.grpc.pb.h"
-
-// Use the Format enum from the protobuf file for clarity in the implementation
-using Format = VCCSim::Format;
 #include <grpcpp/grpcpp.h>
 #include <fstream>
 #include <stdexcept>
-
-// RGBImageUtils implementation
-bool RGBImageUtils::SaveRGBImage(const VCCSim::RGBCameraImageData& image_data, const std::string& output_path) {
-    try {
-        // For PNG, JPEG, and RAW formats, we can write directly to file
-        std::ofstream file(output_path, std::ios::binary);
-        if (!file.is_open()) {
-            return false;
-        }
-        
-        file.write(image_data.data().c_str(), image_data.data().size());
-        file.close();
-        
-        return true;
-    } catch (const std::exception&) {
-        return false;
-    }
-}
-
-std::vector<uint8_t> RGBImageUtils::ProcessRGBImageData(const VCCSim::RGBCameraImageData& image_data) {
-    // Convert the image data string to a vector of bytes
-    std::vector<uint8_t> result(image_data.data().begin(), image_data.data().end());
-    return result;
-}
-
-std::tuple<int, int> RGBImageUtils::GetImageDimensions(const VCCSim::RGBCameraImageData& image_data) {
-    return std::make_tuple(image_data.width(), image_data.height());
-}
 
 // Private implementation class (PIMPL idiom)
 class VCCSimClient::Impl {
@@ -52,14 +21,14 @@ public:
         channel_ = grpc::CreateCustomChannel(server_address, grpc::InsecureChannelCredentials(), args);
         
         // Initialize the service stubs
-        lidar_service_ = std::unique_ptr<VCCSim::LidarService::Stub>(VCCSim::LidarService::NewStub(channel_).release());
-        depth_camera_service_ = std::unique_ptr<VCCSim::DepthCameraService::Stub>(VCCSim::DepthCameraService::NewStub(channel_).release());
-        rgb_camera_service_ = std::unique_ptr<VCCSim::RGBCameraService::Stub>(VCCSim::RGBCameraService::NewStub(channel_).release());
-        drone_service_ = std::unique_ptr<VCCSim::DroneService::Stub>(VCCSim::DroneService::NewStub(channel_).release());
-        car_service_ = std::unique_ptr<VCCSim::CarService::Stub>(VCCSim::CarService::NewStub(channel_).release());
-        flash_service_ = std::unique_ptr<VCCSim::FlashService::Stub>(VCCSim::FlashService::NewStub(channel_).release());
-        mesh_service_ = std::unique_ptr<VCCSim::MeshService::Stub>(VCCSim::MeshService::NewStub(channel_).release());
-        point_cloud_service_ = std::unique_ptr<VCCSim::PointCloudService::Stub>(VCCSim::PointCloudService::NewStub(channel_).release());
+        lidar_service_ = std::unique_ptr<::VCCSim::LidarService::Stub>(::VCCSim::LidarService::NewStub(channel_).release());
+        depth_camera_service_ = std::unique_ptr<::VCCSim::DepthCameraService::Stub>(::VCCSim::DepthCameraService::NewStub(channel_).release());
+        rgb_camera_service_ = std::unique_ptr<::VCCSim::RGBCameraService::Stub>(::VCCSim::RGBCameraService::NewStub(channel_).release());
+        drone_service_ = std::unique_ptr<::VCCSim::DroneService::Stub>(::VCCSim::DroneService::NewStub(channel_).release());
+        car_service_ = std::unique_ptr<::VCCSim::CarService::Stub>(::VCCSim::CarService::NewStub(channel_).release());
+        flash_service_ = std::unique_ptr<::VCCSim::FlashService::Stub>(::VCCSim::FlashService::NewStub(channel_).release());
+        mesh_service_ = std::unique_ptr<::VCCSim::MeshService::Stub>(::VCCSim::MeshService::NewStub(channel_).release());
+        point_cloud_service_ = std::unique_ptr<::VCCSim::PointCloudService::Stub>(::VCCSim::PointCloudService::NewStub(channel_).release());
     }
     
     ~Impl() {
@@ -76,43 +45,107 @@ public:
         }
     }
     
-    // Helper methods
-    VCCSim::RobotName CreateRobotName(const std::string& name) {
-        VCCSim::RobotName robot_name;
+    // Conversion functions between our structs and Protocol Buffer classes
+    ::VCCSim::RobotName CreateRobotName(const std::string& name) {
+        ::VCCSim::RobotName robot_name;
         robot_name.set_name(name);
         return robot_name;
     }
     
-    VCCSim::Pose CreatePose(float x, float y, float z, float roll, float pitch, float yaw) {
-        VCCSim::Pose pose;
-        pose.set_x(x);
-        pose.set_y(y);
-        pose.set_z(z);
-        pose.set_roll(roll);
-        pose.set_pitch(pitch);
-        pose.set_yaw(yaw);
+    ::VCCSim::Pose ToPbPose(const VCCTypes::Pose& pose) {
+        ::VCCSim::Pose pb_pose;
+        pb_pose.set_x(pose.x);
+        pb_pose.set_y(pose.y);
+        pb_pose.set_z(pose.z);
+        pb_pose.set_roll(pose.roll);
+        pb_pose.set_pitch(pose.pitch);
+        pb_pose.set_yaw(pose.yaw);
+        return pb_pose;
+    }
+    
+    VCCTypes::Pose FromPbPose(const ::VCCSim::Pose& pb_pose) {
+        VCCTypes::Pose pose;
+        pose.x = pb_pose.x();
+        pose.y = pb_pose.y();
+        pose.z = pb_pose.z();
+        pose.roll = pb_pose.roll();
+        pose.pitch = pb_pose.pitch();
+        pose.yaw = pb_pose.yaw();
         return pose;
     }
     
-    VCCSim::PoseOnlyYaw CreatePoseOnlyYaw(float x, float y, float z, float yaw) {
-        VCCSim::PoseOnlyYaw pose;
-        pose.set_x(x);
-        pose.set_y(y);
-        pose.set_z(z);
-        pose.set_yaw(yaw);
+    ::VCCSim::PoseOnlyYaw ToPbPoseYaw(const VCCTypes::PoseYaw& pose) {
+        ::VCCSim::PoseOnlyYaw pb_pose;
+        pb_pose.set_x(pose.x);
+        pb_pose.set_y(pose.y);
+        pb_pose.set_z(pose.z);
+        pb_pose.set_yaw(pose.yaw);
+        return pb_pose;
+    }
+    
+    VCCTypes::PoseYaw FromPbPoseYaw(const ::VCCSim::PoseOnlyYaw& pb_pose) {
+        VCCTypes::PoseYaw pose;
+        pose.x = pb_pose.x();
+        pose.y = pb_pose.y();
+        pose.z = pb_pose.z();
+        pose.yaw = pb_pose.yaw();
         return pose;
+    }
+    
+    VCCTypes::Twist FromPbTwist(const ::VCCSim::twist& pb_twist) {
+        VCCTypes::Twist twist;
+        twist.linear_x = pb_twist.linear_x();
+        twist.linear_y = pb_twist.linear_y();
+        twist.linear_z = pb_twist.linear_z();
+        twist.angular_x = pb_twist.angular_x();
+        twist.angular_y = pb_twist.angular_y();
+        twist.angular_z = pb_twist.angular_z();
+        return twist;
+    }
+    
+    VCCTypes::Odometry FromPbOdometry(const ::VCCSim::Odometry& pb_odom) {
+        VCCTypes::Odometry odom;
+        odom.pose = FromPbPose(pb_odom.pose());
+        odom.twist = FromPbTwist(pb_odom.twist());
+        return odom;
+    }
+    
+    VCCTypes::RGBImage FromPbRGBImage(const ::VCCSim::RGBCameraImageData& pb_image) {
+        VCCTypes::RGBImage image;
+        image.width = pb_image.width();
+        image.height = pb_image.height();
+        image.data = std::vector<uint8_t>(pb_image.data().begin(), pb_image.data().end());
+        image.format = static_cast<VCCTypes::Format>(pb_image.format());
+        image.timestamp = pb_image.timestamp();
+        return image;
+    }
+    
+    VCCTypes::Point FromPbPoint(const ::VCCSim::Point& pb_point) {
+        VCCTypes::Point point;
+        point.x = pb_point.x();
+        point.y = pb_point.y();
+        point.z = pb_point.z();
+        return point;
+    }
+    
+    ::VCCSim::Point ToPbPoint(const VCCTypes::Point& point) {
+        ::VCCSim::Point pb_point;
+        pb_point.set_x(point.x);
+        pb_point.set_y(point.y);
+        pb_point.set_z(point.z);
+        return pb_point;
     }
     
     // gRPC channel and stubs
     std::shared_ptr<grpc::Channel> channel_;
-    std::unique_ptr<VCCSim::LidarService::Stub> lidar_service_;
-    std::unique_ptr<VCCSim::DepthCameraService::Stub> depth_camera_service_;
-    std::unique_ptr<VCCSim::RGBCameraService::Stub> rgb_camera_service_;
-    std::unique_ptr<VCCSim::DroneService::Stub> drone_service_;
-    std::unique_ptr<VCCSim::CarService::Stub> car_service_;
-    std::unique_ptr<VCCSim::FlashService::Stub> flash_service_;
-    std::unique_ptr<VCCSim::MeshService::Stub> mesh_service_;
-    std::unique_ptr<VCCSim::PointCloudService::Stub> point_cloud_service_;
+    std::unique_ptr<::VCCSim::LidarService::Stub> lidar_service_;
+    std::unique_ptr<::VCCSim::DepthCameraService::Stub> depth_camera_service_;
+    std::unique_ptr<::VCCSim::RGBCameraService::Stub> rgb_camera_service_;
+    std::unique_ptr<::VCCSim::DroneService::Stub> drone_service_;
+    std::unique_ptr<::VCCSim::CarService::Stub> car_service_;
+    std::unique_ptr<::VCCSim::FlashService::Stub> flash_service_;
+    std::unique_ptr<::VCCSim::MeshService::Stub> mesh_service_;
+    std::unique_ptr<::VCCSim::PointCloudService::Stub> point_cloud_service_;
 };
 
 // Constructor
@@ -128,25 +161,98 @@ void VCCSimClient::Close() {
     pImpl->Close();
 }
 
-std::tuple<int, int> VCCSimClient::GetRGBImageDimensions(const std::string& robot_name, int index) {
-    VCCSim::RGBCameraImageData response = GetRGBIndexedCameraImageData(robot_name, index);
-    return std::make_tuple(response.width(), response.height());
-}
+// RGB Camera Methods
 
-std::vector<uint8_t> VCCSimClient::GetRGBImageData(const std::string& robot_name, int index, int format) {
-    VCCSim::RGBCameraImageData response = GetRGBIndexedCameraImageData(robot_name, index, format);
-    return std::vector<uint8_t>(response.data().begin(), response.data().end());
+std::vector<uint8_t> VCCSimClient::GetRGBImageData(const std::string& robot_name, int index, VCCTypes::Format format) {
+    VCCTypes::RGBImage image = GetRGBIndexedCameraImageData(robot_name, index, format);
+    return image.data;
 }
 
 bool VCCSimClient::GetAndSaveRGBImage(const std::string& robot_name, int index, 
-                                    const std::string& output_path, int format) {
-    VCCSim::RGBCameraImageData response = GetRGBIndexedCameraImageData(robot_name, index, format);
-    return SaveRGBImage(response, output_path);
+                                    const std::string& output_path, VCCTypes::Format format) {
+    VCCTypes::RGBImage image = GetRGBIndexedCameraImageData(robot_name, index, format);
+    return SaveRGBImage(image, output_path);
 }
 
-// LiDAR Service Methods
-std::vector<std::tuple<float, float, float>> VCCSimClient::GetLidarData(const std::string& robot_name) {
-    VCCSim::LidarData response;
+VCCTypes::RGBImage VCCSimClient::GetRGBIndexedCameraImageData(const std::string& robot_name, int index, 
+                                                         VCCTypes::Format format) {
+    ::VCCSim::RGBCameraImageData response;
+    grpc::ClientContext context;
+    
+    // Create request
+    ::VCCSim::IndexedCamera request;
+    auto* robot = request.mutable_robot_name();
+    robot->set_name(robot_name);
+    request.set_index(index);
+    request.set_format(static_cast<::VCCSim::Format>(format));
+    
+    // Call gRPC method
+    grpc::Status status = pImpl->rgb_camera_service_->GetRGBIndexedCameraImageData(&context, request, &response);
+    
+    return pImpl->FromPbRGBImage(response);
+}
+
+bool VCCSimClient::SaveRGBImage(const VCCTypes::RGBImage& image_data, const std::string& output_path) {
+    try {
+        std::ofstream file(output_path, std::ios::binary);
+        if (!file.is_open()) {
+            return false;
+        }
+        
+        file.write(reinterpret_cast<const char*>(image_data.data.data()), image_data.data.size());
+        file.close();
+        
+        return true;
+    } catch (const std::exception&) {
+        return false;
+    }
+}
+
+VCCTypes::Odometry VCCSimClient::GetRGBCameraOdom(const std::string& robot_name) {
+    ::VCCSim::Odometry response;
+    grpc::ClientContext context;
+    
+    // Create request
+    auto request = pImpl->CreateRobotName(robot_name);
+    
+    // Call gRPC method
+    grpc::Status status = pImpl->rgb_camera_service_->GetRGBCameraOdom(&context, request, &response);
+    
+    return pImpl->FromPbOdometry(response);
+}
+
+std::tuple<int, int> VCCSimClient::GetRGBCameraImageSize(const std::string& robot_name, int index) {
+    ::VCCSim::ImageSize response;
+    grpc::ClientContext context;
+    
+    // Create request
+    ::VCCSim::IndexedCamera request;
+    auto* robot = request.mutable_robot_name();
+    robot->set_name(robot_name);
+    request.set_index(index);
+    
+    // Call gRPC method
+    grpc::Status status = pImpl->rgb_camera_service_->GetRGBIndexedCameraImageSize(&context, request, &response);
+    
+    return std::make_tuple(response.width(), response.height());
+}
+
+std::tuple<int, int> VCCSimClient::GetDepthCameraImageSize(const std::string& robot_name) {
+    ::VCCSim::ImageSize response;
+    grpc::ClientContext context;
+    
+    // Create request
+    auto request = pImpl->CreateRobotName(robot_name);
+    
+    // Call gRPC method
+    grpc::Status status = pImpl->depth_camera_service_->GetDepthCameraImageSize(&context, request, &response);
+    
+    return std::make_tuple(response.width(), response.height());
+}
+
+// LiDAR Methods
+std::vector<VCCTypes::Point> VCCSimClient::GetLidarData(const std::string& robot_name) {
+    ::VCCSim::LidarData response;
     grpc::ClientContext context;
     
     // Create request
@@ -155,20 +261,20 @@ std::vector<std::tuple<float, float, float>> VCCSimClient::GetLidarData(const st
     // Call gRPC method
     grpc::Status status = pImpl->lidar_service_->GetLiDARData(&context, request, &response);
     
-    // Convert response to vector of tuples
-    std::vector<std::tuple<float, float, float>> points;
+    // Convert response to vector of points
+    std::vector<VCCTypes::Point> points;
     if (status.ok()) {
         points.reserve(response.data_size());
-        for (const auto& point : response.data()) {
-            points.emplace_back(point.x(), point.y(), point.z());
+        for (const auto& pb_point : response.data()) {
+            points.push_back(pImpl->FromPbPoint(pb_point));
         }
     }
     
     return points;
 }
 
-std::tuple<VCCSim::Pose, VCCSim::twist> VCCSimClient::GetLidarOdom(const std::string& robot_name) {
-    VCCSim::Odometry response;
+VCCTypes::Odometry VCCSimClient::GetLidarOdom(const std::string& robot_name) {
+    ::VCCSim::Odometry response;
     grpc::ClientContext context;
     
     // Create request
@@ -177,13 +283,12 @@ std::tuple<VCCSim::Pose, VCCSim::twist> VCCSimClient::GetLidarOdom(const std::st
     // Call gRPC method
     grpc::Status status = pImpl->lidar_service_->GetLiDAROdom(&context, request, &response);
     
-    // Return as tuple
-    return std::make_tuple(response.pose(), response.twist());
+    return pImpl->FromPbOdometry(response);
 }
 
-std::tuple<std::vector<std::tuple<float, float, float>>, VCCSim::Odometry> 
+std::tuple<std::vector<VCCTypes::Point>, VCCTypes::Odometry> 
 VCCSimClient::GetLidarDataAndOdom(const std::string& robot_name) {
-    VCCSim::LidarDataAndOdom response;
+    ::VCCSim::LidarDataAndOdom response;
     grpc::ClientContext context;
     
     // Create request
@@ -192,21 +297,21 @@ VCCSimClient::GetLidarDataAndOdom(const std::string& robot_name) {
     // Call gRPC method
     grpc::Status status = pImpl->lidar_service_->GetLiDARDataAndOdom(&context, request, &response);
     
-    // Convert points to vector of tuples
-    std::vector<std::tuple<float, float, float>> points;
+    // Convert points to vector
+    std::vector<VCCTypes::Point> points;
     if (status.ok()) {
         points.reserve(response.data().data_size());
-        for (const auto& point : response.data().data()) {
-            points.emplace_back(point.x(), point.y(), point.z());
+        for (const auto& pb_point : response.data().data()) {
+            points.push_back(pImpl->FromPbPoint(pb_point));
         }
     }
     
-    return std::make_tuple(points, response.odom());
+    return std::make_tuple(points, pImpl->FromPbOdometry(response.odom()));
 }
 
-// Depth Camera Service Methods
-std::vector<std::tuple<float, float, float>> VCCSimClient::GetDepthCameraPointData(const std::string& robot_name) {
-    VCCSim::DepthCameraPointData response;
+// Depth Camera Methods
+std::vector<VCCTypes::Point> VCCSimClient::GetDepthCameraPointData(const std::string& robot_name) {
+    ::VCCSim::DepthCameraPointData response;
     grpc::ClientContext context;
     
     // Create request
@@ -215,12 +320,12 @@ std::vector<std::tuple<float, float, float>> VCCSimClient::GetDepthCameraPointDa
     // Call gRPC method
     grpc::Status status = pImpl->depth_camera_service_->GetDepthCameraPointData(&context, request, &response);
     
-    // Convert response to vector of tuples
-    std::vector<std::tuple<float, float, float>> points;
+    // Convert response to vector of points
+    std::vector<VCCTypes::Point> points;
     if (status.ok()) {
         points.reserve(response.data_size());
-        for (const auto& point : response.data()) {
-            points.emplace_back(point.x(), point.y(), point.z());
+        for (const auto& pb_point : response.data()) {
+            points.push_back(pImpl->FromPbPoint(pb_point));
         }
     }
     
@@ -228,7 +333,7 @@ std::vector<std::tuple<float, float, float>> VCCSimClient::GetDepthCameraPointDa
 }
 
 std::vector<float> VCCSimClient::GetDepthCameraImageData(const std::string& robot_name) {
-    VCCSim::DepthCameraImageData response;
+    ::VCCSim::DepthCameraImageData response;
     grpc::ClientContext context;
     
     // Create request
@@ -249,8 +354,8 @@ std::vector<float> VCCSimClient::GetDepthCameraImageData(const std::string& robo
     return data;
 }
 
-VCCSim::Odometry VCCSimClient::GetDepthCameraOdom(const std::string& robot_name) {
-    VCCSim::Odometry response;
+VCCTypes::Odometry VCCSimClient::GetDepthCameraOdom(const std::string& robot_name) {
+    ::VCCSim::Odometry response;
     grpc::ClientContext context;
     
     // Create request
@@ -259,49 +364,12 @@ VCCSim::Odometry VCCSimClient::GetDepthCameraOdom(const std::string& robot_name)
     // Call gRPC method
     grpc::Status status = pImpl->depth_camera_service_->GetDepthCameraOdom(&context, request, &response);
     
-    return response;
+    return pImpl->FromPbOdometry(response);
 }
 
-// RGB Camera Service Methods
-VCCSim::Odometry VCCSimClient::GetRGBCameraOdom(const std::string& robot_name) {
-    VCCSim::Odometry response;
-    grpc::ClientContext context;
-    
-    // Create request
-    auto request = pImpl->CreateRobotName(robot_name);
-    
-    // Call gRPC method
-    grpc::Status status = pImpl->rgb_camera_service_->GetRGBCameraOdom(&context, request, &response);
-    
-    return response;
-}
-
-VCCSim::RGBCameraImageData VCCSimClient::GetRGBIndexedCameraImageData(const std::string& robot_name, int index, 
-                                                                    int format) {
-    VCCSim::RGBCameraImageData response;
-    grpc::ClientContext context;
-    
-    // Create request
-    VCCSim::IndexedCamera request;
-    auto* robot = request.mutable_robot_name();
-    robot->set_name(robot_name);
-    request.set_index(index);
-    request.set_format(static_cast<VCCSim::Format>(format));  // Cast int to Format enum
-    
-    // Call gRPC method
-    grpc::Status status = pImpl->rgb_camera_service_->GetRGBIndexedCameraImageData(&context, request, &response);
-    
-    return response;
-}
-
-bool VCCSimClient::SaveRGBImage(const VCCSim::RGBCameraImageData& image_data, const std::string& output_path) {
-    // Forward to the utility class
-    return RGBImageUtils::SaveRGBImage(image_data, output_path);
-}
-
-// Drone Service Methods
-VCCSim::Pose VCCSimClient::GetDronePose(const std::string& robot_name) {
-    VCCSim::Pose response;
+// Drone Methods
+VCCTypes::Pose VCCSimClient::GetDronePose(const std::string& robot_name) {
+    ::VCCSim::Pose response;
     grpc::ClientContext context;
     
     // Create request
@@ -310,15 +378,19 @@ VCCSim::Pose VCCSimClient::GetDronePose(const std::string& robot_name) {
     // Call gRPC method
     grpc::Status status = pImpl->drone_service_->GetDronePose(&context, request, &response);
     
-    return response;
+    return pImpl->FromPbPose(response);
+}
+
+bool VCCSimClient::SendDronePose(const std::string& name, const VCCTypes::Pose& pose) {
+    return SendDronePose(name, pose.x, pose.y, pose.z, pose.roll, pose.pitch, pose.yaw);
 }
 
 bool VCCSimClient::SendDronePose(const std::string& name, float x, float y, float z, float roll, float pitch, float yaw) {
-    VCCSim::Status response;
+    ::VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    VCCSim::DronePose request;
+    ::VCCSim::DronePose request;
     request.set_name(name);
     auto* pose = request.mutable_pose();
     pose->set_x(x);
@@ -334,22 +406,22 @@ bool VCCSimClient::SendDronePose(const std::string& name, float x, float y, floa
     return status.ok() && response.status();
 }
 
-bool VCCSimClient::SendDronePath(const std::string& name, const std::vector<std::tuple<float, float, float, float, float, float>>& poses) {
-    VCCSim::Status response;
+bool VCCSimClient::SendDronePath(const std::string& name, const std::vector<VCCTypes::Pose>& poses) {
+    ::VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    VCCSim::DronePath request;
+    ::VCCSim::DronePath request;
     request.set_name(name);
     
-    for (const auto& pose_tuple : poses) {
-        auto* pose = request.add_path();
-        pose->set_x(std::get<0>(pose_tuple));
-        pose->set_y(std::get<1>(pose_tuple));
-        pose->set_z(std::get<2>(pose_tuple));
-        pose->set_roll(std::get<3>(pose_tuple));
-        pose->set_pitch(std::get<4>(pose_tuple));
-        pose->set_yaw(std::get<5>(pose_tuple));
+    for (const auto& pose : poses) {
+        auto* pb_pose = request.add_path();
+        pb_pose->set_x(pose.x);
+        pb_pose->set_y(pose.y);
+        pb_pose->set_z(pose.z);
+        pb_pose->set_roll(pose.roll);
+        pb_pose->set_pitch(pose.pitch);
+        pb_pose->set_yaw(pose.yaw);
     }
     
     // Call gRPC method
@@ -358,9 +430,9 @@ bool VCCSimClient::SendDronePath(const std::string& name, const std::vector<std:
     return status.ok() && response.status();
 }
 
-// Car Service Methods
-VCCSim::Odometry VCCSimClient::GetCarOdom(const std::string& robot_name) {
-    VCCSim::Odometry response;
+// Car Methods
+VCCTypes::Odometry VCCSimClient::GetCarOdom(const std::string& robot_name) {
+    ::VCCSim::Odometry response;
     grpc::ClientContext context;
     
     // Create request
@@ -369,15 +441,19 @@ VCCSim::Odometry VCCSimClient::GetCarOdom(const std::string& robot_name) {
     // Call gRPC method
     grpc::Status status = pImpl->car_service_->GetCarOdom(&context, request, &response);
     
-    return response;
+    return pImpl->FromPbOdometry(response);
+}
+
+bool VCCSimClient::SendCarPose(const std::string& name, const VCCTypes::PoseYaw& pose) {
+    return SendCarPose(name, pose.x, pose.y, pose.z, pose.yaw);
 }
 
 bool VCCSimClient::SendCarPose(const std::string& name, float x, float y, float z, float yaw) {
-    VCCSim::Status response;
+    ::VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    VCCSim::CarPose request;
+    ::VCCSim::CarPose request;
     request.set_name(name);
     auto* pose = request.mutable_pose();
     pose->set_x(x);
@@ -391,20 +467,20 @@ bool VCCSimClient::SendCarPose(const std::string& name, float x, float y, float 
     return status.ok() && response.status();
 }
 
-bool VCCSimClient::SendCarPath(const std::string& name, const std::vector<std::tuple<float, float, float, float>>& poses) {
-    VCCSim::Status response;
+bool VCCSimClient::SendCarPath(const std::string& name, const std::vector<VCCTypes::PoseYaw>& poses) {
+    ::VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    VCCSim::CarPath request;
+    ::VCCSim::CarPath request;
     request.set_name(name);
     
-    for (const auto& pose_tuple : poses) {
-        auto* pose = request.add_path();
-        pose->set_x(std::get<0>(pose_tuple));
-        pose->set_y(std::get<1>(pose_tuple));
-        pose->set_z(std::get<2>(pose_tuple));
-        pose->set_yaw(std::get<3>(pose_tuple));
+    for (const auto& pose : poses) {
+        auto* pb_pose = request.add_path();
+        pb_pose->set_x(pose.x);
+        pb_pose->set_y(pose.y);
+        pb_pose->set_z(pose.z);
+        pb_pose->set_yaw(pose.yaw);
     }
     
     // Call gRPC method
@@ -413,9 +489,9 @@ bool VCCSimClient::SendCarPath(const std::string& name, const std::vector<std::t
     return status.ok() && response.status();
 }
 
-// Flash Service Methods
-VCCSim::Pose VCCSimClient::GetFlashPose(const std::string& robot_name) {
-    VCCSim::Pose response;
+// Flash Methods
+VCCTypes::Pose VCCSimClient::GetFlashPose(const std::string& robot_name) {
+    ::VCCSim::Pose response;
     grpc::ClientContext context;
     
     // Create request
@@ -424,15 +500,19 @@ VCCSim::Pose VCCSimClient::GetFlashPose(const std::string& robot_name) {
     // Call gRPC method
     grpc::Status status = pImpl->flash_service_->GetFlashPose(&context, request, &response);
     
-    return response;
+    return pImpl->FromPbPose(response);
+}
+
+bool VCCSimClient::SendFlashPose(const std::string& name, const VCCTypes::Pose& pose) {
+    return SendFlashPose(name, pose.x, pose.y, pose.z, pose.roll, pose.pitch, pose.yaw);
 }
 
 bool VCCSimClient::SendFlashPose(const std::string& name, float x, float y, float z, float roll, float pitch, float yaw) {
-    VCCSim::Status response;
+    ::VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    VCCSim::FlashPose request;
+    ::VCCSim::FlashPose request;
     request.set_name(name);
     auto* pose = request.mutable_pose();
     pose->set_x(x);
@@ -448,22 +528,22 @@ bool VCCSimClient::SendFlashPose(const std::string& name, float x, float y, floa
     return status.ok() && response.status();
 }
 
-bool VCCSimClient::SendFlashPath(const std::string& name, const std::vector<std::tuple<float, float, float, float, float, float>>& poses) {
-    VCCSim::Status response;
+bool VCCSimClient::SendFlashPath(const std::string& name, const std::vector<VCCTypes::Pose>& poses) {
+    ::VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    VCCSim::FlashPath request;
+    ::VCCSim::FlashPath request;
     request.set_name(name);
     
-    for (const auto& pose_tuple : poses) {
-        auto* pose = request.add_path();
-        pose->set_x(std::get<0>(pose_tuple));
-        pose->set_y(std::get<1>(pose_tuple));
-        pose->set_z(std::get<2>(pose_tuple));
-        pose->set_roll(std::get<3>(pose_tuple));
-        pose->set_pitch(std::get<4>(pose_tuple));
-        pose->set_yaw(std::get<5>(pose_tuple));
+    for (const auto& pose : poses) {
+        auto* pb_pose = request.add_path();
+        pb_pose->set_x(pose.x);
+        pb_pose->set_y(pose.y);
+        pb_pose->set_z(pose.z);
+        pb_pose->set_roll(pose.roll);
+        pb_pose->set_pitch(pose.pitch);
+        pb_pose->set_yaw(pose.yaw);
     }
     
     // Call gRPC method
@@ -473,7 +553,7 @@ bool VCCSimClient::SendFlashPath(const std::string& name, const std::vector<std:
 }
 
 bool VCCSimClient::CheckFlashReady(const std::string& robot_name) {
-    VCCSim::Status response;
+    ::VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
@@ -486,7 +566,7 @@ bool VCCSimClient::CheckFlashReady(const std::string& robot_name) {
 }
 
 bool VCCSimClient::MoveToNext(const std::string& robot_name) {
-    VCCSim::Status response;
+    ::VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
@@ -498,14 +578,14 @@ bool VCCSimClient::MoveToNext(const std::string& robot_name) {
     return status.ok() && response.status();
 }
 
-// Mesh Service Methods
+// Mesh Methods
 bool VCCSimClient::SendMesh(const std::string& data, int format, int version, bool simplified,
-                           const std::tuple<float, float, float, float, float, float>& transform_pose) {
-    VCCSim::Status response;
+                          const VCCTypes::Pose& transform_pose) {
+    ::VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    VCCSim::MeshData request;
+    ::VCCSim::MeshData request;
     request.set_data(data);
     request.set_format(format);
     request.set_version(version);
@@ -513,12 +593,12 @@ bool VCCSimClient::SendMesh(const std::string& data, int format, int version, bo
     
     // Set transform pose
     auto* transform = request.mutable_transform();
-    transform->set_x(std::get<0>(transform_pose));
-    transform->set_y(std::get<1>(transform_pose));
-    transform->set_z(std::get<2>(transform_pose));
-    transform->set_roll(std::get<3>(transform_pose));
-    transform->set_pitch(std::get<4>(transform_pose));
-    transform->set_yaw(std::get<5>(transform_pose));
+    transform->set_x(transform_pose.x);
+    transform->set_y(transform_pose.y);
+    transform->set_z(transform_pose.z);
+    transform->set_roll(transform_pose.roll);
+    transform->set_pitch(transform_pose.pitch);
+    transform->set_yaw(transform_pose.yaw);
     
     // Call gRPC method
     grpc::Status status = pImpl->mesh_service_->SendMesh(&context, request, &response);
@@ -527,12 +607,12 @@ bool VCCSimClient::SendMesh(const std::string& data, int format, int version, bo
 }
 
 int VCCSimClient::SendGlobalMesh(const std::string& data, int format, int version, bool simplified,
-                               const std::tuple<float, float, float, float, float, float>& transform_pose) {
-    VCCSim::MeshID response;
+                               const VCCTypes::Pose& transform_pose) {
+    ::VCCSim::MeshID response;
     grpc::ClientContext context;
     
     // Create request
-    VCCSim::MeshData request;
+    ::VCCSim::MeshData request;
     request.set_data(data);
     request.set_format(format);
     request.set_version(version);
@@ -540,12 +620,12 @@ int VCCSimClient::SendGlobalMesh(const std::string& data, int format, int versio
     
     // Set transform pose
     auto* transform = request.mutable_transform();
-    transform->set_x(std::get<0>(transform_pose));
-    transform->set_y(std::get<1>(transform_pose));
-    transform->set_z(std::get<2>(transform_pose));
-    transform->set_roll(std::get<3>(transform_pose));
-    transform->set_pitch(std::get<4>(transform_pose));
-    transform->set_yaw(std::get<5>(transform_pose));
+    transform->set_x(transform_pose.x);
+    transform->set_y(transform_pose.y);
+    transform->set_z(transform_pose.z);
+    transform->set_roll(transform_pose.roll);
+    transform->set_pitch(transform_pose.pitch);
+    transform->set_yaw(transform_pose.yaw);
     
     // Call gRPC method
     grpc::Status status = pImpl->mesh_service_->SendGlobalMesh(&context, request, &response);
@@ -558,11 +638,11 @@ int VCCSimClient::SendGlobalMesh(const std::string& data, int format, int versio
 }
 
 bool VCCSimClient::RemoveGlobalMesh(int mesh_id) {
-    VCCSim::Status response;
+    ::VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    VCCSim::MeshID request;
+    ::VCCSim::MeshID request;
     request.set_id(mesh_id);
     
     // Call gRPC method
@@ -571,27 +651,27 @@ bool VCCSimClient::RemoveGlobalMesh(int mesh_id) {
     return status.ok() && response.status();
 }
 
-// Point Cloud Service Methods
-bool VCCSimClient::SendPointCloudWithColor(const std::vector<std::tuple<float, float, float>>& points,
+// Point Cloud Methods
+bool VCCSimClient::SendPointCloudWithColor(const std::vector<VCCTypes::Point>& points,
                                          const std::vector<int>& colors) {
     if (points.size() != colors.size()) {
         // Number of points must match number of colors
         return false;
     }
 
-    VCCSim::Status response;
+    ::VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    VCCSim::PointCloudWithColor request;
+    ::VCCSim::PointCloudWithColor request;
     
     // Add points and colors
     for (size_t i = 0; i < points.size(); ++i) {
         auto* point_with_color = request.add_data();
-        auto* point = point_with_color->mutable_point();
-        point->set_x(std::get<0>(points[i]));
-        point->set_y(std::get<1>(points[i]));
-        point->set_z(std::get<2>(points[i]));
+        auto* pb_point = point_with_color->mutable_point();
+        pb_point->set_x(points[i].x);
+        pb_point->set_y(points[i].y);
+        pb_point->set_z(points[i].z);
         point_with_color->set_color(colors[i]);
     }
     
@@ -599,17 +679,4 @@ bool VCCSimClient::SendPointCloudWithColor(const std::vector<std::tuple<float, f
     grpc::Status status = pImpl->point_cloud_service_->SendPointCloudWithColor(&context, request, &response);
     
     return status.ok() && response.status();
-}
-
-// Forward the helper methods to the implementation
-VCCSim::RobotName VCCSimClient::CreateRobotName(const std::string& name) {
-    return pImpl->CreateRobotName(name);
-}
-
-VCCSim::Pose VCCSimClient::CreatePose(float x, float y, float z, float roll, float pitch, float yaw) {
-    return pImpl->CreatePose(x, y, z, roll, pitch, yaw);
-}
-
-VCCSim::PoseOnlyYaw VCCSimClient::CreatePoseOnlyYaw(float x, float y, float z, float yaw) {
-    return pImpl->CreatePoseOnlyYaw(x, y, z, yaw);
 }
