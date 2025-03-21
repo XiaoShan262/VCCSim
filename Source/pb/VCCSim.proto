@@ -184,9 +184,9 @@ service DroneService {
 }
 
 service CarService {
-  rpc GetCarOdom (RobotName) returns (Odometry); //todo
-  rpc SendCarPose (CarPose) returns (Status); //todo
-  rpc SendCarPath (CarPath) returns (Status); //todo
+  rpc GetCarOdom (RobotName) returns (Odometry);
+  rpc SendCarPose (CarPose) returns (Status);
+  rpc SendCarPath (CarPath) returns (Status);
 }
 
 service FlashService {
