@@ -81,6 +81,9 @@ extern FlashPathDefaultTypeInternal _FlashPath_default_instance_;
 class FlashPose;
 struct FlashPoseDefaultTypeInternal;
 extern FlashPoseDefaultTypeInternal _FlashPose_default_instance_;
+class ImageSize;
+struct ImageSizeDefaultTypeInternal;
+extern ImageSizeDefaultTypeInternal _ImageSize_default_instance_;
 class IndexedCamera;
 struct IndexedCameraDefaultTypeInternal;
 extern IndexedCameraDefaultTypeInternal _IndexedCamera_default_instance_;
@@ -875,7 +878,7 @@ class RGBCameraImageData final
     return reinterpret_cast<const RGBCameraImageData*>(
         &_RGBCameraImageData_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 18;
+  static constexpr int kIndexInFileMessages = 19;
   friend void swap(RGBCameraImageData& a, RGBCameraImageData& b) { a.Swap(&b); }
   inline void Swap(RGBCameraImageData* other) {
     if (other == this) return;
@@ -2068,7 +2071,7 @@ class MeshID final
     return reinterpret_cast<const MeshID*>(
         &_MeshID_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 13;
+  static constexpr int kIndexInFileMessages = 14;
   friend void swap(MeshID& a, MeshID& b) { a.Swap(&b); }
   inline void Swap(MeshID* other) {
     if (other == this) return;
@@ -2191,6 +2194,209 @@ class MeshID final
                           ::google::protobuf::Arena* arena, const Impl_& from,
                           const MeshID& from_msg);
     ::uint32_t id_;
+    ::google::protobuf::internal::CachedSize _cached_size_;
+    PROTOBUF_TSAN_DECLARE_MEMBER
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_VCCSim_2eproto;
+};
+// -------------------------------------------------------------------
+
+class ImageSize final
+    : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:VCCSim.ImageSize) */ {
+ public:
+  inline ImageSize() : ImageSize(nullptr) {}
+  ~ImageSize() PROTOBUF_FINAL;
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+  void operator delete(ImageSize* msg, std::destroying_delete_t) {
+    SharedDtor(*msg);
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(ImageSize));
+  }
+#endif
+
+  template <typename = void>
+  explicit PROTOBUF_CONSTEXPR ImageSize(
+      ::google::protobuf::internal::ConstantInitialized);
+
+  inline ImageSize(const ImageSize& from) : ImageSize(nullptr, from) {}
+  inline ImageSize(ImageSize&& from) noexcept
+      : ImageSize(nullptr, std::move(from)) {}
+  inline ImageSize& operator=(const ImageSize& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ImageSize& operator=(ImageSize&& from) noexcept {
+    if (this == &from) return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields()
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::google::protobuf::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::google::protobuf::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ImageSize& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ImageSize* internal_default_instance() {
+    return reinterpret_cast<const ImageSize*>(
+        &_ImageSize_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages = 12;
+  friend void swap(ImageSize& a, ImageSize& b) { a.Swap(&b); }
+  inline void Swap(ImageSize* other) {
+    if (other == this) return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+      InternalSwap(other);
+    } else {
+      ::google::protobuf::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ImageSize* other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ImageSize* New(::google::protobuf::Arena* arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<ImageSize>(arena);
+  }
+  using ::google::protobuf::Message::CopyFrom;
+  void CopyFrom(const ImageSize& from);
+  using ::google::protobuf::Message::MergeFrom;
+  void MergeFrom(const ImageSize& from) { ImageSize::MergeImpl(*this, from); }
+
+  private:
+  static void MergeImpl(
+      ::google::protobuf::MessageLite& to_msg,
+      const ::google::protobuf::MessageLite& from_msg);
+
+  public:
+  bool IsInitialized() const {
+    return true;
+  }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+  #if defined(PROTOBUF_CUSTOM_VTABLE)
+  private:
+  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  static ::uint8_t* _InternalSerialize(
+      const MessageLite& msg, ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream);
+
+  public:
+  ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+    return _InternalSerialize(*this, target, stream);
+  }
+  #else   // PROTOBUF_CUSTOM_VTABLE
+  ::size_t ByteSizeLong() const final;
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream) const final;
+  #endif  // PROTOBUF_CUSTOM_VTABLE
+  int GetCachedSize() const { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::google::protobuf::Arena* arena);
+  static void SharedDtor(MessageLite& self);
+  void InternalSwap(ImageSize* other);
+ private:
+  template <typename T>
+  friend ::absl::string_view(
+      ::google::protobuf::internal::GetAnyMessageName)();
+  static ::absl::string_view FullMessageName() { return "VCCSim.ImageSize"; }
+
+ protected:
+  explicit ImageSize(::google::protobuf::Arena* arena);
+  ImageSize(::google::protobuf::Arena* arena, const ImageSize& from);
+  ImageSize(::google::protobuf::Arena* arena, ImageSize&& from) noexcept
+      : ImageSize(arena) {
+    *this = ::std::move(from);
+  }
+  const ::google::protobuf::internal::ClassData* GetClassData() const PROTOBUF_FINAL;
+  static void* PlacementNew_(const void*, void* mem,
+                             ::google::protobuf::Arena* arena);
+  static constexpr auto InternalNewImpl_();
+  static const ::google::protobuf::internal::ClassDataFull _class_data_;
+
+ public:
+  ::google::protobuf::Metadata GetMetadata() const;
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+  enum : int {
+    kWidthFieldNumber = 1,
+    kHeightFieldNumber = 2,
+  };
+  // uint32 width = 1;
+  void clear_width() ;
+  ::uint32_t width() const;
+  void set_width(::uint32_t value);
+
+  private:
+  ::uint32_t _internal_width() const;
+  void _internal_set_width(::uint32_t value);
+
+  public:
+  // uint32 height = 2;
+  void clear_height() ;
+  ::uint32_t height() const;
+  void set_height(::uint32_t value);
+
+  private:
+  ::uint32_t _internal_height() const;
+  void _internal_set_height(::uint32_t value);
+
+  public:
+  // @@protoc_insertion_point(class_scope:VCCSim.ImageSize)
+ private:
+  class _Internal;
+  friend class ::google::protobuf::internal::TcParser;
+  static const ::google::protobuf::internal::TcParseTable<
+      1, 2, 0,
+      0, 2>
+      _table_;
+
+  friend class ::google::protobuf::MessageLite;
+  friend class ::google::protobuf::Arena;
+  template <typename T>
+  friend class ::google::protobuf::Arena::InternalHelper;
+  using InternalArenaConstructable_ = void;
+  using DestructorSkippable_ = void;
+  struct Impl_ {
+    inline explicit constexpr Impl_(
+        ::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                          ::google::protobuf::Arena* arena);
+    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                          ::google::protobuf::Arena* arena, const Impl_& from,
+                          const ImageSize& from_msg);
+    ::uint32_t width_;
+    ::uint32_t height_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
@@ -2405,7 +2611,7 @@ class DepthCameraImageData final
     return reinterpret_cast<const DepthCameraImageData*>(
         &_DepthCameraImageData_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 17;
+  static constexpr int kIndexInFileMessages = 18;
   friend void swap(DepthCameraImageData& a, DepthCameraImageData& b) { a.Swap(&b); }
   inline void Swap(DepthCameraImageData* other) {
     if (other == this) return;
@@ -3027,7 +3233,7 @@ class MeshData final
     return reinterpret_cast<const MeshData*>(
         &_MeshData_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 12;
+  static constexpr int kIndexInFileMessages = 13;
   friend void swap(MeshData& a, MeshData& b) { a.Swap(&b); }
   inline void Swap(MeshData* other) {
     if (other == this) return;
@@ -3278,7 +3484,7 @@ class LidarData final
     return reinterpret_cast<const LidarData*>(
         &_LidarData_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 14;
+  static constexpr int kIndexInFileMessages = 15;
   friend void swap(LidarData& a, LidarData& b) { a.Swap(&b); }
   inline void Swap(LidarData* other) {
     if (other == this) return;
@@ -3697,7 +3903,7 @@ class FlashPose final
     return reinterpret_cast<const FlashPose*>(
         &_FlashPose_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 23;
+  static constexpr int kIndexInFileMessages = 24;
   friend void swap(FlashPose& a, FlashPose& b) { a.Swap(&b); }
   inline void Swap(FlashPose* other) {
     if (other == this) return;
@@ -3912,7 +4118,7 @@ class FlashPath final
     return reinterpret_cast<const FlashPath*>(
         &_FlashPath_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 24;
+  static constexpr int kIndexInFileMessages = 25;
   friend void swap(FlashPath& a, FlashPath& b) { a.Swap(&b); }
   inline void Swap(FlashPath* other) {
     if (other == this) return;
@@ -4128,7 +4334,7 @@ class DronePose final
     return reinterpret_cast<const DronePose*>(
         &_DronePose_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 19;
+  static constexpr int kIndexInFileMessages = 20;
   friend void swap(DronePose& a, DronePose& b) { a.Swap(&b); }
   inline void Swap(DronePose* other) {
     if (other == this) return;
@@ -4343,7 +4549,7 @@ class DronePath final
     return reinterpret_cast<const DronePath*>(
         &_DronePath_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 20;
+  static constexpr int kIndexInFileMessages = 21;
   friend void swap(DronePath& a, DronePath& b) { a.Swap(&b); }
   inline void Swap(DronePath* other) {
     if (other == this) return;
@@ -4559,7 +4765,7 @@ class DepthCameraPointData final
     return reinterpret_cast<const DepthCameraPointData*>(
         &_DepthCameraPointData_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 16;
+  static constexpr int kIndexInFileMessages = 17;
   friend void swap(DepthCameraPointData& a, DepthCameraPointData& b) { a.Swap(&b); }
   inline void Swap(DepthCameraPointData* other) {
     if (other == this) return;
@@ -4757,7 +4963,7 @@ class CarPose final
     return reinterpret_cast<const CarPose*>(
         &_CarPose_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 21;
+  static constexpr int kIndexInFileMessages = 22;
   friend void swap(CarPose& a, CarPose& b) { a.Swap(&b); }
   inline void Swap(CarPose* other) {
     if (other == this) return;
@@ -4972,7 +5178,7 @@ class CarPath final
     return reinterpret_cast<const CarPath*>(
         &_CarPath_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 22;
+  static constexpr int kIndexInFileMessages = 23;
   friend void swap(CarPath& a, CarPath& b) { a.Swap(&b); }
   inline void Swap(CarPath* other) {
     if (other == this) return;
@@ -5386,7 +5592,7 @@ class LidarDataAndOdom final
     return reinterpret_cast<const LidarDataAndOdom*>(
         &_LidarDataAndOdom_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 15;
+  static constexpr int kIndexInFileMessages = 16;
   friend void swap(LidarDataAndOdom& a, LidarDataAndOdom& b) { a.Swap(&b); }
   inline void Swap(LidarDataAndOdom* other) {
     if (other == this) return;
@@ -6650,6 +6856,54 @@ inline ::VCCSim::Format IndexedCamera::_internal_format() const {
 inline void IndexedCamera::_internal_set_format(::VCCSim::Format value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.format_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// ImageSize
+
+// uint32 width = 1;
+inline void ImageSize::clear_width() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.width_ = 0u;
+}
+inline ::uint32_t ImageSize::width() const {
+  // @@protoc_insertion_point(field_get:VCCSim.ImageSize.width)
+  return _internal_width();
+}
+inline void ImageSize::set_width(::uint32_t value) {
+  _internal_set_width(value);
+  // @@protoc_insertion_point(field_set:VCCSim.ImageSize.width)
+}
+inline ::uint32_t ImageSize::_internal_width() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.width_;
+}
+inline void ImageSize::_internal_set_width(::uint32_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.width_ = value;
+}
+
+// uint32 height = 2;
+inline void ImageSize::clear_height() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.height_ = 0u;
+}
+inline ::uint32_t ImageSize::height() const {
+  // @@protoc_insertion_point(field_get:VCCSim.ImageSize.height)
+  return _internal_height();
+}
+inline void ImageSize::set_height(::uint32_t value) {
+  _internal_set_height(value);
+  // @@protoc_insertion_point(field_set:VCCSim.ImageSize.height)
+}
+inline ::uint32_t ImageSize::_internal_height() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.height_;
+}
+inline void ImageSize::_internal_set_height(::uint32_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.height_ = value;
 }
 
 // -------------------------------------------------------------------

@@ -178,7 +178,7 @@ DepthCameraGetPointDataCall::DepthCameraGetPointDataCall(
     VCCSim::DepthCameraService::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
     std::map<std::string, UDepthCameraComponent*> rdcmap)
-        : AsyncCallTemplateM(service, cq, rdcmap)
+        : AsyncCallTemplateImage(service, cq, rdcmap)
 {
     Proceed(true);
 }
@@ -195,14 +195,10 @@ void DepthCameraGetPointDataCall::InitializeRequest()
 
 void DepthCameraGetPointDataCall::ProcessRequest()
 {
-    Promise = MakeShared<TPromise<void>>();
-    auto Future = Promise->GetFuture();
-
     if (!RCMap_.contains(request_.name()))
     {
         UE_LOG(LogTemp, Warning, TEXT("DepthCameraGetPointDataCall: "
                                       "DepthCamera component not found!"));
-        Promise->SetValue();  // Complete the promise even in error case
         return;
     }
 
@@ -211,45 +207,72 @@ void DepthCameraGetPointDataCall::ProcessRequest()
     {
         UE_LOG(LogTemp, Warning, TEXT("DepthCameraGetPointDataCall: "
                                       "Invalid DepthCamera reference!"));
-        Promise->SetValue();
         return;
     }
 
-    // Capture WeakPtr to Promise to avoid lifetime issues
-    TWeakPtr<TPromise<void>> WeakPromise = Promise;
-    
+    // Use the callback version to get point cloud data
     DepthCamera->AsyncGetPointCloudData(
-        [this, WeakPromise](TArray<FDCPoint> Points) {
-        auto StrongPromise = WeakPromise.Pin();
-        if (!StrongPromise)
-        {
-            UE_LOG(LogTemp, Error,
-                TEXT("Promise was destroyed before completion"));
-            return;
-        }
-
-        // Convert points to protobuf format
-        for (const auto& Point : Points)
-        {
-            VCCSim::Point* DepthPoint = response_.add_data();
-            DepthPoint->set_x(Point.Location.X);
-            DepthPoint->set_y(Point.Location.Y);
-            DepthPoint->set_z(Point.Location.Z);
-        }
-        
-        StrongPromise->SetValue();
-    });
-
-    // Wait with timeout
-    const float TimeoutSeconds = 5.0f;
-    if (!Future.WaitFor(FTimespan::FromSeconds(TimeoutSeconds)))
+        [this, DepthCamera]()
     {
-        UE_LOG(LogTemp, Error, TEXT("GetPointCloudData timed out after "
-                                    "%f seconds"), TimeoutSeconds);
-        if (Promise.IsValid())
+        // Process the points in a background thread
+        AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask,
+            [this, DepthCamera]()
         {
-            Promise->SetValue();  // Ensure promise is completed
-        }
+            const auto PointCloudData = DepthCamera->GeneratePointCloud();
+            if (PointCloudData.Num() == 0)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("DepthCameraGetPointDataCall: "
+                                              "No point cloud data available!"));
+                status_ = FINISH;
+                responder_.Finish(response_, grpc::Status::CANCELLED, this);
+                return;
+            }
+            // Add each point to the response
+            for (const FDCPoint& Point : PointCloudData)
+            {
+                auto* point = response_.add_data();
+                point->set_x(Point.Location.X);
+                point->set_y(Point.Location.Y);
+                point->set_z(Point.Location.Z);
+            }
+
+            status_ = FINISH;
+            responder_.Finish(response_, grpc::Status::OK, this);
+        });
+    });
+}
+
+DepthCameraGetImageSizeCall::DepthCameraGetImageSizeCall(
+    VCCSim::DepthCameraService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq, std::map<std::string,
+    UDepthCameraComponent*> rdcmap)
+        : AsyncCallTemplateM(service, cq, rdcmap)
+{
+    Proceed(true);
+}
+
+void DepthCameraGetImageSizeCall::PrepareNextCall()
+{
+    new DepthCameraGetImageSizeCall(service_, cq_, RCMap_);
+}
+
+void DepthCameraGetImageSizeCall::InitializeRequest()
+{
+    service_->RequestGetDepthCameraImageSize(&ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void DepthCameraGetImageSizeCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        const auto& Size = RCMap_[request_.name()]->GetImageSize();
+        response_.set_width(Size.first);
+        response_.set_height(Size.second);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("DepthCameraGetImageSizeCall: "
+                                      "DepthCamera component not found!"));
     }
 }
 
@@ -257,7 +280,7 @@ DepthCameraGetImageDataCall::DepthCameraGetImageDataCall(
     VCCSim::DepthCameraService::AsyncService* service,
     grpc::ServerCompletionQueue* cq,
     std::map<std::string, UDepthCameraComponent*> rdcmap)
-        : AsyncCallTemplateM(service, cq, rdcmap)
+        : AsyncCallTemplateImage(service, cq, rdcmap)
 {
     Proceed(true);
 }
@@ -274,14 +297,10 @@ void DepthCameraGetImageDataCall::InitializeRequest()
 
 void DepthCameraGetImageDataCall::ProcessRequest()
 {
-    Promise = MakeShared<TPromise<void>>();
-    auto Future = Promise->GetFuture();
-
     if (!RCMap_.contains(request_.name()))
     {
         UE_LOG(LogTemp, Warning, TEXT("DepthCameraGetImageDataCall: "
                                       "DepthCamera component not found!"));
-        Promise->SetValue();
         return;
     }
 
@@ -290,43 +309,26 @@ void DepthCameraGetImageDataCall::ProcessRequest()
     {
         UE_LOG(LogTemp, Warning, TEXT("DepthCameraGetImageDataCall: "
                                       "Invalid DepthCamera reference!"));
-        Promise->SetValue();
         return;
     }
 
-    // Capture WeakPtr to Promise to avoid lifetime issues
-    TWeakPtr<TPromise<void>> WeakPromise = Promise;
-
+    // Use the callback version to get depth image data
     DepthCamera->AsyncGetDepthImageData(
-        [this, WeakPromise](TArray<float> DepthImage) {
-        auto StrongPromise = WeakPromise.Pin();
-        if (!StrongPromise)
-        {
-            UE_LOG(LogTemp, Error,
-                TEXT("Promise was destroyed before completion"));
-            return;
-        }
-
-        // Convert depth image to protobuf format
-        for (const float& Depth : DepthImage)
-        {
-            response_.add_data(Depth);
-        }
-        
-        StrongPromise->SetValue();
-    });
-
-    // Wait with timeout
-    const float TimeoutSeconds = 5.0f;
-    if (!Future.WaitFor(FTimespan::FromSeconds(TimeoutSeconds)))
+        [this, DepthCamera](const TArray<FFloat16Color>& DepthImageData)
     {
-        UE_LOG(LogTemp, Error, TEXT("GetDepthImageData timed out after "
-                                    "%f seconds"), TimeoutSeconds);
-        if (Promise.IsValid())
+        // Process the depth data in a background thread
+        AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask,
+            [this, DepthImageData, DepthCamera]()
         {
-            Promise->SetValue();  // Ensure promise is completed
-        }
-    }
+            for (const auto& DepthValue : DepthImageData)
+            {
+                response_.add_data(DepthValue.R.GetFloat());
+            }
+
+            status_ = FINISH;
+            responder_.Finish(response_, grpc::Status::OK, this);
+        });
+    });
 }
 
 DepthCameraGetOdomCall::DepthCameraGetOdomCall(
@@ -432,6 +434,43 @@ void RGBCameraGetOdomCall::ProcessRequest()
     {
         UE_LOG(LogTemp, Warning, TEXT("RGBCameraGetOdomCall: "
                                     "RGB Camera component not found!"));
+    }
+}
+
+RGBIndexedCameraImageSizeCall::RGBIndexedCameraImageSizeCall(
+    VCCSim::RGBCameraService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq, std::map<std::string,
+    URGBCameraComponent*> rrgbcmap)
+        : AsyncCallTemplateM(service, cq, rrgbcmap)
+{
+    Proceed(true);
+}
+
+void RGBIndexedCameraImageSizeCall::PrepareNextCall()
+{
+    new RGBIndexedCameraImageSizeCall(service_, cq_, RCMap_);
+}
+
+void RGBIndexedCameraImageSizeCall::InitializeRequest()
+{
+    service_->RequestGetRGBIndexedCameraImageSize(
+        &ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void RGBIndexedCameraImageSizeCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.robot_name().name() + "^" +
+                         std::to_string(request_.index())))
+    {
+        const auto& Size = RCMap_[request_.robot_name().name() + "^" +
+                                 std::to_string(request_.index())]->GetImageSize();
+        response_.set_width(Size.first);
+        response_.set_height(Size.second);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("RGBIndexedCameraImageSizeCall: "
+                                      "RGB Camera component not found!"));
     }
 }
 

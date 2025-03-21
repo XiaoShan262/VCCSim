@@ -67,12 +67,12 @@ public:
     void CaptureDepthScene();
     UFUNCTION(BlueprintCallable, Category = "DepthCamera")
     void VisualizePointCloud();
+    TArray<FDCPoint> GeneratePointCloud();
 
-    TArray<FDCPoint> GetPointCloudDataGameThread();
-    TArray<float> GetDepthImageDataGameThread();
     // For grpc server
-    void AsyncGetPointCloudData(TFunction<void(TArray<FDCPoint>)> Callback);
-    void AsyncGetDepthImageData(TFunction<void(TArray<float>)> Callback);
+    void AsyncGetPointCloudData(TFunction<void()> Callback);
+    void AsyncGetDepthImageData(TFunction<void(const TArray<FFloat16Color>&)> Callback);
+    std::pair<int32, int32> GetImageSize() const { return {Width, Height}; }
     
 protected:
     virtual void BeginPlay() override;
@@ -81,9 +81,10 @@ protected:
     FActorComponentTickFunction* ThisTickFunction) override;
     
     void InitializeRenderTargets();
-    void ProcessDepthTexture();
-    void OnDepthDataProcessed();
-    TArray<FDCPoint> GeneratePointCloud();
+    void ProcessDepthTexture(TFunction<void()> OnComplete);
+    void ProcessDepthTextureParam(
+        TFunction<void(const TArray<FFloat16Color>&)> OnComplete);
+    
     TArray<float> GetDepthImage();
     
 public:
@@ -130,9 +131,5 @@ private:
     float RecordInterval = -1.f;
     bool RecordState = false;
     float TimeSinceLastCapture;
-
-    // Double-buffered data: one for the rendering thread to write to, the other for the main thread to read from
-    TArray<FFloat16Color> DepthDataBuffers[2];
-    std::atomic<int32> CurrentWriteBufferIndex = 0;
-    std::atomic<bool> bDataReady = false;
+    bool dirty = false;
 };

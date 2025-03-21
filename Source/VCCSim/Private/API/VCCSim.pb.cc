@@ -278,6 +278,32 @@ struct MeshIDDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 MeshIDDefaultTypeInternal _MeshID_default_instance_;
+
+inline constexpr ImageSize::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : width_{0u},
+        height_{0u},
+        _cached_size_{0} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR ImageSize::ImageSize(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(::_pbi::ConstantInitialized()) {
+}
+struct ImageSizeDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR ImageSizeDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~ImageSizeDefaultTypeInternal() {}
+  union {
+    ImageSize _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ImageSizeDefaultTypeInternal _ImageSize_default_instance_;
               template <typename>
 PROTOBUF_CONSTEXPR EmptyRequest::EmptyRequest(::_pbi::ConstantInitialized)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
@@ -842,6 +868,16 @@ const ::uint32_t
         0,
         ~0u,
         ~0u,
+        ~0u,  // no _has_bits_
+        PROTOBUF_FIELD_OFFSET(::VCCSim::ImageSize, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::VCCSim::ImageSize, _impl_.width_),
+        PROTOBUF_FIELD_OFFSET(::VCCSim::ImageSize, _impl_.height_),
         PROTOBUF_FIELD_OFFSET(::VCCSim::MeshData, _impl_._has_bits_),
         PROTOBUF_FIELD_OFFSET(::VCCSim::MeshData, _internal_metadata_),
         ~0u,  // no _extensions_
@@ -1014,19 +1050,20 @@ static const ::_pbi::MigrationSchema
         {103, -1, -1, sizeof(::VCCSim::Status)},
         {112, -1, -1, sizeof(::VCCSim::RobotName)},
         {121, 132, -1, sizeof(::VCCSim::IndexedCamera)},
-        {135, 148, -1, sizeof(::VCCSim::MeshData)},
-        {153, -1, -1, sizeof(::VCCSim::MeshID)},
-        {162, -1, -1, sizeof(::VCCSim::LidarData)},
-        {171, 181, -1, sizeof(::VCCSim::LidarDataAndOdom)},
-        {183, -1, -1, sizeof(::VCCSim::DepthCameraPointData)},
-        {192, -1, -1, sizeof(::VCCSim::DepthCameraImageData)},
-        {201, 217, -1, sizeof(::VCCSim::RGBCameraImageData)},
-        {225, 235, -1, sizeof(::VCCSim::DronePose)},
-        {237, -1, -1, sizeof(::VCCSim::DronePath)},
-        {247, 257, -1, sizeof(::VCCSim::CarPose)},
-        {259, -1, -1, sizeof(::VCCSim::CarPath)},
-        {269, 279, -1, sizeof(::VCCSim::FlashPose)},
-        {281, -1, -1, sizeof(::VCCSim::FlashPath)},
+        {135, -1, -1, sizeof(::VCCSim::ImageSize)},
+        {145, 158, -1, sizeof(::VCCSim::MeshData)},
+        {163, -1, -1, sizeof(::VCCSim::MeshID)},
+        {172, -1, -1, sizeof(::VCCSim::LidarData)},
+        {181, 191, -1, sizeof(::VCCSim::LidarDataAndOdom)},
+        {193, -1, -1, sizeof(::VCCSim::DepthCameraPointData)},
+        {202, -1, -1, sizeof(::VCCSim::DepthCameraImageData)},
+        {211, 227, -1, sizeof(::VCCSim::RGBCameraImageData)},
+        {235, 245, -1, sizeof(::VCCSim::DronePose)},
+        {247, -1, -1, sizeof(::VCCSim::DronePath)},
+        {257, 267, -1, sizeof(::VCCSim::CarPose)},
+        {269, -1, -1, sizeof(::VCCSim::CarPath)},
+        {279, 289, -1, sizeof(::VCCSim::FlashPose)},
+        {291, -1, -1, sizeof(::VCCSim::FlashPath)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::VCCSim::_Point_default_instance_._instance,
@@ -1041,6 +1078,7 @@ static const ::_pb::Message* const file_default_instances[] = {
     &::VCCSim::_Status_default_instance_._instance,
     &::VCCSim::_RobotName_default_instance_._instance,
     &::VCCSim::_IndexedCamera_default_instance_._instance,
+    &::VCCSim::_ImageSize_default_instance_._instance,
     &::VCCSim::_MeshData_default_instance_._instance,
     &::VCCSim::_MeshID_default_instance_._instance,
     &::VCCSim::_LidarData_default_instance_._instance,
@@ -1075,84 +1113,89 @@ const char descriptor_table_protodef_VCCSim_2eproto[] ABSL_ATTRIBUTE_SECTION_VAR
     "tus\030\001 \001(\010\"\031\n\tRobotName\022\014\n\004name\030\001 \001(\t\"e\n\r"
     "IndexedCamera\022%\n\nrobot_name\030\001 \001(\0132\021.VCCS"
     "im.RobotName\022\r\n\005index\030\002 \001(\r\022\036\n\006format\030\003 "
-    "\001(\0162\016.VCCSim.Format\"n\n\010MeshData\022\014\n\004data\030"
-    "\001 \001(\014\022\016\n\006format\030\002 \001(\r\022\017\n\007version\030\003 \001(\r\022\022"
-    "\n\nsimplified\030\004 \001(\010\022\037\n\ttransform\030\005 \001(\0132\014."
-    "VCCSim.Pose\"\024\n\006MeshID\022\n\n\002id\030\001 \001(\r\"(\n\tLid"
-    "arData\022\033\n\004data\030\001 \003(\0132\r.VCCSim.Point\"S\n\020L"
-    "idarDataAndOdom\022\037\n\004data\030\001 \001(\0132\021.VCCSim.L"
-    "idarData\022\036\n\004odom\030\002 \001(\0132\020.VCCSim.Odometry"
-    "\"3\n\024DepthCameraPointData\022\033\n\004data\030\001 \003(\0132\r"
-    ".VCCSim.Point\"$\n\024DepthCameraImageData\022\014\n"
-    "\004data\030\001 \003(\002\"\364\001\n\022RGBCameraImageData\022\r\n\005wi"
-    "dth\030\001 \001(\r\022\016\n\006height\030\002 \001(\r\022\014\n\004data\030\003 \001(\014\022"
-    "\036\n\006format\030\004 \001(\0162\016.VCCSim.Format\022\021\n\ttimes"
-    "tamp\030\005 \001(\r\022\034\n\017bytes_per_pixel\030\006 \001(\rH\000\210\001\001"
-    "\022\023\n\006stride\030\007 \001(\rH\001\210\001\001\022\032\n\ris_compressed\030\010"
-    " \001(\010H\002\210\001\001B\022\n\020_bytes_per_pixelB\t\n\007_stride"
-    "B\020\n\016_is_compressed\"5\n\tDronePose\022\014\n\004name\030"
-    "\001 \001(\t\022\032\n\004pose\030\002 \001(\0132\014.VCCSim.Pose\"5\n\tDro"
-    "nePath\022\014\n\004name\030\001 \001(\t\022\032\n\004path\030\002 \003(\0132\014.VCC"
-    "Sim.Pose\":\n\007CarPose\022\014\n\004name\030\001 \001(\t\022!\n\004pos"
-    "e\030\002 \001(\0132\023.VCCSim.PoseOnlyYaw\":\n\007CarPath\022"
-    "\014\n\004name\030\001 \001(\t\022!\n\004path\030\002 \003(\0132\023.VCCSim.Pos"
-    "eOnlyYaw\"5\n\tFlashPose\022\014\n\004name\030\001 \001(\t\022\032\n\004p"
-    "ose\030\002 \001(\0132\014.VCCSim.Pose\"5\n\tFlashPath\022\014\n\004"
-    "name\030\001 \001(\t\022\032\n\004path\030\002 \003(\0132\014.VCCSim.Pose*$"
-    "\n\006Format\022\007\n\003PNG\020\000\022\010\n\004JPEG\020\001\022\007\n\003RAW\020\0022\275\001\n"
-    "\014LidarService\0224\n\014GetLiDARData\022\021.VCCSim.R"
-    "obotName\032\021.VCCSim.LidarData\0223\n\014GetLiDARO"
-    "dom\022\021.VCCSim.RobotName\032\020.VCCSim.Odometry"
-    "\022B\n\023GetLiDARDataAndOdom\022\021.VCCSim.RobotNa"
-    "me\032\030.VCCSim.LidarDataAndOdom2\347\001\n\022DepthCa"
-    "meraService\022J\n\027GetDepthCameraPointData\022\021"
-    ".VCCSim.RobotName\032\034.VCCSim.DepthCameraPo"
-    "intData\022J\n\027GetDepthCameraImageData\022\021.VCC"
-    "Sim.RobotName\032\034.VCCSim.DepthCameraImageD"
-    "ata\0229\n\022GetDepthCameraOdom\022\021.VCCSim.Robot"
-    "Name\032\020.VCCSim.Odometry2\236\001\n\020RGBCameraServ"
-    "ice\0227\n\020GetRGBCameraOdom\022\021.VCCSim.RobotNa"
-    "me\032\020.VCCSim.Odometry\022Q\n\034GetRGBIndexedCam"
-    "eraImageData\022\025.VCCSim.IndexedCamera\032\032.VC"
-    "CSim.RGBCameraImageData2\247\001\n\014DroneService"
-    "\022/\n\014GetDronePose\022\021.VCCSim.RobotName\032\014.VC"
-    "CSim.Pose\0222\n\rSendDronePose\022\021.VCCSim.Dron"
-    "ePose\032\016.VCCSim.Status\0222\n\rSendDronePath\022\021"
-    ".VCCSim.DronePath\032\016.VCCSim.Status2\237\001\n\nCa"
-    "rService\0221\n\nGetCarOdom\022\021.VCCSim.RobotNam"
-    "e\032\020.VCCSim.Odometry\022.\n\013SendCarPose\022\017.VCC"
-    "Sim.CarPose\032\016.VCCSim.Status\022.\n\013SendCarPa"
-    "th\022\017.VCCSim.CarPath\032\016.VCCSim.Status2\216\002\n\014"
-    "FlashService\022/\n\014GetFlashPose\022\021.VCCSim.Ro"
-    "botName\032\014.VCCSim.Pose\0222\n\rSendFlashPose\022\021"
-    ".VCCSim.FlashPose\032\016.VCCSim.Status\0222\n\rSen"
-    "dFlashPath\022\021.VCCSim.FlashPath\032\016.VCCSim.S"
-    "tatus\0224\n\017CheckFlashReady\022\021.VCCSim.RobotN"
-    "ame\032\016.VCCSim.Status\022/\n\nMoveToNext\022\021.VCCS"
-    "im.RobotName\032\016.VCCSim.Status2\243\001\n\013MeshSer"
-    "vice\022,\n\010SendMesh\022\020.VCCSim.MeshData\032\016.VCC"
-    "Sim.Status\0222\n\016SendGlobalMesh\022\020.VCCSim.Me"
-    "shData\032\016.VCCSim.MeshID\0222\n\020RemoveGlobalMe"
-    "sh\022\016.VCCSim.MeshID\032\016.VCCSim.Status2[\n\021Po"
-    "intCloudService\022F\n\027SendPointCloudWithCol"
-    "or\022\033.VCCSim.PointCloudWithColor\032\016.VCCSim"
-    ".Status2\262\001\n\020SafeCheckService\0224\n\017CheckSaf"
-    "etyPawn\022\021.VCCSim.RobotName\032\016.VCCSim.Stat"
-    "us\0227\n\023CheckSafetyPosition\022\020.VCCSim.Posit"
-    "ion\032\016.VCCSim.Status\022/\n\017CheckSafetyPath\022\014"
-    ".VCCSim.Pose\032\016.VCCSim.Statusb\006proto3"
+    "\001(\0162\016.VCCSim.Format\"*\n\tImageSize\022\r\n\005widt"
+    "h\030\001 \001(\r\022\016\n\006height\030\002 \001(\r\"n\n\010MeshData\022\014\n\004d"
+    "ata\030\001 \001(\014\022\016\n\006format\030\002 \001(\r\022\017\n\007version\030\003 \001"
+    "(\r\022\022\n\nsimplified\030\004 \001(\010\022\037\n\ttransform\030\005 \001("
+    "\0132\014.VCCSim.Pose\"\024\n\006MeshID\022\n\n\002id\030\001 \001(\r\"(\n"
+    "\tLidarData\022\033\n\004data\030\001 \003(\0132\r.VCCSim.Point\""
+    "S\n\020LidarDataAndOdom\022\037\n\004data\030\001 \001(\0132\021.VCCS"
+    "im.LidarData\022\036\n\004odom\030\002 \001(\0132\020.VCCSim.Odom"
+    "etry\"3\n\024DepthCameraPointData\022\033\n\004data\030\001 \003"
+    "(\0132\r.VCCSim.Point\"$\n\024DepthCameraImageDat"
+    "a\022\014\n\004data\030\001 \003(\002\"\364\001\n\022RGBCameraImageData\022\r"
+    "\n\005width\030\001 \001(\r\022\016\n\006height\030\002 \001(\r\022\014\n\004data\030\003 "
+    "\001(\014\022\036\n\006format\030\004 \001(\0162\016.VCCSim.Format\022\021\n\tt"
+    "imestamp\030\005 \001(\r\022\034\n\017bytes_per_pixel\030\006 \001(\rH"
+    "\000\210\001\001\022\023\n\006stride\030\007 \001(\rH\001\210\001\001\022\032\n\ris_compress"
+    "ed\030\010 \001(\010H\002\210\001\001B\022\n\020_bytes_per_pixelB\t\n\007_st"
+    "rideB\020\n\016_is_compressed\"5\n\tDronePose\022\014\n\004n"
+    "ame\030\001 \001(\t\022\032\n\004pose\030\002 \001(\0132\014.VCCSim.Pose\"5\n"
+    "\tDronePath\022\014\n\004name\030\001 \001(\t\022\032\n\004path\030\002 \003(\0132\014"
+    ".VCCSim.Pose\":\n\007CarPose\022\014\n\004name\030\001 \001(\t\022!\n"
+    "\004pose\030\002 \001(\0132\023.VCCSim.PoseOnlyYaw\":\n\007CarP"
+    "ath\022\014\n\004name\030\001 \001(\t\022!\n\004path\030\002 \003(\0132\023.VCCSim"
+    ".PoseOnlyYaw\"5\n\tFlashPose\022\014\n\004name\030\001 \001(\t\022"
+    "\032\n\004pose\030\002 \001(\0132\014.VCCSim.Pose\"5\n\tFlashPath"
+    "\022\014\n\004name\030\001 \001(\t\022\032\n\004path\030\002 \003(\0132\014.VCCSim.Po"
+    "se*$\n\006Format\022\007\n\003PNG\020\000\022\010\n\004JPEG\020\001\022\007\n\003RAW\020\002"
+    "2\275\001\n\014LidarService\0224\n\014GetLiDARData\022\021.VCCS"
+    "im.RobotName\032\021.VCCSim.LidarData\0223\n\014GetLi"
+    "DAROdom\022\021.VCCSim.RobotName\032\020.VCCSim.Odom"
+    "etry\022B\n\023GetLiDARDataAndOdom\022\021.VCCSim.Rob"
+    "otName\032\030.VCCSim.LidarDataAndOdom2\250\002\n\022Dep"
+    "thCameraService\022J\n\027GetDepthCameraPointDa"
+    "ta\022\021.VCCSim.RobotName\032\034.VCCSim.DepthCame"
+    "raPointData\022\?\n\027GetDepthCameraImageSize\022\021"
+    ".VCCSim.RobotName\032\021.VCCSim.ImageSize\022J\n\027"
+    "GetDepthCameraImageData\022\021.VCCSim.RobotNa"
+    "me\032\034.VCCSim.DepthCameraImageData\0229\n\022GetD"
+    "epthCameraOdom\022\021.VCCSim.RobotName\032\020.VCCS"
+    "im.Odometry2\350\001\n\020RGBCameraService\0227\n\020GetR"
+    "GBCameraOdom\022\021.VCCSim.RobotName\032\020.VCCSim"
+    ".Odometry\022Q\n\034GetRGBIndexedCameraImageDat"
+    "a\022\025.VCCSim.IndexedCamera\032\032.VCCSim.RGBCam"
+    "eraImageData\022H\n\034GetRGBIndexedCameraImage"
+    "Size\022\025.VCCSim.IndexedCamera\032\021.VCCSim.Ima"
+    "geSize2\247\001\n\014DroneService\022/\n\014GetDronePose\022"
+    "\021.VCCSim.RobotName\032\014.VCCSim.Pose\0222\n\rSend"
+    "DronePose\022\021.VCCSim.DronePose\032\016.VCCSim.St"
+    "atus\0222\n\rSendDronePath\022\021.VCCSim.DronePath"
+    "\032\016.VCCSim.Status2\237\001\n\nCarService\0221\n\nGetCa"
+    "rOdom\022\021.VCCSim.RobotName\032\020.VCCSim.Odomet"
+    "ry\022.\n\013SendCarPose\022\017.VCCSim.CarPose\032\016.VCC"
+    "Sim.Status\022.\n\013SendCarPath\022\017.VCCSim.CarPa"
+    "th\032\016.VCCSim.Status2\216\002\n\014FlashService\022/\n\014G"
+    "etFlashPose\022\021.VCCSim.RobotName\032\014.VCCSim."
+    "Pose\0222\n\rSendFlashPose\022\021.VCCSim.FlashPose"
+    "\032\016.VCCSim.Status\0222\n\rSendFlashPath\022\021.VCCS"
+    "im.FlashPath\032\016.VCCSim.Status\0224\n\017CheckFla"
+    "shReady\022\021.VCCSim.RobotName\032\016.VCCSim.Stat"
+    "us\022/\n\nMoveToNext\022\021.VCCSim.RobotName\032\016.VC"
+    "CSim.Status2\243\001\n\013MeshService\022,\n\010SendMesh\022"
+    "\020.VCCSim.MeshData\032\016.VCCSim.Status\0222\n\016Sen"
+    "dGlobalMesh\022\020.VCCSim.MeshData\032\016.VCCSim.M"
+    "eshID\0222\n\020RemoveGlobalMesh\022\016.VCCSim.MeshI"
+    "D\032\016.VCCSim.Status2[\n\021PointCloudService\022F"
+    "\n\027SendPointCloudWithColor\022\033.VCCSim.Point"
+    "CloudWithColor\032\016.VCCSim.Status2\262\001\n\020SafeC"
+    "heckService\0224\n\017CheckSafetyPawn\022\021.VCCSim."
+    "RobotName\032\016.VCCSim.Status\0227\n\023CheckSafety"
+    "Position\022\020.VCCSim.Position\032\016.VCCSim.Stat"
+    "us\022/\n\017CheckSafetyPath\022\014.VCCSim.Pose\032\016.VC"
+    "CSim.Statusb\006proto3"
 };
 static ::absl::once_flag descriptor_table_VCCSim_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_VCCSim_2eproto = {
     false,
     false,
-    3356,
+    3539,
     descriptor_table_protodef_VCCSim_2eproto,
     "VCCSim.proto",
     &descriptor_table_VCCSim_2eproto_once,
     nullptr,
     0,
-    25,
+    26,
     schemas,
     file_default_instances,
     TableStruct_VCCSim_2eproto::offsets,
@@ -4293,6 +4336,247 @@ void IndexedCamera::InternalSwap(IndexedCamera* PROTOBUF_RESTRICT other) {
 }
 
 ::google::protobuf::Metadata IndexedCamera::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class ImageSize::_Internal {
+ public:
+};
+
+ImageSize::ImageSize(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:VCCSim.ImageSize)
+}
+ImageSize::ImageSize(
+    ::google::protobuf::Arena* arena, const ImageSize& from)
+    : ImageSize(arena) {
+  MergeFrom(from);
+}
+inline PROTOBUF_NDEBUG_INLINE ImageSize::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0} {}
+
+inline void ImageSize::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  ::memset(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, width_),
+           0,
+           offsetof(Impl_, height_) -
+               offsetof(Impl_, width_) +
+               sizeof(Impl_::height_));
+}
+ImageSize::~ImageSize() {
+  // @@protoc_insertion_point(destructor:VCCSim.ImageSize)
+  SharedDtor(*this);
+}
+inline void ImageSize::SharedDtor(MessageLite& self) {
+  ImageSize& this_ = static_cast<ImageSize&>(self);
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  this_._impl_.~Impl_();
+}
+
+inline void* ImageSize::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) ImageSize(arena);
+}
+constexpr auto ImageSize::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(ImageSize),
+                                            alignof(ImageSize));
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull ImageSize::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_ImageSize_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &ImageSize::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<ImageSize>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &ImageSize::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<ImageSize>(), &ImageSize::ByteSizeLong,
+            &ImageSize::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(ImageSize, _impl_._cached_size_),
+        false,
+    },
+    &ImageSize::kDescriptorMethods,
+    &descriptor_table_VCCSim_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* ImageSize::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<1, 2, 0, 0, 2> ImageSize::_table_ = {
+  {
+    0,  // no _has_bits_
+    0, // no _extensions_
+    2, 8,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967292,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    2,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::VCCSim::ImageSize>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    // uint32 height = 2;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(ImageSize, _impl_.height_), 63>(),
+     {16, 63, 0, PROTOBUF_FIELD_OFFSET(ImageSize, _impl_.height_)}},
+    // uint32 width = 1;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(ImageSize, _impl_.width_), 63>(),
+     {8, 63, 0, PROTOBUF_FIELD_OFFSET(ImageSize, _impl_.width_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // uint32 width = 1;
+    {PROTOBUF_FIELD_OFFSET(ImageSize, _impl_.width_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt32)},
+    // uint32 height = 2;
+    {PROTOBUF_FIELD_OFFSET(ImageSize, _impl_.height_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt32)},
+  }},
+  // no aux_entries
+  {{
+  }},
+};
+
+PROTOBUF_NOINLINE void ImageSize::Clear() {
+// @@protoc_insertion_point(message_clear_start:VCCSim.ImageSize)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.width_, 0, static_cast<::size_t>(
+      reinterpret_cast<char*>(&_impl_.height_) -
+      reinterpret_cast<char*>(&_impl_.width_)) + sizeof(_impl_.height_));
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::uint8_t* ImageSize::_InternalSerialize(
+            const MessageLite& base, ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) {
+          const ImageSize& this_ = static_cast<const ImageSize&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::uint8_t* ImageSize::_InternalSerialize(
+            ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+          const ImageSize& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(serialize_to_array_start:VCCSim.ImageSize)
+          ::uint32_t cached_has_bits = 0;
+          (void)cached_has_bits;
+
+          // uint32 width = 1;
+          if (this_._internal_width() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
+                1, this_._internal_width(), target);
+          }
+
+          // uint32 height = 2;
+          if (this_._internal_height() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
+                2, this_._internal_height(), target);
+          }
+
+          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+            target =
+                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+          }
+          // @@protoc_insertion_point(serialize_to_array_end:VCCSim.ImageSize)
+          return target;
+        }
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::size_t ImageSize::ByteSizeLong(const MessageLite& base) {
+          const ImageSize& this_ = static_cast<const ImageSize&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::size_t ImageSize::ByteSizeLong() const {
+          const ImageSize& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(message_byte_size_start:VCCSim.ImageSize)
+          ::size_t total_size = 0;
+
+          ::uint32_t cached_has_bits = 0;
+          // Prevent compiler warnings about cached_has_bits being unused
+          (void)cached_has_bits;
+
+          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+           {
+            // uint32 width = 1;
+            if (this_._internal_width() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
+                  this_._internal_width());
+            }
+            // uint32 height = 2;
+            if (this_._internal_height() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
+                  this_._internal_height());
+            }
+          }
+          return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                                     &this_._impl_._cached_size_);
+        }
+
+void ImageSize::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<ImageSize*>(&to_msg);
+  auto& from = static_cast<const ImageSize&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:VCCSim.ImageSize)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_width() != 0) {
+    _this->_impl_.width_ = from._impl_.width_;
+  }
+  if (from._internal_height() != 0) {
+    _this->_impl_.height_ = from._impl_.height_;
+  }
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void ImageSize::CopyFrom(const ImageSize& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:VCCSim.ImageSize)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void ImageSize::InternalSwap(ImageSize* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::google::protobuf::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(ImageSize, _impl_.height_)
+      + sizeof(ImageSize::_impl_.height_)
+      - PROTOBUF_FIELD_OFFSET(ImageSize, _impl_.width_)>(
+          reinterpret_cast<char*>(&_impl_.width_),
+          reinterpret_cast<char*>(&other->_impl_.width_));
+}
+
+::google::protobuf::Metadata ImageSize::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // ===================================================================

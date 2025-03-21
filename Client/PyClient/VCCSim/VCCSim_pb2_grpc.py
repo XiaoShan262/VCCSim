@@ -200,6 +200,11 @@ class DepthCameraServiceStub(object):
                 request_serializer=VCCSim__pb2.RobotName.SerializeToString,
                 response_deserializer=VCCSim__pb2.DepthCameraPointData.FromString,
                 _registered_method=True)
+        self.GetDepthCameraImageSize = channel.unary_unary(
+                '/VCCSim.DepthCameraService/GetDepthCameraImageSize',
+                request_serializer=VCCSim__pb2.RobotName.SerializeToString,
+                response_deserializer=VCCSim__pb2.ImageSize.FromString,
+                _registered_method=True)
         self.GetDepthCameraImageData = channel.unary_unary(
                 '/VCCSim.DepthCameraService/GetDepthCameraImageData',
                 request_serializer=VCCSim__pb2.RobotName.SerializeToString,
@@ -221,9 +226,14 @@ class DepthCameraServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetDepthCameraImageSize(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def GetDepthCameraImageData(self, request, context):
-        """todo: size?
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -241,6 +251,11 @@ def add_DepthCameraServiceServicer_to_server(servicer, server):
                     servicer.GetDepthCameraPointData,
                     request_deserializer=VCCSim__pb2.RobotName.FromString,
                     response_serializer=VCCSim__pb2.DepthCameraPointData.SerializeToString,
+            ),
+            'GetDepthCameraImageSize': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetDepthCameraImageSize,
+                    request_deserializer=VCCSim__pb2.RobotName.FromString,
+                    response_serializer=VCCSim__pb2.ImageSize.SerializeToString,
             ),
             'GetDepthCameraImageData': grpc.unary_unary_rpc_method_handler(
                     servicer.GetDepthCameraImageData,
@@ -280,6 +295,33 @@ class DepthCameraService(object):
             '/VCCSim.DepthCameraService/GetDepthCameraPointData',
             VCCSim__pb2.RobotName.SerializeToString,
             VCCSim__pb2.DepthCameraPointData.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetDepthCameraImageSize(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.DepthCameraService/GetDepthCameraImageSize',
+            VCCSim__pb2.RobotName.SerializeToString,
+            VCCSim__pb2.ImageSize.FromString,
             options,
             channel_credentials,
             insecure,
@@ -364,6 +406,11 @@ class RGBCameraServiceStub(object):
                 request_serializer=VCCSim__pb2.IndexedCamera.SerializeToString,
                 response_deserializer=VCCSim__pb2.RGBCameraImageData.FromString,
                 _registered_method=True)
+        self.GetRGBIndexedCameraImageSize = channel.unary_unary(
+                '/VCCSim.RGBCameraService/GetRGBIndexedCameraImageSize',
+                request_serializer=VCCSim__pb2.IndexedCamera.SerializeToString,
+                response_deserializer=VCCSim__pb2.ImageSize.FromString,
+                _registered_method=True)
 
 
 class RGBCameraServiceServicer(object):
@@ -381,6 +428,12 @@ class RGBCameraServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetRGBIndexedCameraImageSize(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_RGBCameraServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -393,6 +446,11 @@ def add_RGBCameraServiceServicer_to_server(servicer, server):
                     servicer.GetRGBIndexedCameraImageData,
                     request_deserializer=VCCSim__pb2.IndexedCamera.FromString,
                     response_serializer=VCCSim__pb2.RGBCameraImageData.SerializeToString,
+            ),
+            'GetRGBIndexedCameraImageSize': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetRGBIndexedCameraImageSize,
+                    request_deserializer=VCCSim__pb2.IndexedCamera.FromString,
+                    response_serializer=VCCSim__pb2.ImageSize.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -449,6 +507,33 @@ class RGBCameraService(object):
             '/VCCSim.RGBCameraService/GetRGBIndexedCameraImageData',
             VCCSim__pb2.IndexedCamera.SerializeToString,
             VCCSim__pb2.RGBCameraImageData.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetRGBIndexedCameraImageSize(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/VCCSim.RGBCameraService/GetRGBIndexedCameraImageSize',
+            VCCSim__pb2.IndexedCamera.SerializeToString,
+            VCCSim__pb2.ImageSize.FromString,
             options,
             channel_credentials,
             insecure,
@@ -648,22 +733,19 @@ class CarServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetCarOdom(self, request, context):
-        """todo
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def SendCarPose(self, request, context):
-        """todo
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def SendCarPath(self, request, context):
-        """todo
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')

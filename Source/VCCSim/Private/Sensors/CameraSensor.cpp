@@ -67,7 +67,7 @@ void URGBCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
         {
             TimeSinceLastCapture = 0.0f;
             CaptureRGBScene();
-            ProcessRGBTextureAsyncRaw();
+            ProcessRGBTextureAsyncRaw(); // todo: Maybe need check if it finished
             if (RecorderPtr)
             {
                 FRGBCameraData DepthData;
@@ -125,7 +125,7 @@ void URGBCameraComponent::SetCaptureComponent() const
         // Change the capture source to HDR for better quality
         CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
         CaptureComponent->bCaptureEveryFrame = false;
-        CaptureComponent->bCaptureOnMovement = true;
+        CaptureComponent->bCaptureOnMovement = false;
         CaptureComponent->bAlwaysPersistRenderingState = true;
         
         FEngineShowFlags& ShowFlags = CaptureComponent->ShowFlags;

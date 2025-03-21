@@ -183,7 +183,7 @@ protected:
 
 /* --------------------------Depth Camera---------------------------------- */
 struct FDCPoint;
-class DepthCameraGetPointDataCall : public AsyncCallTemplateM<
+class DepthCameraGetPointDataCall : public AsyncCallTemplateImage<
     VCCSim::RobotName, VCCSim::DepthCameraPointData,
     VCCSim::DepthCameraService::AsyncService,
     std::map<std::string, UDepthCameraComponent*>>
@@ -197,11 +197,25 @@ protected:
     virtual void PrepareNextCall() override final;
     virtual void InitializeRequest() override final;
     virtual void ProcessRequest() override final;
-private:
-    TSharedPtr<TPromise<void>> Promise;
 };
 
-class DepthCameraGetImageDataCall : public AsyncCallTemplateM<
+class DepthCameraGetImageSizeCall : public AsyncCallTemplateM<
+    VCCSim::RobotName, VCCSim::ImageSize,
+    VCCSim::DepthCameraService::AsyncService,
+    std::map<std::string, UDepthCameraComponent*>>
+{
+public:
+    DepthCameraGetImageSizeCall(
+        VCCSim::DepthCameraService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        std::map<std::string, UDepthCameraComponent*> rdcmap);
+protected:
+    virtual void PrepareNextCall() override final;
+    virtual void InitializeRequest() override final;
+    virtual void ProcessRequest() override final;
+};
+
+class DepthCameraGetImageDataCall : public AsyncCallTemplateImage<
     VCCSim::RobotName, VCCSim::DepthCameraImageData,
     VCCSim::DepthCameraService::AsyncService,
     std::map<std::string, UDepthCameraComponent*>>
@@ -215,8 +229,6 @@ protected:
     virtual void PrepareNextCall() override final;
     virtual void InitializeRequest() override final;
     virtual void ProcessRequest() override final;
-private:
-    TSharedPtr<TPromise<void>> Promise;
 };
 
 class DepthCameraGetOdomCall : public AsyncCallTemplateM<
@@ -242,6 +254,21 @@ class RGBCameraGetOdomCall : public AsyncCallTemplateM<
 {
 public:
     RGBCameraGetOdomCall(
+        VCCSim::RGBCameraService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        std::map<std::string, URGBCameraComponent*> rrgbcmap);
+protected:
+    virtual void PrepareNextCall() override final;
+    virtual void InitializeRequest() override final;
+    virtual void ProcessRequest() override final;
+};
+
+class RGBIndexedCameraImageSizeCall : public AsyncCallTemplateM<
+    VCCSim::IndexedCamera, VCCSim::ImageSize, VCCSim::RGBCameraService::AsyncService,
+    std::map<std::string, URGBCameraComponent*>>
+{
+public:
+    RGBIndexedCameraImageSizeCall(
         VCCSim::RGBCameraService::AsyncService* service,
         grpc::ServerCompletionQueue* cq,
         std::map<std::string, URGBCameraComponent*> rrgbcmap);

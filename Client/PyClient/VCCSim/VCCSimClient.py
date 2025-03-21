@@ -88,6 +88,12 @@ class VCCSimClient:
         response = self.depth_camera_service.GetDepthCameraPointData(request)
         return [(point.x, point.y, point.z) for point in response.data]
 
+    def get_depth_camera_image_size(self, robot_name: str) -> Tuple[int, int]:
+        """Get depth camera image size (width, height) for a robot."""
+        request = self._create_robot_name(robot_name)
+        response = self.depth_camera_service.GetDepthCameraImageSize(request)
+        return response.width, response.height
+
     def get_depth_camera_image_data(self, robot_name: str) -> List[float]:
         """Get depth camera image data for a robot."""
         request = self._create_robot_name(robot_name)
@@ -104,6 +110,23 @@ class VCCSimClient:
         """Get RGB camera odometry for a robot."""
         request = self._create_robot_name(robot_name)
         return self.rgb_camera_service.GetRGBCameraOdom(request)
+    
+    def get_rgb_indexed_camera_image_size(self, robot_name: str, index: int) -> Tuple[int, int]:
+        """Get RGB camera image size for a specific camera index.
+        
+        Args:
+            robot_name: The name of the robot
+            index: Camera index
+        
+        Returns:
+            Tuple of width and height
+        """
+        request = VCCSim_pb2.IndexedCamera(
+            robot_name=self._create_robot_name(robot_name),
+            index=index
+        )
+        response = self.rgb_camera_service.GetRGBIndexedCameraImageSize(request)
+        return response.width, response.height
 
     def get_rgb_indexed_camera_image_data(self, robot_name: str, index: int, 
                                          format: VCCSim_pb2.Format = VCCSim_pb2.Format.PNG) -> VCCSim_pb2.RGBCameraImageData:

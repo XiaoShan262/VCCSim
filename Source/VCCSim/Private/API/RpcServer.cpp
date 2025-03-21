@@ -162,6 +162,8 @@ public:
 					CompletionQueue.get(), RGrpcMaps.RCMaps.RDCMap);
         		new DepthCameraGetOdomCall(&DepthCameraService,
 					CompletionQueue.get(), RGrpcMaps.RCMaps.RDCMap);
+        		new DepthCameraGetImageSizeCall(&DepthCameraService,
+        			CompletionQueue.get(), RGrpcMaps.RCMaps.RDCMap);
         	}
         	if (!RGrpcMaps.RCMaps.RRGBCMap.empty())
         	{
@@ -169,6 +171,8 @@ public:
 					CompletionQueue.get(), RGrpcMaps.RCMaps.RRGBCMap);
         		new RGBIndexedCameraImageDataCall(&RGBCameraService,
 					CompletionQueue.get(), RGrpcMaps.RCMaps.RRGBCMap);
+        		new RGBIndexedCameraImageSizeCall(&RGBCameraService,
+        			CompletionQueue.get(), RGrpcMaps.RCMaps.RRGBCMap);
         	}
         	
         	new SendMeshCall(&MeshService, CompletionQueue.get(), MeshComponent);

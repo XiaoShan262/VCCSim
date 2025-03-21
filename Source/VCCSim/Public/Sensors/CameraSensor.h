@@ -67,7 +67,8 @@ public:
     
     // For GRPC call
     void AsyncGetRGBImageData(TFunction<void(const TArray<FLinearColor>&)> Callback);
-
+    std::pair<int32, int32> GetImageSize() const { return {Width, Height}; }
+        
 protected:
     virtual void BeginPlay() override;
     virtual void OnComponentCreated() override;

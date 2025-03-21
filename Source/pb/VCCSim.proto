@@ -79,6 +79,11 @@ message IndexedCamera{
     Format format = 3;
 }
 
+message ImageSize {
+  uint32 width = 1;
+  uint32 height = 2;
+}
+
 // Mesh:
 message MeshData {
   bytes data = 1;           // Binary mesh data
@@ -168,13 +173,15 @@ service LidarService {
 
 service DepthCameraService {
   rpc GetDepthCameraPointData (RobotName) returns (DepthCameraPointData);
-  rpc GetDepthCameraImageData (RobotName) returns (DepthCameraImageData); // todo: size?
+  rpc GetDepthCameraImageSize (RobotName) returns (ImageSize);
+  rpc GetDepthCameraImageData (RobotName) returns (DepthCameraImageData);
   rpc GetDepthCameraOdom (RobotName) returns (Odometry);
 }
 
 service RGBCameraService {
   rpc GetRGBCameraOdom (RobotName) returns (Odometry);
   rpc GetRGBIndexedCameraImageData (IndexedCamera) returns (RGBCameraImageData);
+  rpc GetRGBIndexedCameraImageSize (IndexedCamera) returns (ImageSize);
 }
 
 service DroneService {

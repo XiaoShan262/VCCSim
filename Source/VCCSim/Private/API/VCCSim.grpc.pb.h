@@ -564,6 +564,13 @@ class DepthCameraService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::DepthCameraPointData>> PrepareAsyncGetDepthCameraPointData(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::DepthCameraPointData>>(PrepareAsyncGetDepthCameraPointDataRaw(context, request, cq));
     }
+    virtual ::grpc::Status GetDepthCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::ImageSize* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::ImageSize>> AsyncGetDepthCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::ImageSize>>(AsyncGetDepthCameraImageSizeRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::ImageSize>> PrepareAsyncGetDepthCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::ImageSize>>(PrepareAsyncGetDepthCameraImageSizeRaw(context, request, cq));
+    }
     virtual ::grpc::Status GetDepthCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::DepthCameraImageData* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::DepthCameraImageData>> AsyncGetDepthCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::DepthCameraImageData>>(AsyncGetDepthCameraImageDataRaw(context, request, cq));
@@ -571,7 +578,6 @@ class DepthCameraService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::DepthCameraImageData>> PrepareAsyncGetDepthCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::DepthCameraImageData>>(PrepareAsyncGetDepthCameraImageDataRaw(context, request, cq));
     }
-    // todo: size?
     virtual ::grpc::Status GetDepthCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Odometry* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>> AsyncGetDepthCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>>(AsyncGetDepthCameraOdomRaw(context, request, cq));
@@ -584,9 +590,10 @@ class DepthCameraService final {
       virtual ~async_interface() {}
       virtual void GetDepthCameraPointData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::DepthCameraPointData* response, std::function<void(::grpc::Status)>) = 0;
       virtual void GetDepthCameraPointData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::DepthCameraPointData* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void GetDepthCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::ImageSize* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void GetDepthCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::ImageSize* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void GetDepthCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::DepthCameraImageData* response, std::function<void(::grpc::Status)>) = 0;
       virtual void GetDepthCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::DepthCameraImageData* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      // todo: size?
       virtual void GetDepthCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, std::function<void(::grpc::Status)>) = 0;
       virtual void GetDepthCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
@@ -596,6 +603,8 @@ class DepthCameraService final {
    private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::DepthCameraPointData>* AsyncGetDepthCameraPointDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::DepthCameraPointData>* PrepareAsyncGetDepthCameraPointDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::ImageSize>* AsyncGetDepthCameraImageSizeRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::ImageSize>* PrepareAsyncGetDepthCameraImageSizeRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::DepthCameraImageData>* AsyncGetDepthCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::DepthCameraImageData>* PrepareAsyncGetDepthCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>* AsyncGetDepthCameraOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
@@ -610,6 +619,13 @@ class DepthCameraService final {
     }
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::DepthCameraPointData>> PrepareAsyncGetDepthCameraPointData(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::DepthCameraPointData>>(PrepareAsyncGetDepthCameraPointDataRaw(context, request, cq));
+    }
+    ::grpc::Status GetDepthCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::ImageSize* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>> AsyncGetDepthCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>>(AsyncGetDepthCameraImageSizeRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>> PrepareAsyncGetDepthCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>>(PrepareAsyncGetDepthCameraImageSizeRaw(context, request, cq));
     }
     ::grpc::Status GetDepthCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::DepthCameraImageData* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::DepthCameraImageData>> AsyncGetDepthCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
@@ -630,6 +646,8 @@ class DepthCameraService final {
      public:
       void GetDepthCameraPointData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::DepthCameraPointData* response, std::function<void(::grpc::Status)>) override;
       void GetDepthCameraPointData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::DepthCameraPointData* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void GetDepthCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::ImageSize* response, std::function<void(::grpc::Status)>) override;
+      void GetDepthCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::ImageSize* response, ::grpc::ClientUnaryReactor* reactor) override;
       void GetDepthCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::DepthCameraImageData* response, std::function<void(::grpc::Status)>) override;
       void GetDepthCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::DepthCameraImageData* response, ::grpc::ClientUnaryReactor* reactor) override;
       void GetDepthCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, std::function<void(::grpc::Status)>) override;
@@ -647,11 +665,14 @@ class DepthCameraService final {
     class async async_stub_{this};
     ::grpc::ClientAsyncResponseReader< ::VCCSim::DepthCameraPointData>* AsyncGetDepthCameraPointDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::DepthCameraPointData>* PrepareAsyncGetDepthCameraPointDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>* AsyncGetDepthCameraImageSizeRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>* PrepareAsyncGetDepthCameraImageSizeRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::DepthCameraImageData>* AsyncGetDepthCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::DepthCameraImageData>* PrepareAsyncGetDepthCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>* AsyncGetDepthCameraOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>* PrepareAsyncGetDepthCameraOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_GetDepthCameraPointData_;
+    const ::grpc::internal::RpcMethod rpcmethod_GetDepthCameraImageSize_;
     const ::grpc::internal::RpcMethod rpcmethod_GetDepthCameraImageData_;
     const ::grpc::internal::RpcMethod rpcmethod_GetDepthCameraOdom_;
   };
@@ -662,8 +683,8 @@ class DepthCameraService final {
     Service();
     virtual ~Service();
     virtual ::grpc::Status GetDepthCameraPointData(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::DepthCameraPointData* response);
+    virtual ::grpc::Status GetDepthCameraImageSize(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::ImageSize* response);
     virtual ::grpc::Status GetDepthCameraImageData(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::DepthCameraImageData* response);
-    // todo: size?
     virtual ::grpc::Status GetDepthCameraOdom(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response);
   };
   template <class BaseClass>
@@ -687,12 +708,32 @@ class DepthCameraService final {
     }
   };
   template <class BaseClass>
+  class WithAsyncMethod_GetDepthCameraImageSize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_GetDepthCameraImageSize() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
+    ~WithAsyncMethod_GetDepthCameraImageSize() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetDepthCameraImageSize(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::ImageSize* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetDepthCameraImageSize(::grpc::ServerContext* context, ::VCCSim::RobotName* request, ::grpc::ServerAsyncResponseWriter< ::VCCSim::ImageSize>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithAsyncMethod_GetDepthCameraImageData : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_GetDepthCameraImageData() {
-      ::grpc::Service::MarkMethodAsync(1);
+      ::grpc::Service::MarkMethodAsync(2);
     }
     ~WithAsyncMethod_GetDepthCameraImageData() override {
       BaseClassMustBeDerivedFromService(this);
@@ -703,7 +744,7 @@ class DepthCameraService final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestGetDepthCameraImageData(::grpc::ServerContext* context, ::VCCSim::RobotName* request, ::grpc::ServerAsyncResponseWriter< ::VCCSim::DepthCameraImageData>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -712,7 +753,7 @@ class DepthCameraService final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_GetDepthCameraOdom() {
-      ::grpc::Service::MarkMethodAsync(2);
+      ::grpc::Service::MarkMethodAsync(3);
     }
     ~WithAsyncMethod_GetDepthCameraOdom() override {
       BaseClassMustBeDerivedFromService(this);
@@ -723,10 +764,10 @@ class DepthCameraService final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestGetDepthCameraOdom(::grpc::ServerContext* context, ::VCCSim::RobotName* request, ::grpc::ServerAsyncResponseWriter< ::VCCSim::Odometry>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_GetDepthCameraPointData<WithAsyncMethod_GetDepthCameraImageData<WithAsyncMethod_GetDepthCameraOdom<Service > > > AsyncService;
+  typedef WithAsyncMethod_GetDepthCameraPointData<WithAsyncMethod_GetDepthCameraImageSize<WithAsyncMethod_GetDepthCameraImageData<WithAsyncMethod_GetDepthCameraOdom<Service > > > > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_GetDepthCameraPointData : public BaseClass {
    private:
@@ -755,18 +796,45 @@ class DepthCameraService final {
       ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::DepthCameraPointData* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithCallbackMethod_GetDepthCameraImageSize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_GetDepthCameraImageSize() {
+      ::grpc::Service::MarkMethodCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::VCCSim::RobotName, ::VCCSim::ImageSize>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::ImageSize* response) { return this->GetDepthCameraImageSize(context, request, response); }));}
+    void SetMessageAllocatorFor_GetDepthCameraImageSize(
+        ::grpc::MessageAllocator< ::VCCSim::RobotName, ::VCCSim::ImageSize>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::VCCSim::RobotName, ::VCCSim::ImageSize>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_GetDepthCameraImageSize() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetDepthCameraImageSize(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::ImageSize* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* GetDepthCameraImageSize(
+      ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::ImageSize* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithCallbackMethod_GetDepthCameraImageData : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_GetDepthCameraImageData() {
-      ::grpc::Service::MarkMethodCallback(1,
+      ::grpc::Service::MarkMethodCallback(2,
           new ::grpc::internal::CallbackUnaryHandler< ::VCCSim::RobotName, ::VCCSim::DepthCameraImageData>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::DepthCameraImageData* response) { return this->GetDepthCameraImageData(context, request, response); }));}
     void SetMessageAllocatorFor_GetDepthCameraImageData(
         ::grpc::MessageAllocator< ::VCCSim::RobotName, ::VCCSim::DepthCameraImageData>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::VCCSim::RobotName, ::VCCSim::DepthCameraImageData>*>(handler)
               ->SetMessageAllocator(allocator);
     }
@@ -787,13 +855,13 @@ class DepthCameraService final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithCallbackMethod_GetDepthCameraOdom() {
-      ::grpc::Service::MarkMethodCallback(2,
+      ::grpc::Service::MarkMethodCallback(3,
           new ::grpc::internal::CallbackUnaryHandler< ::VCCSim::RobotName, ::VCCSim::Odometry>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response) { return this->GetDepthCameraOdom(context, request, response); }));}
     void SetMessageAllocatorFor_GetDepthCameraOdom(
         ::grpc::MessageAllocator< ::VCCSim::RobotName, ::VCCSim::Odometry>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(3);
       static_cast<::grpc::internal::CallbackUnaryHandler< ::VCCSim::RobotName, ::VCCSim::Odometry>*>(handler)
               ->SetMessageAllocator(allocator);
     }
@@ -808,7 +876,7 @@ class DepthCameraService final {
     virtual ::grpc::ServerUnaryReactor* GetDepthCameraOdom(
       ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::Odometry* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_GetDepthCameraPointData<WithCallbackMethod_GetDepthCameraImageData<WithCallbackMethod_GetDepthCameraOdom<Service > > > CallbackService;
+  typedef WithCallbackMethod_GetDepthCameraPointData<WithCallbackMethod_GetDepthCameraImageSize<WithCallbackMethod_GetDepthCameraImageData<WithCallbackMethod_GetDepthCameraOdom<Service > > > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_GetDepthCameraPointData : public BaseClass {
@@ -828,12 +896,29 @@ class DepthCameraService final {
     }
   };
   template <class BaseClass>
+  class WithGenericMethod_GetDepthCameraImageSize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_GetDepthCameraImageSize() {
+      ::grpc::Service::MarkMethodGeneric(1);
+    }
+    ~WithGenericMethod_GetDepthCameraImageSize() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetDepthCameraImageSize(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::ImageSize* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
   class WithGenericMethod_GetDepthCameraImageData : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_GetDepthCameraImageData() {
-      ::grpc::Service::MarkMethodGeneric(1);
+      ::grpc::Service::MarkMethodGeneric(2);
     }
     ~WithGenericMethod_GetDepthCameraImageData() override {
       BaseClassMustBeDerivedFromService(this);
@@ -850,7 +935,7 @@ class DepthCameraService final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_GetDepthCameraOdom() {
-      ::grpc::Service::MarkMethodGeneric(2);
+      ::grpc::Service::MarkMethodGeneric(3);
     }
     ~WithGenericMethod_GetDepthCameraOdom() override {
       BaseClassMustBeDerivedFromService(this);
@@ -882,12 +967,32 @@ class DepthCameraService final {
     }
   };
   template <class BaseClass>
+  class WithRawMethod_GetDepthCameraImageSize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_GetDepthCameraImageSize() {
+      ::grpc::Service::MarkMethodRaw(1);
+    }
+    ~WithRawMethod_GetDepthCameraImageSize() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetDepthCameraImageSize(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::ImageSize* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetDepthCameraImageSize(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithRawMethod_GetDepthCameraImageData : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_GetDepthCameraImageData() {
-      ::grpc::Service::MarkMethodRaw(1);
+      ::grpc::Service::MarkMethodRaw(2);
     }
     ~WithRawMethod_GetDepthCameraImageData() override {
       BaseClassMustBeDerivedFromService(this);
@@ -898,7 +1003,7 @@ class DepthCameraService final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestGetDepthCameraImageData(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -907,7 +1012,7 @@ class DepthCameraService final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_GetDepthCameraOdom() {
-      ::grpc::Service::MarkMethodRaw(2);
+      ::grpc::Service::MarkMethodRaw(3);
     }
     ~WithRawMethod_GetDepthCameraOdom() override {
       BaseClassMustBeDerivedFromService(this);
@@ -918,7 +1023,7 @@ class DepthCameraService final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestGetDepthCameraOdom(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -944,12 +1049,34 @@ class DepthCameraService final {
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithRawCallbackMethod_GetDepthCameraImageSize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_GetDepthCameraImageSize() {
+      ::grpc::Service::MarkMethodRawCallback(1,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetDepthCameraImageSize(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_GetDepthCameraImageSize() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetDepthCameraImageSize(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::ImageSize* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* GetDepthCameraImageSize(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithRawCallbackMethod_GetDepthCameraImageData : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_GetDepthCameraImageData() {
-      ::grpc::Service::MarkMethodRawCallback(1,
+      ::grpc::Service::MarkMethodRawCallback(2,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetDepthCameraImageData(context, request, response); }));
@@ -971,7 +1098,7 @@ class DepthCameraService final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawCallbackMethod_GetDepthCameraOdom() {
-      ::grpc::Service::MarkMethodRawCallback(2,
+      ::grpc::Service::MarkMethodRawCallback(3,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
                    ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetDepthCameraOdom(context, request, response); }));
@@ -1015,12 +1142,39 @@ class DepthCameraService final {
     virtual ::grpc::Status StreamedGetDepthCameraPointData(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::RobotName,::VCCSim::DepthCameraPointData>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
+  class WithStreamedUnaryMethod_GetDepthCameraImageSize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_GetDepthCameraImageSize() {
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::VCCSim::RobotName, ::VCCSim::ImageSize>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::VCCSim::RobotName, ::VCCSim::ImageSize>* streamer) {
+                       return this->StreamedGetDepthCameraImageSize(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_GetDepthCameraImageSize() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status GetDepthCameraImageSize(::grpc::ServerContext* /*context*/, const ::VCCSim::RobotName* /*request*/, ::VCCSim::ImageSize* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedGetDepthCameraImageSize(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::RobotName,::VCCSim::ImageSize>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_GetDepthCameraImageData : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_GetDepthCameraImageData() {
-      ::grpc::Service::MarkMethodStreamed(1,
+      ::grpc::Service::MarkMethodStreamed(2,
         new ::grpc::internal::StreamedUnaryHandler<
           ::VCCSim::RobotName, ::VCCSim::DepthCameraImageData>(
             [this](::grpc::ServerContext* context,
@@ -1047,7 +1201,7 @@ class DepthCameraService final {
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_GetDepthCameraOdom() {
-      ::grpc::Service::MarkMethodStreamed(2,
+      ::grpc::Service::MarkMethodStreamed(3,
         new ::grpc::internal::StreamedUnaryHandler<
           ::VCCSim::RobotName, ::VCCSim::Odometry>(
             [this](::grpc::ServerContext* context,
@@ -1068,9 +1222,9 @@ class DepthCameraService final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedGetDepthCameraOdom(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::RobotName,::VCCSim::Odometry>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_GetDepthCameraPointData<WithStreamedUnaryMethod_GetDepthCameraImageData<WithStreamedUnaryMethod_GetDepthCameraOdom<Service > > > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_GetDepthCameraPointData<WithStreamedUnaryMethod_GetDepthCameraImageSize<WithStreamedUnaryMethod_GetDepthCameraImageData<WithStreamedUnaryMethod_GetDepthCameraOdom<Service > > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_GetDepthCameraPointData<WithStreamedUnaryMethod_GetDepthCameraImageData<WithStreamedUnaryMethod_GetDepthCameraOdom<Service > > > StreamedService;
+  typedef WithStreamedUnaryMethod_GetDepthCameraPointData<WithStreamedUnaryMethod_GetDepthCameraImageSize<WithStreamedUnaryMethod_GetDepthCameraImageData<WithStreamedUnaryMethod_GetDepthCameraOdom<Service > > > > StreamedService;
 };
 
 class RGBCameraService final {
@@ -1095,6 +1249,13 @@ class RGBCameraService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::RGBCameraImageData>> PrepareAsyncGetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::RGBCameraImageData>>(PrepareAsyncGetRGBIndexedCameraImageDataRaw(context, request, cq));
     }
+    virtual ::grpc::Status GetRGBIndexedCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::VCCSim::ImageSize* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::ImageSize>> AsyncGetRGBIndexedCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::ImageSize>>(AsyncGetRGBIndexedCameraImageSizeRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::ImageSize>> PrepareAsyncGetRGBIndexedCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::ImageSize>>(PrepareAsyncGetRGBIndexedCameraImageSizeRaw(context, request, cq));
+    }
     class async_interface {
      public:
       virtual ~async_interface() {}
@@ -1102,6 +1263,8 @@ class RGBCameraService final {
       virtual void GetRGBCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       virtual void GetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::RGBCameraImageData* response, std::function<void(::grpc::Status)>) = 0;
       virtual void GetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::RGBCameraImageData* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void GetRGBIndexedCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::ImageSize* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void GetRGBIndexedCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::ImageSize* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
@@ -1111,6 +1274,8 @@ class RGBCameraService final {
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>* PrepareAsyncGetRGBCameraOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::RGBCameraImageData>* AsyncGetRGBIndexedCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::RGBCameraImageData>* PrepareAsyncGetRGBIndexedCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::ImageSize>* AsyncGetRGBIndexedCameraImageSizeRaw(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::ImageSize>* PrepareAsyncGetRGBIndexedCameraImageSizeRaw(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -1129,6 +1294,13 @@ class RGBCameraService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>> PrepareAsyncGetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>>(PrepareAsyncGetRGBIndexedCameraImageDataRaw(context, request, cq));
     }
+    ::grpc::Status GetRGBIndexedCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::VCCSim::ImageSize* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>> AsyncGetRGBIndexedCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>>(AsyncGetRGBIndexedCameraImageSizeRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>> PrepareAsyncGetRGBIndexedCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>>(PrepareAsyncGetRGBIndexedCameraImageSizeRaw(context, request, cq));
+    }
     class async final :
       public StubInterface::async_interface {
      public:
@@ -1136,6 +1308,8 @@ class RGBCameraService final {
       void GetRGBCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, ::grpc::ClientUnaryReactor* reactor) override;
       void GetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::RGBCameraImageData* response, std::function<void(::grpc::Status)>) override;
       void GetRGBIndexedCameraImageData(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::RGBCameraImageData* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void GetRGBIndexedCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::ImageSize* response, std::function<void(::grpc::Status)>) override;
+      void GetRGBIndexedCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::ImageSize* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
       friend class Stub;
       explicit async(Stub* stub): stub_(stub) { }
@@ -1151,8 +1325,11 @@ class RGBCameraService final {
     ::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>* PrepareAsyncGetRGBCameraOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>* AsyncGetRGBIndexedCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::VCCSim::RGBCameraImageData>* PrepareAsyncGetRGBIndexedCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>* AsyncGetRGBIndexedCameraImageSizeRaw(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>* PrepareAsyncGetRGBIndexedCameraImageSizeRaw(::grpc::ClientContext* context, const ::VCCSim::IndexedCamera& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_GetRGBCameraOdom_;
     const ::grpc::internal::RpcMethod rpcmethod_GetRGBIndexedCameraImageData_;
+    const ::grpc::internal::RpcMethod rpcmethod_GetRGBIndexedCameraImageSize_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -1162,6 +1339,7 @@ class RGBCameraService final {
     virtual ~Service();
     virtual ::grpc::Status GetRGBCameraOdom(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response);
     virtual ::grpc::Status GetRGBIndexedCameraImageData(::grpc::ServerContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::RGBCameraImageData* response);
+    virtual ::grpc::Status GetRGBIndexedCameraImageSize(::grpc::ServerContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::ImageSize* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_GetRGBCameraOdom : public BaseClass {
@@ -1203,7 +1381,27 @@ class RGBCameraService final {
       ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_GetRGBCameraOdom<WithAsyncMethod_GetRGBIndexedCameraImageData<Service > > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_GetRGBIndexedCameraImageSize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_GetRGBIndexedCameraImageSize() {
+      ::grpc::Service::MarkMethodAsync(2);
+    }
+    ~WithAsyncMethod_GetRGBIndexedCameraImageSize() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetRGBIndexedCameraImageSize(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::ImageSize* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetRGBIndexedCameraImageSize(::grpc::ServerContext* context, ::VCCSim::IndexedCamera* request, ::grpc::ServerAsyncResponseWriter< ::VCCSim::ImageSize>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_GetRGBCameraOdom<WithAsyncMethod_GetRGBIndexedCameraImageData<WithAsyncMethod_GetRGBIndexedCameraImageSize<Service > > > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_GetRGBCameraOdom : public BaseClass {
    private:
@@ -1258,7 +1456,34 @@ class RGBCameraService final {
     virtual ::grpc::ServerUnaryReactor* GetRGBIndexedCameraImageData(
       ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::RGBCameraImageData* /*response*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_GetRGBCameraOdom<WithCallbackMethod_GetRGBIndexedCameraImageData<Service > > CallbackService;
+  template <class BaseClass>
+  class WithCallbackMethod_GetRGBIndexedCameraImageSize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_GetRGBIndexedCameraImageSize() {
+      ::grpc::Service::MarkMethodCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::VCCSim::IndexedCamera, ::VCCSim::ImageSize>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::VCCSim::IndexedCamera* request, ::VCCSim::ImageSize* response) { return this->GetRGBIndexedCameraImageSize(context, request, response); }));}
+    void SetMessageAllocatorFor_GetRGBIndexedCameraImageSize(
+        ::grpc::MessageAllocator< ::VCCSim::IndexedCamera, ::VCCSim::ImageSize>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::VCCSim::IndexedCamera, ::VCCSim::ImageSize>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_GetRGBIndexedCameraImageSize() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetRGBIndexedCameraImageSize(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::ImageSize* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* GetRGBIndexedCameraImageSize(
+      ::grpc::CallbackServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::ImageSize* /*response*/)  { return nullptr; }
+  };
+  typedef WithCallbackMethod_GetRGBCameraOdom<WithCallbackMethod_GetRGBIndexedCameraImageData<WithCallbackMethod_GetRGBIndexedCameraImageSize<Service > > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_GetRGBCameraOdom : public BaseClass {
@@ -1290,6 +1515,23 @@ class RGBCameraService final {
     }
     // disable synchronous version of this method
     ::grpc::Status GetRGBIndexedCameraImageData(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::RGBCameraImageData* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_GetRGBIndexedCameraImageSize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_GetRGBIndexedCameraImageSize() {
+      ::grpc::Service::MarkMethodGeneric(2);
+    }
+    ~WithGenericMethod_GetRGBIndexedCameraImageSize() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetRGBIndexedCameraImageSize(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::ImageSize* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1335,6 +1577,26 @@ class RGBCameraService final {
     }
   };
   template <class BaseClass>
+  class WithRawMethod_GetRGBIndexedCameraImageSize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_GetRGBIndexedCameraImageSize() {
+      ::grpc::Service::MarkMethodRaw(2);
+    }
+    ~WithRawMethod_GetRGBIndexedCameraImageSize() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetRGBIndexedCameraImageSize(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::ImageSize* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetRGBIndexedCameraImageSize(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithRawCallbackMethod_GetRGBCameraOdom : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
@@ -1376,6 +1638,28 @@ class RGBCameraService final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     virtual ::grpc::ServerUnaryReactor* GetRGBIndexedCameraImageData(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
+  class WithRawCallbackMethod_GetRGBIndexedCameraImageSize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_GetRGBIndexedCameraImageSize() {
+      ::grpc::Service::MarkMethodRawCallback(2,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetRGBIndexedCameraImageSize(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_GetRGBIndexedCameraImageSize() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetRGBIndexedCameraImageSize(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::ImageSize* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* GetRGBIndexedCameraImageSize(
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
@@ -1432,9 +1716,36 @@ class RGBCameraService final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedGetRGBIndexedCameraImageData(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::IndexedCamera,::VCCSim::RGBCameraImageData>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_GetRGBCameraOdom<WithStreamedUnaryMethod_GetRGBIndexedCameraImageData<Service > > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_GetRGBIndexedCameraImageSize : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_GetRGBIndexedCameraImageSize() {
+      ::grpc::Service::MarkMethodStreamed(2,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::VCCSim::IndexedCamera, ::VCCSim::ImageSize>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::VCCSim::IndexedCamera, ::VCCSim::ImageSize>* streamer) {
+                       return this->StreamedGetRGBIndexedCameraImageSize(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_GetRGBIndexedCameraImageSize() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status GetRGBIndexedCameraImageSize(::grpc::ServerContext* /*context*/, const ::VCCSim::IndexedCamera* /*request*/, ::VCCSim::ImageSize* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedGetRGBIndexedCameraImageSize(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::VCCSim::IndexedCamera,::VCCSim::ImageSize>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_GetRGBCameraOdom<WithStreamedUnaryMethod_GetRGBIndexedCameraImageData<WithStreamedUnaryMethod_GetRGBIndexedCameraImageSize<Service > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_GetRGBCameraOdom<WithStreamedUnaryMethod_GetRGBIndexedCameraImageData<Service > > StreamedService;
+  typedef WithStreamedUnaryMethod_GetRGBCameraOdom<WithStreamedUnaryMethod_GetRGBIndexedCameraImageData<WithStreamedUnaryMethod_GetRGBIndexedCameraImageSize<Service > > > StreamedService;
 };
 
 class DroneService final {
@@ -1973,7 +2284,6 @@ class CarService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>> PrepareAsyncGetCarOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Odometry>>(PrepareAsyncGetCarOdomRaw(context, request, cq));
     }
-    // todo
     virtual ::grpc::Status SendCarPose(::grpc::ClientContext* context, const ::VCCSim::CarPose& request, ::VCCSim::Status* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> AsyncSendCarPose(::grpc::ClientContext* context, const ::VCCSim::CarPose& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(AsyncSendCarPoseRaw(context, request, cq));
@@ -1981,7 +2291,6 @@ class CarService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> PrepareAsyncSendCarPose(::grpc::ClientContext* context, const ::VCCSim::CarPose& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(PrepareAsyncSendCarPoseRaw(context, request, cq));
     }
-    // todo
     virtual ::grpc::Status SendCarPath(::grpc::ClientContext* context, const ::VCCSim::CarPath& request, ::VCCSim::Status* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> AsyncSendCarPath(::grpc::ClientContext* context, const ::VCCSim::CarPath& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(AsyncSendCarPathRaw(context, request, cq));
@@ -1989,19 +2298,15 @@ class CarService final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>> PrepareAsyncSendCarPath(::grpc::ClientContext* context, const ::VCCSim::CarPath& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::VCCSim::Status>>(PrepareAsyncSendCarPathRaw(context, request, cq));
     }
-    // todo
     class async_interface {
      public:
       virtual ~async_interface() {}
       virtual void GetCarOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, std::function<void(::grpc::Status)>) = 0;
       virtual void GetCarOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      // todo
       virtual void SendCarPose(::grpc::ClientContext* context, const ::VCCSim::CarPose* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SendCarPose(::grpc::ClientContext* context, const ::VCCSim::CarPose* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      // todo
       virtual void SendCarPath(::grpc::ClientContext* context, const ::VCCSim::CarPath* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SendCarPath(::grpc::ClientContext* context, const ::VCCSim::CarPath* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      // todo
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
@@ -2075,11 +2380,8 @@ class CarService final {
     Service();
     virtual ~Service();
     virtual ::grpc::Status GetCarOdom(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response);
-    // todo
     virtual ::grpc::Status SendCarPose(::grpc::ServerContext* context, const ::VCCSim::CarPose* request, ::VCCSim::Status* response);
-    // todo
     virtual ::grpc::Status SendCarPath(::grpc::ServerContext* context, const ::VCCSim::CarPath* request, ::VCCSim::Status* response);
-    // todo
   };
   template <class BaseClass>
   class WithAsyncMethod_GetCarOdom : public BaseClass {
