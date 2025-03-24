@@ -45,6 +45,7 @@ void UDepthCameraComponent::RConfigure(
     Height = Config.Height;
     bOrthographic = Config.bOrthographic;
     OrthoWidth = Config.OrthoWidth;
+    InitializeRenderTargets();
     SetCaptureComponent();
 
     if (Config.RecordInterval > 0)
@@ -270,6 +271,8 @@ void UDepthCameraComponent::ProcessDepthTextureParam(
 
     auto SharedCallback = MakeShared<TFunction<void(const TArray<FFloat16Color>&)>>(OnComplete);
     // Submit the render thread command
+    
+    
     ENQUEUE_RENDER_COMMAND(ReadSurfaceCommand)(
         [Context, SharedCallback](FRHICommandListImmediate& RHICmdList)
     {

@@ -90,6 +90,23 @@ void URGBCameraComponent::RConfigure(
     Height = Config.Height;
     bOrthographic = Config.bOrthographic;
     OrthoWidth = Config.OrthoWidth;
+    
+    float HorizontalFOVRad = FMath::DegreesToRadians(FOV);
+    float fx = (Width / 2.0f) / FMath::Tan(HorizontalFOVRad / 2.0f);
+
+    // Compute vertical FOV from horizontal FOV and aspect ratio.
+    float verticalFOVRad = 2.0f * FMath::Atan((Height / Width) * FMath::Tan(HorizontalFOVRad / 2.0f));
+    float fy = (Height / 2.0f) / FMath::Tan(verticalFOVRad / 2.0f);
+
+    float cx = Width / 2.0f;
+    float cy = Height / 2.0f;
+
+    CameraIntrinsics = FMatrix44f::Identity;
+    CameraIntrinsics.M[0][0] = fx;  // focal length in x
+    CameraIntrinsics.M[1][1] = fy;  // focal length in y
+    CameraIntrinsics.M[0][2] = cx;  // principal point x
+    CameraIntrinsics.M[1][2] = cy;  // principal point y
+    
     InitializeRenderTargets();
     SetCaptureComponent();
     

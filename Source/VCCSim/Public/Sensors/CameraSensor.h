@@ -42,6 +42,9 @@ public:
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
     FOnRGBImageCaptured, const TArray<FLinearColor>&, ImageData);
 
+DECLARE_DYNAMIC_DELEGATE_TwoParams(
+    FKeyPointCaptured, const FTransform&, Pose, const FString&, Name);
+
 UCLASS(ClassGroup = (VCCSIM), meta = (BlueprintSpawnableComponent))
 class VCCSIM_API URGBCameraComponent : public UPrimitiveComponent
 {
@@ -55,6 +58,7 @@ public:
     void SetRecordState(bool RState) { RecordState = RState; }
     
     int32 GetCameraIndex() const { return CameraIndex; }
+    FString CameraName;
     
     void SetCaptureComponent() const;
     void InitializeRenderTargets();
@@ -64,7 +68,8 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "RGBCamera")
     void CaptureRGBScene();
-    
+
+    FMatrix44f GetCameraIntrinsics() const { return CameraIntrinsics; }
     // For GRPC call
     void AsyncGetRGBImageData(TFunction<void(const TArray<FLinearColor>&)> Callback);
     std::pair<int32, int32> GetImageSize() const { return {Width, Height}; }
@@ -94,7 +99,11 @@ public:
     int32 CameraIndex = 0;
 
     UPROPERTY(BlueprintAssignable, Category = "Camera")
-    FOnRGBImageCaptured OnRGBImageCaptured;
+    FOnRGBImageCaptured
+    OnRGBImageCaptured;
+
+    FKeyPointCaptured
+    OnKeyPointCaptured;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "RGBCamera|Debug")
     bool bRecorded = false;
@@ -113,6 +122,8 @@ private:
         FIntRect Rect;
         FReadSurfaceDataFlags Flags;
     };
+
+    FMatrix44f CameraIntrinsics;
     
     UPROPERTY()
     USceneCaptureComponent2D* CaptureComponent = nullptr;
