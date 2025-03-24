@@ -17,7 +17,12 @@
   <depend>tf2</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>visualization_msgs</depend>
-  
+
+  <depend>nvblox_ros</depend>
+  <depend>nvblox_examples_bringup</depend>
+  <depend>nvblox_ros_python_utils</depend>
+  <depend>isaac_ros_launch_utils</depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 

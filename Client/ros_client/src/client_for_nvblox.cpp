@@ -93,6 +93,14 @@ private:
   int rgb_height_ = 480;
   int depth_width_ = 640;
   int depth_height_ = 480;
+  
+  // Topic names
+  std::string rgb_topic_;
+  std::string rgb_info_topic_;
+  std::string depth_topic_;
+  std::string depth_info_topic_;
+  std::string lidar_topic_;
+  std::string pose_topic_;
 
 public:
   VCCSimROS2Node() : Node("vccsim_ros2_node") {
@@ -116,6 +124,14 @@ public:
     this->declare_parameter<double>("drone_pose_frequency", 20.0);
     this->declare_parameter<double>("tf_frequency", 30.0);
     
+    // Declare topic name parameters (new)
+    this->declare_parameter<std::string>("rgb_topic", "vccsim/rgb_image");
+    this->declare_parameter<std::string>("rgb_info_topic", "vccsim/rgb_camera_info");
+    this->declare_parameter<std::string>("depth_topic", "vccsim/depth_image");
+    this->declare_parameter<std::string>("depth_info_topic", "vccsim/depth_camera_info");
+    this->declare_parameter<std::string>("lidar_topic", "vccsim/lidar_points");
+    this->declare_parameter<std::string>("pose_topic", "vccsim/drone_pose");
+    
     // Get connection parameters
     std::string host = this->get_parameter("vccsim_host").as_string();
     int port = this->get_parameter("vccsim_port").as_int();
@@ -133,6 +149,14 @@ public:
     double lidar_freq = this->get_parameter("lidar_frequency").as_double();
     double drone_pose_freq = this->get_parameter("drone_pose_frequency").as_double();
     double tf_freq = this->get_parameter("tf_frequency").as_double();
+    
+    // Get topic names (new)
+    rgb_topic_ = this->get_parameter("rgb_topic").as_string();
+    rgb_info_topic_ = this->get_parameter("rgb_info_topic").as_string();
+    depth_topic_ = this->get_parameter("depth_topic").as_string();
+    depth_info_topic_ = this->get_parameter("depth_info_topic").as_string();
+    lidar_topic_ = this->get_parameter("lidar_topic").as_string();
+    pose_topic_ = this->get_parameter("pose_topic").as_string();
     
     // Convert frequencies to durations
     auto rgb_period = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -155,10 +179,8 @@ public:
     
     // Create publishers (only if the respective component is active)
     if (rgb_active_) {
-      rgb_pub_ = this->create_publisher<sensor_msgs::msg::Image>(
-        "vccsim/rgb_image", 10);
-      rgb_info_pub_ = this->create_publisher<sensor_msgs::msg::CameraInfo>(
-        "vccsim/rgb_camera_info", 10);
+      rgb_pub_ = this->create_publisher<sensor_msgs::msg::Image>(rgb_topic_, 10);
+      rgb_info_pub_ = this->create_publisher<sensor_msgs::msg::CameraInfo>(rgb_info_topic_, 10);
         
       // Try to get the actual image dimensions
       std::string robot_name = this->get_parameter("robot_name").as_string();
@@ -169,26 +191,20 @@ public:
         RCLCPP_INFO(this->get_logger(), "Got RGB image dimensions: %dx%d", rgb_width_, rgb_height_);
       } catch (const std::exception& e) {
         RCLCPP_WARN(this->get_logger(), "Could not get RGB image dimensions: %s", e.what());
-      } catch (const std::exception& e) {
-        RCLCPP_WARN(this->get_logger(), "Could not get RGB image dimensions: %s", e.what());
       }
     }
     
     if (depth_active_) {
-      depth_pub_ = this->create_publisher<sensor_msgs::msg::Image>(
-        "vccsim/depth_image", 10);
-      depth_info_pub_ = this->create_publisher<sensor_msgs::msg::CameraInfo>(
-        "vccsim/depth_camera_info", 10);
+      depth_pub_ = this->create_publisher<sensor_msgs::msg::Image>(depth_topic_, 10);
+      depth_info_pub_ = this->create_publisher<sensor_msgs::msg::CameraInfo>(depth_info_topic_, 10);
     }
     
     if (lidar_active_) {
-      lidar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
-        "vccsim/lidar_points", 10);
+      lidar_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(lidar_topic_, 10);
     }
     
     if (drone_pose_active_) {
-      drone_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
-        "vccsim/drone_pose", 10);
+      drone_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(pose_topic_, 10);
     }
     
     // Create timers (only if the respective component is active)
@@ -232,6 +248,14 @@ public:
     RCLCPP_INFO(this->get_logger(), "Drone Pose: %s (%.1f Hz)", 
                 drone_pose_active_ ? "ACTIVE" : "INACTIVE", drone_pose_freq);
     RCLCPP_INFO(this->get_logger(), "TF Publishing: ACTIVE (%.1f Hz)", tf_freq);
+    
+    // Log topic names
+    RCLCPP_INFO(this->get_logger(), "RGB Image Topic: %s", rgb_topic_.c_str());
+    RCLCPP_INFO(this->get_logger(), "RGB Camera Info Topic: %s", rgb_info_topic_.c_str());
+    RCLCPP_INFO(this->get_logger(), "Depth Image Topic: %s", depth_topic_.c_str());
+    RCLCPP_INFO(this->get_logger(), "Depth Camera Info Topic: %s", depth_info_topic_.c_str());
+    RCLCPP_INFO(this->get_logger(), "LiDAR Topic: %s", lidar_topic_.c_str());
+    RCLCPP_INFO(this->get_logger(), "Pose Topic: %s", pose_topic_.c_str());
   }
 
   ~VCCSimROS2Node() {
@@ -364,8 +388,8 @@ private:
     info_msg->height = height;
     
     // Set reasonable default intrinsics (adjust these based on your camera model)
-    double fx = width * 0.8;  // Focal length x
-    double fy = height * 0.8; // Focal length y
+    double fx = width / 2.0;  // Focal length x
+    double fy = height / 2.0; // Focal length y
     double cx = width / 2.0;  // Principal point x
     double cy = height / 2.0; // Principal point y
     
@@ -413,6 +437,10 @@ private:
       
       // Get depth camera image data
       auto depth_data = client_->GetDepthCameraImageData(robot_name);
+      // Convert to meters
+      std::transform(depth_data.begin(), depth_data.end(), depth_data.begin(),
+                     [](float d) { return d / 100.0f; });
+      
       
       if (depth_data.empty()) {
         RCLCPP_WARN(this->get_logger(), "Received empty depth image data");
@@ -616,7 +644,7 @@ private:
     geometry_msgs::msg::TransformStamped t_map_drone;
     t_map_drone.header.stamp = now;
     t_map_drone.header.frame_id = "map";
-    t_map_drone.child_frame_id = robot_name + "_base";
+    t_map_drone.child_frame_id = "base_link";
     
     // Set translation - transform from UE to ROS coordinates and cm to m
     auto position = transform_position(drone_pose);
@@ -648,13 +676,13 @@ private:
     // Transform: drone_base -> rgb_camera
     geometry_msgs::msg::TransformStamped t_base_rgb;
     t_base_rgb.header.stamp = now;
-    t_base_rgb.header.frame_id = robot_name + "_base";
+    t_base_rgb.header.frame_id = "base_link";
     t_base_rgb.child_frame_id = robot_name + "_rgb_camera";
     
     // Set the RGB camera position (adjust as needed)
-    t_base_rgb.transform.translation.x = 0.1;  // 10cm forward
+    t_base_rgb.transform.translation.x = 0.0;
     t_base_rgb.transform.translation.y = 0.0;
-    t_base_rgb.transform.translation.z = -0.05; // 5cm down
+    t_base_rgb.transform.translation.z = 0.0;
     
     // Set rotation (pointing forward)
     tf2::Quaternion q_rgb;
@@ -671,13 +699,13 @@ private:
     // Transform: drone_base -> depth_camera
     geometry_msgs::msg::TransformStamped t_base_depth;
     t_base_depth.header.stamp = now;
-    t_base_depth.header.frame_id = robot_name + "_base";
+    t_base_depth.header.frame_id = "base_link";
     t_base_depth.child_frame_id = robot_name + "_depth_camera";
     
     // Set the depth camera position (adjust as needed)
-    t_base_depth.transform.translation.x = 0.1;  // 10cm forward
+    t_base_depth.transform.translation.x = 0.0;
     t_base_depth.transform.translation.y = 0.0;
-    t_base_depth.transform.translation.z = -0.05; // 5cm down, same as RGB camera
+    t_base_depth.transform.translation.z = 0.0;
     
     // Set rotation (pointing forward)
     tf2::Quaternion q_depth;
@@ -694,13 +722,13 @@ private:
     // Transform: drone_base -> lidar
     geometry_msgs::msg::TransformStamped t_base_lidar;
     t_base_lidar.header.stamp = now;
-    t_base_lidar.header.frame_id = robot_name + "_base";
+    t_base_lidar.header.frame_id = "base_link";
     t_base_lidar.child_frame_id = robot_name + "_lidar";
     
     // Set the LiDAR position (adjust as needed)
-    t_base_lidar.transform.translation.x = 0.0;  // Center
+    t_base_lidar.transform.translation.x = 0.0;
     t_base_lidar.transform.translation.y = 0.0;
-    t_base_lidar.transform.translation.z = 0.05; // 5cm up
+    t_base_lidar.transform.translation.z = 0.0;
     
     // Set rotation (standard orientation)
     tf2::Quaternion q_lidar;
