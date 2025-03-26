@@ -306,11 +306,11 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), APawn::StaticClass(), FoundPawns);
 
     FRobotGrpcMaps RGrpcMaps;
-    
+
     for (const FRobot& Robot : Config.Robots)
     {
         APawn* RobotPawn = Cast<APawn>(FindPawnInTagAndName(Robot.UETag, FoundPawns));
-            
+
         if (!RobotPawn)
         {
             UE_LOG(LogTemp, Warning, TEXT("Robot %s not found! Creating a new one"),
@@ -323,7 +323,7 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                 continue;
             }
         }
-        
+
         if (Robot.Type == EPawnType::Drone)
         {
             RGrpcMaps.RMaps.DroneMap[Robot.UETag] = RobotPawn;
@@ -339,7 +339,7 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
         else
         {
             UE_LOG(LogTemp, Error, TEXT("AVCCHUD::SetupActors:"
-                                        "Unknown pawn type!"));
+                "Unknown pawn type!"));
         }
 
         if (Robot.RecordInterval > 0)
@@ -358,13 +358,20 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
         bool bHasLidar = false;
         bool bHasDepth = false;
         bool bHasRGB = false;
-        
+
         for (const auto& Component : Robot.ComponentConfigs)
         {
             if (Component.first == ESensorType::Lidar)
             {
                 ULidarComponent* LidarComponent =
                     RobotPawn->FindComponentByClass<ULidarComponent>();
+                if (!LidarComponent)
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("AVCCHUD: Lidar component not found! Adding it."));
+                    LidarComponent = NewObject<ULidarComponent>(RobotPawn);
+                    LidarComponent->RegisterComponent();
+                    RobotPawn->AddInstanceComponent(LidarComponent);
+                }
                 LidarComponent->RConfigure(
                     *static_cast<FLiDarConfig*>(Component.second.get()),
                     Recorder);
@@ -381,7 +388,16 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
             {
                 TArray<UDepthCameraComponent*> DepthCameras;
                 RobotPawn->GetComponents<UDepthCameraComponent>(DepthCameras);
-    
+
+                if (DepthCameras.Num() == 0)
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("AVCCHUD: DepthCamera component not found! Adding it."));
+                    UDepthCameraComponent* DepthCameraComponent = NewObject<UDepthCameraComponent>(RobotPawn);
+                    DepthCameraComponent->RegisterComponent();
+                    RobotPawn->AddInstanceComponent(DepthCameraComponent);
+                    DepthCameras.Add(DepthCameraComponent);
+                }
+
                 for (auto* DepthCam : DepthCameras)
                 {
                     if (!DepthCam->IsConfigured())
@@ -389,9 +405,10 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                         DepthCam->RConfigure(
                             *static_cast<FDepthCameraConfig*>(Component.second.get()),
                             Recorder);
-                        // Use both robot tag and camera ID/index for unique identification
-                        // FString cameraKey = FString::Printf(TEXT("%s^%d"), 
-                        //     *FString(Robot.UETag.c_str()), DepthCam->GetCameraIndex());
+                        // Set the position and Rotation of the depth camera
+                        DepthCam->SetRelativeLocation(FVector(0, 0, 50));
+                        DepthCam->SetRelativeRotation(FRotator(-10, 0, 0));
+
                         FString cameraKey = FString::Printf(TEXT("%s"),
                             *FString(Robot.UETag.c_str()));
                         RGrpcMaps.RCMaps.RDCMap[TCHAR_TO_UTF8(*cameraKey)] = DepthCam;
@@ -408,6 +425,15 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                 TArray<URGBCameraComponent*> RGBCameras;
                 RobotPawn->GetComponents<URGBCameraComponent>(RGBCameras);
 
+                if (RGBCameras.Num() == 0)
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("AVCCHUD: RGBCamera component not found! Adding it."));
+                    URGBCameraComponent* RGBCameraComponent = NewObject<URGBCameraComponent>(RobotPawn);
+                    RGBCameraComponent->RegisterComponent();
+                    RobotPawn->AddInstanceComponent(RGBCameraComponent);
+                    RGBCameras.Add(RGBCameraComponent);
+                }
+
                 for (auto* RGBCam : RGBCameras)
                 {
                     if (!RGBCam->IsConfigured())
@@ -415,8 +441,11 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                         RGBCam->RConfigure(
                             *static_cast<FRGBCameraConfig*>(Component.second.get()),
                             Recorder);
-                        // Use both robot tag and camera ID/index for unique identification
-                        FString cameraKey = FString::Printf(TEXT("%s^%d"), 
+                        // Set the position and Rotation of the RGB camera
+                        RGBCam->SetRelativeLocation(FVector(0, 0, 50));
+                        RGBCam->SetRelativeRotation(FRotator(-10, 0, 0));
+
+                        FString cameraKey = FString::Printf(TEXT("%s^%d"),
                             *FString(Robot.UETag.c_str()), RGBCam->GetCameraIndex());
                         RGrpcMaps.RCMaps.RRGBCMap[TCHAR_TO_UTF8(*cameraKey)] = RGBCam;
                     }
@@ -433,14 +462,17 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                     "AVCCHUD::SetupActors: Unknown component, %d"), Component.first);
             }
         }
-        
+
         Recorder->RegisterPawn(RobotPawn, bHasLidar, bHasDepth, bHasRGB);
     }
 
     SetupMainCharacter(Config, FoundPawns);
-    
+
     return RGrpcMaps;
 }
+
+
+
 
 APawn* AVCCHUD::CreatePawn(const FVCCSimConfig& Config, const FRobot& Robot)
 {
