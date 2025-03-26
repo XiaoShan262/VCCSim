@@ -47,6 +47,7 @@ protected:
     
     // Frequency stats
     struct FrequencyStats {
+        std::chrono::steady_clock::time_point first_publish_time;
         std::chrono::steady_clock::time_point last_publish_time;
         int publish_count = 0;
         double current_frequency = 0.0;

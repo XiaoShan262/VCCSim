@@ -111,7 +111,6 @@ def generate_launch_description():
     vccsim_node = Node(
         package='ros_client',
         executable='vccsim_node',
-        name='vccsim_ros2_node',
         parameters=[{
             # Connection parameters
             'vccsim_host': LaunchConfiguration('vccsim_host'),

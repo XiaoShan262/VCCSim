@@ -7,7 +7,7 @@
 SensorNodeBase::SensorNodeBase(const std::string& name, std::shared_ptr<VCCSimClient> client,
                               const std::string& robot_name, double frequency)
     // Ensure unique node names by appending robot_name
-    : Node(name + "_" + robot_name), client_(client), robot_name_(robot_name), 
+    : Node(robot_name + "_" + name), client_(client), robot_name_(robot_name), 
       frequency_(frequency), is_running_(false), sensor_type_(name)
 {
     // Create frequency publisher with sensor type in topic name
@@ -64,22 +64,22 @@ void SensorNodeBase::update_frequency_stats()
     
     frequency_stats_.publish_count++;
     
-    if (frequency_stats_.last_publish_time != std::chrono::steady_clock::time_point{}) {
-        auto elapsed = now - frequency_stats_.last_publish_time;
-        auto elapsed_seconds = std::chrono::duration<double>(elapsed).count();
+    if (frequency_stats_.first_publish_time == std::chrono::steady_clock::time_point{}) {
+        // First publish event
+        frequency_stats_.first_publish_time = now;
+        frequency_stats_.last_publish_time = now;
+    } else {
+        frequency_stats_.last_publish_time = now;
         
-        double alpha = 0.3;
-        double instantaneous_freq = 1.0 / elapsed_seconds;
+        // Calculate total elapsed time since first publish
+        auto total_elapsed = now - frequency_stats_.first_publish_time;
+        auto total_seconds = std::chrono::duration<double>(total_elapsed).count();
         
-        if (frequency_stats_.current_frequency == 0.0) {
-            frequency_stats_.current_frequency = instantaneous_freq;
-        } else {
-            frequency_stats_.current_frequency = alpha * instantaneous_freq + 
-                                             (1.0 - alpha) * frequency_stats_.current_frequency;
+        // Average frequency = total publications / total time
+        if (total_seconds > 0) {
+            frequency_stats_.current_frequency = (frequency_stats_.publish_count - 1) / total_seconds;
         }
     }
-    
-    frequency_stats_.last_publish_time = now;
 }
 
 void SensorNodeBase::monitor_frequency()
@@ -425,7 +425,7 @@ void VCCSimNodeManager::init(int argc, char* argv[])
     
     // Create parameter node with a unique name
     param_node_ = std::make_shared<rclcpp::Node>("vccsim_param_node_" + 
-                                              std::to_string(std::hash<std::thread::id>{}(std::this_thread::get_id())));
+                    std::to_string(std::hash<std::thread::id>{}(std::this_thread::get_id())));
     
     // Declare and get parameters
     param_node_->declare_parameter("vccsim_host", "localhost");
