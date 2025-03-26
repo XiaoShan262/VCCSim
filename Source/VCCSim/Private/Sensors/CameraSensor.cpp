@@ -182,10 +182,24 @@ void URGBCameraComponent::CaptureRGBScene()
         return;
     }
     
-    CaptureComponent->CaptureScene();
+    // Check if we're on the game thread
+    if (IsInGameThread())
+    {
+        // We're already on the game thread, proceed normally
+        ExecuteCaptureOnGameThread();
+    }
+    else
+    {
+        // We're not on the game thread, so we need to dispatch to it
+        AsyncTask(ENamedThreads::GameThread, [this]()
+        {
+            ExecuteCaptureOnGameThread();
+        });
+    }
 }
 
-void URGBCameraComponent::AsyncGetRGBImageData(TFunction<void(const TArray<FLinearColor>&)> Callback)
+void URGBCameraComponent::AsyncGetRGBImageData(
+    TFunction<void(const TArray<FLinearColor>&)> Callback)
 {
     AsyncTask(ENamedThreads::GameThread, [this, Callback = MoveTemp(Callback)]()
     {
@@ -294,19 +308,13 @@ bool URGBCameraComponent::CheckComponentAndRenderTarget() const
     return false;
 }
 
-void URGBCameraComponent::CaptureRGBImageAsync()
+void URGBCameraComponent::ExecuteCaptureOnGameThread()
 {
-    UE_LOG(LogTemp, Warning, TEXT("Starting async RGB capture"));
-    
-    if (CheckComponentAndRenderTarget())
-    {
-        return;
-    }
+    check(IsInGameThread());
     
     CaptureComponent->CaptureScene();
-    
-    ProcessRGBTextureAsync([this](const TArray<FLinearColor>& ColorData)
+    if (OnKeyPointCaptured.IsBound())
     {
-        OnRGBImageCaptured.Broadcast(ColorData);
-    });
+        OnKeyPointCaptured.Execute(this->GetComponentTransform(), CameraName);
+    }
 }

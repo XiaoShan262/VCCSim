@@ -386,8 +386,7 @@ public:
     UPROPERTY(EditAnywhere, Category = "Recording")
     int32 BufferSize = 100;
 
-    UPROPERTY(EditAnywhere, Category = "Recording")
-    FString LogBasePath = FPaths::ProjectSavedDir() / TEXT("Recordings");
+    FString RecordingPath;
 
     FRecordStateChanged OnRecordStateChanged;
     bool RecordState = false; // If the sensors should submit data
@@ -395,7 +394,6 @@ public:
 private:
     bool bRecording = false; // Recording state of the recorder
     
-    FString CurrentRecordingPath;
     TAtomic<int32> PendingTasks;
 
     TMap<AActor*, FPawnDirectoryInfo> PawnDirectories;

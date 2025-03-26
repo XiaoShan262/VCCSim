@@ -215,7 +215,7 @@ void DepthCameraGetPointDataCall::ProcessRequest()
         [this, DepthCamera]()
     {
         // Process the points in a background thread
-        AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask,
+        AsyncTask(ENamedThreads::AnyBackgroundHiPriTask,
             [this, DepthCamera]()
         {
             const auto PointCloudData = DepthCamera->GeneratePointCloud();
@@ -317,9 +317,10 @@ void DepthCameraGetImageDataCall::ProcessRequest()
         [this, DepthCamera](const TArray<FFloat16Color>& DepthImageData)
     {
         // Process the depth data in a background thread
-        AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask,
+        AsyncTask(ENamedThreads::AnyBackgroundHiPriTask,
             [this, DepthImageData, DepthCamera]()
         {
+            response_.mutable_data()->Reserve(DepthImageData.Num());
             for (const auto& DepthValue : DepthImageData)
             {
                 response_.add_data(DepthValue.R.GetFloat());
@@ -524,7 +525,7 @@ void RGBIndexedCameraImageDataCall::ProcessRequest()
         [this, RGBCamera, requestedFormat](const TArray<FLinearColor>& ImageData)
     {
         // Process the image in a background thread
-        AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask,
+        AsyncTask(ENamedThreads::AnyBackgroundHiPriTask,
             [this, ImageData, RGBCamera, requestedFormat]()
         {
             // Set common properties

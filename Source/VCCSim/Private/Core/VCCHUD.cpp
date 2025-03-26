@@ -23,6 +23,7 @@
 #include "Sensors/CameraSensor.h"
 #include "Simulation/Recorder.h"
 #include "Simulation/MeshManager.h"
+#include "Simulation/SceneAnalysisManager.h"
 #include "Utils/ConfigParser.h"
 #include "Utils/InsMeshHolder.h"
 #include "Utils/VCCSIMDisplayWidget.h"
@@ -36,7 +37,7 @@ void AVCCHUD::BeginPlay()
 {
     Super::BeginPlay();
     
-    const FVCCSimConfig Config = ParseConfig();
+    FVCCSimConfig Config = ParseConfig();
     
     SetupRecorder(Config);
     SetupWidgetsAndLS(Config);
@@ -47,6 +48,10 @@ void AVCCHUD::BeginPlay()
         MeshManager = NewObject<UFMeshManager>(Holder);
         MeshManager->RConfigure(Config);
     }
+
+    SceneAnalysisManager = NewObject<USceneAnalysisManager>(Holder);
+    SceneAnalysisManager->Initialize(GetWorld(), Config.VCCSim.LogSavePath.c_str());
+    SceneAnalysisManager->ScanScene();
     
     RunServer(Config, Holder, RCMaps, MeshManager);
 }
@@ -154,10 +159,12 @@ void AVCCHUD::OnToggleRecordingTriggered()
     }
 }
 
-void AVCCHUD::SetupRecorder(const FVCCSimConfig& Config)
+void AVCCHUD::SetupRecorder(FVCCSimConfig& Config)
 {
     Recorder = GetWorld()->SpawnActor<ARecorder>(ARecorder::StaticClass(), FTransform::Identity);
-    Recorder->LogBasePath = Config.VCCSim.LogSavePath.c_str();
+    Recorder->RecordingPath = FPaths::Combine(Config.VCCSim.LogSavePath.c_str(),
+        FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S")));
+    Config.VCCSim.LogSavePath = TCHAR_TO_UTF8(*Recorder->RecordingPath);
     Recorder->BufferSize = Config.VCCSim.BufferSize;
     Recorder->RecordState = Config.VCCSim.StartWithRecording;
     Recorder->StartRecording();
@@ -276,7 +283,9 @@ void AVCCHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> Fo
             if (UDepthCameraComponent* DepthCameraComponent =
                 MainCharacter->FindComponentByClass<UDepthCameraComponent>())
             {
-                WidgetInstance->SetDepthTexture(DepthCameraComponent->DepthRenderTarget);               
+                WidgetInstance->SetDepthContext(
+                    DepthCameraComponent->DepthRenderTarget, 
+                    DepthCameraComponent);               
             }
             else
             {
@@ -289,7 +298,9 @@ void AVCCHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> Fo
             if (URGBCameraComponent* RGBCameraComponent =
                 MainCharacter->FindComponentByClass<URGBCameraComponent>())
             {
-                WidgetInstance->SetRGBTexture(RGBCameraComponent->RGBRenderTarget);
+                WidgetInstance->SetRGBContext(
+                    RGBCameraComponent->RGBRenderTarget,
+                    RGBCameraComponent);
             }
             else
             {
@@ -413,8 +424,7 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                     if (!RGBCam->IsConfigured())
                     {
                         RGBCam->RConfigure(
-                            *static_cast<FRGBCameraConfig*>(Component.second.get()),
-                            Recorder);
+                            *static_cast<FRGBCameraConfig*>(Component.second.get()), Recorder);
                         // Use both robot tag and camera ID/index for unique identification
                         FString cameraKey = FString::Printf(TEXT("%s^%d"), 
                             *FString(Robot.UETag.c_str()), RGBCam->GetCameraIndex());

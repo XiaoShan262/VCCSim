@@ -122,7 +122,6 @@ private:
     USceneCaptureComponent2D* CaptureComponent = nullptr;
     TArray<FDCPoint> PointCloudData;
     TArray<FFloat16Color> DepthData;
-    FCriticalSection DataLock;
     
     UPROPERTY()
     AActor* ParentActor = nullptr;

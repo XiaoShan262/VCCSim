@@ -23,6 +23,8 @@
 #include "VCCSIMDisplayWidget.generated.h"
 
 class UMeshHandlerComponent;
+class UDepthCameraComponent;
+class URGBCameraComponent;
 
 UCLASS()
 class VCCSIM_API UVCCSIMDisplayWidget : public UUserWidget
@@ -38,11 +40,9 @@ public:
     
     UFUNCTION()
     void SetHolder(AActor* holder){ Holder = holder; }
-
-    UFUNCTION(BlueprintCallable, Category = "DepthCamera")
-    void SetDepthTexture(UTextureRenderTarget2D* DepthTexture);
-    UFUNCTION(BlueprintCallable, Category = "RGBCamera")
-    void SetRGBTexture(UTextureRenderTarget2D* RGBTexture);
+    
+    void SetDepthContext(UTextureRenderTarget2D* DepthTexture, UDepthCameraComponent* InCamera);
+    void SetRGBContext(UTextureRenderTarget2D* RGBTexture, URGBCameraComponent* InCamera);
     
     UFUNCTION(BlueprintCallable, Category = "LitView")
     void SetLitMeshComponent(TArray<UStaticMeshComponent*> MeshComponent,
@@ -77,6 +77,8 @@ protected:
     TObjectPtr<UMaterialInstanceDynamic> DepthMaterial;
     UPROPERTY()
     TObjectPtr<UTextureRenderTarget2D> DepthRenderTarget;
+    UPROPERTY()
+    UDepthCameraComponent* DepthCameraComponent = nullptr;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DepthCamera|Visualization")
     float MinDepth = 0.0f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DepthCamera|Visualization")
@@ -97,6 +99,8 @@ protected:
     TObjectPtr<UMaterialInstanceDynamic> RGBMaterial;
     UPROPERTY()
     TObjectPtr<UTextureRenderTarget2D> RGBRenderTarget;
+    UPROPERTY()
+    URGBCameraComponent* RGBCameraComponent = nullptr;
         
     // Lit image visualization properties
     UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
@@ -151,7 +155,6 @@ protected:
     TObjectPtr<USceneCaptureComponent2D> MeshSceneCapture;
     UPROPERTY()
     TObjectPtr<UMaterialInstanceDynamic> MeshMaterial;
-
     UPROPERTY()
     TObjectPtr<UMeshHandlerComponent> MeshHandler;
 

@@ -39,9 +39,6 @@ public:
     float OrthoWidth = 512.0f;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
-    FOnRGBImageCaptured, const TArray<FLinearColor>&, ImageData);
-
 DECLARE_DYNAMIC_DELEGATE_TwoParams(
     FKeyPointCaptured, const FTransform&, Pose, const FString&, Name);
 
@@ -98,10 +95,6 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RGBCamera|Config")
     int32 CameraIndex = 0;
 
-    UPROPERTY(BlueprintAssignable, Category = "Camera")
-    FOnRGBImageCaptured
-    OnRGBImageCaptured;
-
     FKeyPointCaptured
     OnKeyPointCaptured;
 
@@ -113,7 +106,7 @@ public:
     
 private:
     bool CheckComponentAndRenderTarget() const;
-    void CaptureRGBImageAsync();
+    void ExecuteCaptureOnGameThread();
 
     struct FReadSurfaceContext
     {
