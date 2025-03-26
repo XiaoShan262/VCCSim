@@ -12,6 +12,12 @@ def generate_launch_description():
         description='Logging level (debug, info, warn, error, fatal)'
     )
     
+    enable_timing_arg = DeclareLaunchArgument(
+        'enable_timing',
+        default_value='false',
+        description='Enable API call timing measurements'
+    )
+    
     # Declare launch arguments for component activation
     rgb_active_arg = DeclareLaunchArgument(
         'rgb_active',
@@ -27,26 +33,26 @@ def generate_launch_description():
     
     lidar_active_arg = DeclareLaunchArgument(
         'lidar_active',
-        default_value='true',
+        default_value='false',
         description='Enable LiDAR publishing'
     )
     
     drone_pose_active_arg = DeclareLaunchArgument(
         'drone_pose_active',
-        default_value='true',
+        default_value='false',
         description='Enable drone pose publishing'
     )
     
     # Declare launch arguments for component frequencies
     rgb_freq_arg = DeclareLaunchArgument(
         'rgb_frequency',
-        default_value='10.0',
+        default_value='15.0',
         description='Frequency (Hz) of RGB camera publishing'
     )
     
     depth_freq_arg = DeclareLaunchArgument(
         'depth_frequency',
-        default_value='10.0',
+        default_value='15.0',
         description='Frequency (Hz) of depth camera publishing'
     )
     
@@ -112,6 +118,8 @@ def generate_launch_description():
         package='ros_client',
         executable='vccsim_node',
         parameters=[{
+            'enable_timing': LaunchConfiguration('enable_timing'),
+            
             # Connection parameters
             'vccsim_host': LaunchConfiguration('vccsim_host'),
             'vccsim_port': LaunchConfiguration('vccsim_port'),
@@ -147,6 +155,9 @@ def generate_launch_description():
     # Return the launch description
     return LaunchDescription([
         # Component activation arguments
+        
+        enable_timing_arg,
+        
         rgb_active_arg,
         depth_active_arg,
         lidar_active_arg,

@@ -137,13 +137,30 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        base_link:
+          Value: true
+        depth_camera_frame:
+          Value: true
+        lidar_frame:
+          Value: true
+        map:
+          Value: true
+        rgb_camera_frame:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        map:
+          base_link:
+            depth_camera_frame:
+              {}
+            lidar_frame:
+              {}
+            rgb_camera_frame:
+              {}
       Update Interval: 0
       Value: true
   Enabled: true

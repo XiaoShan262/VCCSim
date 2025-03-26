@@ -17,6 +17,10 @@ SensorNodeBase::SensorNodeBase(const std::string& name, std::shared_ptr<VCCSimCl
     // Create timer for frequency monitoring
     frequency_monitor_timer_ = this->create_wall_timer(
         2s, std::bind(&SensorNodeBase::monitor_frequency, this));
+
+    // Declare and get the enable_timing parameter
+    this->declare_parameter("enable_timing", false);
+    this->get_parameter("enable_timing", enable_timing_);
 }
 
 SensorNodeBase::~SensorNodeBase()
@@ -31,7 +35,6 @@ void SensorNodeBase::start()
         
         // Start the executor thread
         executor_thread_ = std::thread([this]() {
-            RCLCPP_INFO(this->get_logger(), "Starting executor thread for %s", this->get_name());
             rclcpp::executors::SingleThreadedExecutor executor;
             executor.add_node(this->shared_from_this());
             
@@ -101,6 +104,21 @@ RGBCameraNode::RGBCameraNode(std::shared_ptr<VCCSimClient> client, const std::st
                            int camera_index, double frequency)
     : SensorNodeBase("rgb_camera", client, robot_name, frequency), camera_index_(camera_index)
 {
+    // Get camera dimensions once during initialization
+    try {
+        VCCSim::RGBCameraImageData init_data = 
+            client_->GetRGBIndexedCameraImageData(robot_name_, camera_index_, VCCSim::PNG);
+        width_ = init_data.width();
+        height_ = init_data.height();
+        RCLCPP_INFO(this->get_logger(), "RGB camera initialized with dimensions: %dx%d", 
+                   width_, height_);
+    } catch (const std::exception& e) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to get initial RGB dimensions: %s", e.what());
+        // Set default dimensions as fallback
+        width_ = 640;
+        height_ = 480;
+    }
+    
     // Create publishers with robot name in topic path
     image_pub_ = this->create_publisher<sensor_msgs::msg::Image>(
         "vccsim/" + robot_name + "/rgb/image", 10);
@@ -116,9 +134,24 @@ RGBCameraNode::RGBCameraNode(std::shared_ptr<VCCSimClient> client, const std::st
 void RGBCameraNode::publish_data()
 {
     try {
+        std::chrono::steady_clock::time_point start_time;
+        
+        // Only start timing if enabled
+        if (enable_timing_) {
+            start_time = std::chrono::steady_clock::now();
+        }
+        
         // Get RGB image data
         VCCSim::RGBCameraImageData rgb_data = 
-            client_->GetRGBIndexedCameraImageData(robot_name_, camera_index_, VCCSim::PNG);
+            client_->GetRGBIndexedCameraImageData(robot_name_, camera_index_, VCCSim::RAW);
+        
+        // Log API call timing if enabled
+        if (enable_timing_) {
+            auto end_time = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            RCLCPP_INFO(this->get_logger(), "[%s][%s] GetRGBIndexedCameraImageData API call took %ld ms", 
+                      sensor_type_.c_str(), robot_name_.c_str(), duration);
+        }
         
         // Convert to ROS message
         auto ros_image = convert_to_ros_image(rgb_data);
@@ -126,8 +159,8 @@ void RGBCameraNode::publish_data()
         // Create camera info message
         sensor_msgs::msg::CameraInfo camera_info;
         camera_info.header = ros_image.header;
-        camera_info.width = rgb_data.width();
-        camera_info.height = rgb_data.height();
+        camera_info.width = width_;  // Use cached width
+        camera_info.height = height_; // Use cached height
         
         // Publish
         image_pub_->publish(ros_image);
@@ -137,7 +170,7 @@ void RGBCameraNode::publish_data()
         update_frequency_stats();
         
         RCLCPP_DEBUG(this->get_logger(), "Published RGB data, image size: %dx%d", 
-                    rgb_data.width(), rgb_data.height());
+                    width_, height_);
     } catch (const std::exception& e) {
         RCLCPP_ERROR(this->get_logger(), "Error publishing RGB data: %s", e.what());
     }
@@ -193,6 +226,18 @@ DepthCameraNode::DepthCameraNode(std::shared_ptr<VCCSimClient> client, const std
                                double frequency)
     : SensorNodeBase("depth_camera", client, robot_name, frequency)
 {
+    // Get depth camera dimensions once during initialization
+    try {
+        std::tie(width_, height_) = client_->GetDepthCameraImageSize(robot_name_);
+        RCLCPP_INFO(this->get_logger(), "Depth camera initialized with dimensions: %dx%d", 
+                   width_, height_);
+    } catch (const std::exception& e) {
+        RCLCPP_ERROR(this->get_logger(), "Failed to get initial depth dimensions: %s", e.what());
+        // Set default dimensions as fallback
+        width_ = 640;
+        height_ = 480;
+    }
+    
     // Create publishers with robot name in topic path
     image_pub_ = this->create_publisher<sensor_msgs::msg::Image>(
         "vccsim/" + robot_name + "/depth/image", 10);
@@ -208,20 +253,32 @@ DepthCameraNode::DepthCameraNode(std::shared_ptr<VCCSimClient> client, const std
 void DepthCameraNode::publish_data()
 {
     try {
-        // Get depth image size
-        auto [width, height] = client_->GetDepthCameraImageSize(robot_name_);
+        std::chrono::steady_clock::time_point start_time;
         
-        // Get depth image data
+        // Only start timing if enabled
+        if (enable_timing_) {
+            start_time = std::chrono::steady_clock::now();
+        }
+        
+        // Get depth image data - no longer calling GetDepthCameraImageSize
         std::vector<float> depth_data = client_->GetDepthCameraImageData(robot_name_);
         
-        // Convert to ROS message
-        auto ros_image = convert_to_ros_depth_image(depth_data, width, height);
+        // Log API call timing if enabled
+        if (enable_timing_) {
+            auto end_time = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            RCLCPP_INFO(this->get_logger(), "[%s][%s] GetDepthCameraImageData API call took %ld ms", 
+                      sensor_type_.c_str(), robot_name_.c_str(), duration);
+        }
+        
+        // Convert to ROS message using stored dimensions
+        auto ros_image = convert_to_ros_depth_image(depth_data, width_, height_);
         
         // Create camera info message
         sensor_msgs::msg::CameraInfo camera_info;
         camera_info.header = ros_image.header;
-        camera_info.width = width;
-        camera_info.height = height;
+        camera_info.width = width_;  // Use cached width
+        camera_info.height = height_; // Use cached height
         
         // Publish
         image_pub_->publish(ros_image);
@@ -230,7 +287,7 @@ void DepthCameraNode::publish_data()
         // Update frequency statistics
         update_frequency_stats();
         
-        RCLCPP_DEBUG(this->get_logger(), "Published depth data, image size: %dx%d", width, height);
+        RCLCPP_DEBUG(this->get_logger(), "Published depth data, image size: %dx%d", width_, height_);
     } catch (const std::exception& e) {
         RCLCPP_ERROR(this->get_logger(), "Error publishing depth data: %s", e.what());
     }
@@ -271,12 +328,26 @@ LidarNode::LidarNode(std::shared_ptr<VCCSimClient> client, const std::string& ro
         std::bind(&LidarNode::publish_data, this));
 }
 
-
 void LidarNode::publish_data()
 {
     try {
+        std::chrono::steady_clock::time_point start_time;
+        
+        // Only start timing if enabled
+        if (enable_timing_) {
+            start_time = std::chrono::steady_clock::now();
+        }
+        
         // Get LiDAR data
         std::vector<VCCSim::Point> lidar_points = client_->GetLidarData(robot_name_);
+        
+        // Log timing information if enabled
+        if (enable_timing_) {
+            auto end_time = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            RCLCPP_INFO(this->get_logger(), "[%s][%s] GetLidarData API call took %ld ms", 
+                      sensor_type_.c_str(), robot_name_.c_str(), duration);
+        }
         
         // Convert to ROS message
         auto ros_point_cloud = convert_to_ros_pointcloud(lidar_points);
@@ -299,7 +370,7 @@ sensor_msgs::msg::PointCloud2 LidarNode::convert_to_ros_pointcloud(const std::ve
     
     // Set header
     ros_cloud.header.stamp = this->now();
-    ros_cloud.header.frame_id = "lidar_frame";
+    ros_cloud.header.frame_id = "map";
     
     // Set fields
     ros_cloud.fields.resize(3);
@@ -354,12 +425,26 @@ DronePoseNode::DronePoseNode(std::shared_ptr<VCCSimClient> client, const std::st
         std::bind(&DronePoseNode::publish_data, this));
 }
 
-
 void DronePoseNode::publish_data()
 {
     try {
+        std::chrono::steady_clock::time_point start_time;
+        
+        // Only start timing if enabled
+        if (enable_timing_) {
+            start_time = std::chrono::steady_clock::now();
+        }
+        
         // Get drone pose
         VCCSim::Pose drone_pose = client_->GetDronePose(robot_name_);
+        
+        // Log API call timing if enabled
+        if (enable_timing_) {
+            auto end_time = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            RCLCPP_INFO(this->get_logger(), "[%s][%s] GetDronePose API call took %ld ms", 
+                      sensor_type_.c_str(), robot_name_.c_str(), duration);
+        }
         
         // Convert to ROS message
         auto ros_pose = convert_to_ros_pose(drone_pose);
