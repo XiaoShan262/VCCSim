@@ -16,7 +16,7 @@ from VCCSim.VCCSimClient import RGBImageUtils
 # Test script for RGB camera functionality
 def test_rgb_camera():
     # Create VCCSim client with default connection settings
-    client = VCCSimClient(host="localhost", port=50996)
+    client = VCCSimClient(host="172.31.178.18", port=50996)
     
     try:
         # Configuration settings
@@ -95,7 +95,7 @@ def test_rgb_camera():
 
 def test_depth_camera():
     # Create VCCSim client with default connection settings
-    client = VCCSimClient(host="localhost", port=50996)
+    client = VCCSimClient(host="172.31.178.18", port=50996)
     
     try:
         # Configuration settings
@@ -190,5 +190,5 @@ def test_depth_camera():
 
 if __name__ == "__main__":
     
-    # test_rgb_camera()
-    test_depth_camera()
+    test_rgb_camera()
+    # test_depth_camera()

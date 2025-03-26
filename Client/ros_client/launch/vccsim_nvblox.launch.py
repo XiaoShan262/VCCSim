@@ -17,7 +17,7 @@ def generate_launch_description() -> LaunchDescription:
     # Arguments from Nvblox launch file
     args = lu.ArgumentContainer()
     args.add_arg(
-        'log_level', 'info', choices=['debug', 'info', 'warn'], cli=True)
+        'log_level', 'warn', choices=['debug', 'info', 'warn'], cli=True)
     args.add_arg(
         'mode',
         NvbloxMode.static,

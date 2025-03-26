@@ -8,81 +8,13 @@
 #include <functional>
 #include <cstdint>
 
-// Forward declarations instead of direct includes
+// Include Protocol Buffer headers directly
+#include "VCCSim.pb.h"
+#include "VCCSim.grpc.pb.h"
+
+// Forward declaration for gRPC channel
 namespace grpc {
     class Channel;
-}
-
-// Forward declare the Protocol Buffer Format enum
-namespace VCCSim {
-    enum Format : int;
-}
-
-// Simple structs to replace Protocol Buffer generated classes in a separate namespace
-namespace VCCTypes {
-    // Image formats enum (matches Protocol Buffer enum values)
-    enum Format {
-        PNG = 0,
-        JPEG = 1,
-        RAW = 2
-    };
-    
-    // Simple position struct
-    struct Position {
-        float x = 0.0f;
-        float y = 0.0f;
-        float z = 0.0f;
-    };
-    
-    // Simple pose struct with full rotation
-    struct Pose {
-        float x = 0.0f;
-        float y = 0.0f;
-        float z = 0.0f;
-        float roll = 0.0f;
-        float pitch = 0.0f;
-        float yaw = 0.0f;
-    };
-
-    // Simple pose struct with only yaw rotation
-    struct PoseYaw {
-        float x = 0.0f;
-        float y = 0.0f;
-        float z = 0.0f;
-        float yaw = 0.0f;
-    };
-
-    // Simple twist struct for velocity
-    struct Twist {
-        float linear_x = 0.0f;
-        float linear_y = 0.0f;
-        float linear_z = 0.0f;
-        float angular_x = 0.0f;
-        float angular_y = 0.0f;
-        float angular_z = 0.0f;
-    };
-
-    // Simple odometry struct
-    struct Odometry {
-        Pose pose;
-        Twist twist;
-    };
-
-    // Simple RGB image data struct
-    struct RGBImage {
-        uint32_t width = 0;
-        uint32_t height = 0;
-        std::vector<uint8_t> data;
-        Format format = PNG;
-        uint32_t timestamp = 0;
-    };
-    
-    // Simple 3D point struct
-    struct Point {
-        float x = 0.0f;
-        float y = 0.0f;
-        float z = 0.0f;
-    };
 }
 
 class VCCSimClient {
@@ -117,7 +49,7 @@ public:
      * @return Vector of bytes containing the image data
      */
     std::vector<uint8_t> GetRGBImageData(const std::string& robot_name, int index, 
-                                        VCCTypes::Format format = VCCTypes::PNG);
+                                        VCCSim::Format format = VCCSim::PNG);
 
     /**
      * Get RGB camera image data and save directly to a file.
@@ -129,7 +61,7 @@ public:
      * @return True if saving was successful, false otherwise
      */
     bool GetAndSaveRGBImage(const std::string& robot_name, int index, 
-                           const std::string& output_path, VCCTypes::Format format = VCCTypes::PNG);
+                           const std::string& output_path, VCCSim::Format format = VCCSim::PNG);
 
     /**
      * Get RGB camera image data for a specific camera index.
@@ -139,8 +71,8 @@ public:
      * @param format Image format (PNG, JPEG, or RAW), default is PNG
      * @return RGB image data
      */
-    VCCTypes::RGBImage GetRGBIndexedCameraImageData(const std::string& robot_name, int index, 
-                                                VCCTypes::Format format = VCCTypes::PNG);
+    VCCSim::RGBCameraImageData GetRGBIndexedCameraImageData(const std::string& robot_name, int index, 
+                                                VCCSim::Format format = VCCSim::PNG);
                                                 
     /**
      * Save RGB image data to a file.
@@ -149,7 +81,7 @@ public:
      * @param output_path Path to save the image
      * @return True if saving was successful, false otherwise
      */
-    bool SaveRGBImage(const VCCTypes::RGBImage& image_data, const std::string& output_path);
+    bool SaveRGBImage(const VCCSim::RGBCameraImageData& image_data, const std::string& output_path);
     
     /**
      * Get RGB camera odometry for a robot.
@@ -157,9 +89,9 @@ public:
      * @param robot_name Name of the robot
      * @return Odometry of the RGB camera
      */
-    
-    VCCTypes::Odometry GetRGBCameraOdom(const std::string& robot_name);
-        /**
+    VCCSim::Odometry GetRGBCameraOdom(const std::string& robot_name);
+
+    /**
      * Get RGB camera image size directly without fetching image data.
      *
      * @param robot_name Name of the robot
@@ -183,7 +115,7 @@ public:
      * @param robot_name Name of the robot
      * @return Vector of points representing LiDAR points
      */
-    std::vector<VCCTypes::Point> GetLidarData(const std::string& robot_name);
+    std::vector<VCCSim::Point> GetLidarData(const std::string& robot_name);
 
     /**
      * Get LiDAR odometry for a robot.
@@ -191,7 +123,7 @@ public:
      * @param robot_name Name of the robot
      * @return Odometry containing pose and twist
      */
-    VCCTypes::Odometry GetLidarOdom(const std::string& robot_name);
+    VCCSim::Odometry GetLidarOdom(const std::string& robot_name);
 
     /**
      * Get both LiDAR data and odometry for a robot.
@@ -199,7 +131,7 @@ public:
      * @param robot_name Name of the robot
      * @return Tuple of points vector and odometry
      */
-    std::tuple<std::vector<VCCTypes::Point>, VCCTypes::Odometry> GetLidarDataAndOdom(const std::string& robot_name);
+    std::tuple<std::vector<VCCSim::Point>, VCCSim::Odometry> GetLidarDataAndOdom(const std::string& robot_name);
 
     // Depth Camera Methods
     /**
@@ -208,7 +140,7 @@ public:
      * @param robot_name Name of the robot
      * @return Vector of points representing depth camera points
      */
-    std::vector<VCCTypes::Point> GetDepthCameraPointData(const std::string& robot_name);
+    std::vector<VCCSim::Point> GetDepthCameraPointData(const std::string& robot_name);
 
     /**
      * Get depth camera image data for a robot.
@@ -224,7 +156,7 @@ public:
      * @param robot_name Name of the robot
      * @return Odometry of the depth camera
      */
-    VCCTypes::Odometry GetDepthCameraOdom(const std::string& robot_name);
+    VCCSim::Odometry GetDepthCameraOdom(const std::string& robot_name);
 
     // Drone Methods
     /**
@@ -233,7 +165,7 @@ public:
      * @param robot_name Name of the robot
      * @return Pose of the drone
      */
-    VCCTypes::Pose GetDronePose(const std::string& robot_name);
+    VCCSim::Pose GetDronePose(const std::string& robot_name);
 
     /**
      * Send drone pose.
@@ -242,7 +174,7 @@ public:
      * @param pose Pose to send
      * @return True if successful, false otherwise
      */
-    bool SendDronePose(const std::string& name, const VCCTypes::Pose& pose);
+    bool SendDronePose(const std::string& name, const VCCSim::Pose& pose);
 
     /**
      * Send drone pose with individual components.
@@ -265,7 +197,7 @@ public:
      * @param poses Vector of poses
      * @return True if successful, false otherwise
      */
-    bool SendDronePath(const std::string& name, const std::vector<VCCTypes::Pose>& poses);
+    bool SendDronePath(const std::string& name, const std::vector<VCCSim::Pose>& poses);
 
     // Car Methods
     /**
@@ -274,7 +206,7 @@ public:
      * @param robot_name Name of the robot
      * @return Odometry of the car
      */
-    VCCTypes::Odometry GetCarOdom(const std::string& robot_name);
+    VCCSim::Odometry GetCarOdom(const std::string& robot_name);
 
     /**
      * Send car pose.
@@ -283,7 +215,7 @@ public:
      * @param pose Pose to send (only yaw angle is used)
      * @return True if successful, false otherwise
      */
-    bool SendCarPose(const std::string& name, const VCCTypes::PoseYaw& pose);
+    bool SendCarPose(const std::string& name, const VCCSim::PoseOnlyYaw& pose);
 
     /**
      * Send car pose with individual components.
@@ -304,7 +236,7 @@ public:
      * @param poses Vector of poses
      * @return True if successful, false otherwise
      */
-    bool SendCarPath(const std::string& name, const std::vector<VCCTypes::PoseYaw>& poses);
+    bool SendCarPath(const std::string& name, const std::vector<VCCSim::PoseOnlyYaw>& poses);
 
     // Flash Methods
     /**
@@ -313,7 +245,7 @@ public:
      * @param robot_name Name of the robot
      * @return Pose of the flash
      */
-    VCCTypes::Pose GetFlashPose(const std::string& robot_name);
+    VCCSim::Pose GetFlashPose(const std::string& robot_name);
 
     /**
      * Send flash pose.
@@ -322,7 +254,7 @@ public:
      * @param pose Pose to send
      * @return True if successful, false otherwise
      */
-    bool SendFlashPose(const std::string& name, const VCCTypes::Pose& pose);
+    bool SendFlashPose(const std::string& name, const VCCSim::Pose& pose);
 
     /**
      * Send flash pose with individual components.
@@ -345,7 +277,7 @@ public:
      * @param poses Vector of poses
      * @return True if successful, false otherwise
      */
-    bool SendFlashPath(const std::string& name, const std::vector<VCCTypes::Pose>& poses);
+    bool SendFlashPath(const std::string& name, const std::vector<VCCSim::Pose>& poses);
 
     /**
      * Check if flash is ready.
@@ -375,7 +307,7 @@ public:
      * @return True if successful, false otherwise
      */
     bool SendMesh(const std::string& data, int format, int version, bool simplified,
-                 const VCCTypes::Pose& transform_pose);
+                 const VCCSim::Pose& transform_pose);
 
     /**
      * Send global mesh data.
@@ -388,7 +320,7 @@ public:
      * @return ID of the created mesh
      */
     int SendGlobalMesh(const std::string& data, int format, int version, bool simplified,
-                     const VCCTypes::Pose& transform_pose);
+                     const VCCSim::Pose& transform_pose);
 
     /**
      * Remove a global mesh by its ID.
@@ -406,7 +338,7 @@ public:
      * @param colors Vector of color values for each point
      * @return True if successful, false otherwise
      */
-    bool SendPointCloudWithColor(const std::vector<VCCTypes::Point>& points,
+    bool SendPointCloudWithColor(const std::vector<VCCSim::Point>& points,
                                const std::vector<int>& colors);
 
 private:

@@ -1,8 +1,5 @@
 #include "VCCSimClient.h"
 
-// Include the actual gRPC and protobuf headers only in the implementation file
-#include "VCCSim.pb.h"
-#include "VCCSim.grpc.pb.h"
 #include <grpcpp/grpcpp.h>
 #include <fstream>
 #include <stdexcept>
@@ -45,95 +42,150 @@ public:
         }
     }
     
-    // Conversion functions between our structs and Protocol Buffer classes
+    // Helper function to create a RobotName message
     ::VCCSim::RobotName CreateRobotName(const std::string& name) {
         ::VCCSim::RobotName robot_name;
         robot_name.set_name(name);
         return robot_name;
     }
-    
-    ::VCCSim::Pose ToPbPose(const VCCTypes::Pose& pose) {
-        ::VCCSim::Pose pb_pose;
-        pb_pose.set_x(pose.x);
-        pb_pose.set_y(pose.y);
-        pb_pose.set_z(pose.z);
-        pb_pose.set_roll(pose.roll);
-        pb_pose.set_pitch(pose.pitch);
-        pb_pose.set_yaw(pose.yaw);
-        return pb_pose;
+
+    // Transform point from UE (left-handed, cm) to right-handed (m)
+    VCCSim::Point TransformPointFromUE(const VCCSim::Point& ue_point) {
+        VCCSim::Point transformed;
+        // Convert cm to m and flip Y-axis for right-handed system
+        transformed.set_x(ue_point.x() * 0.01f);
+        transformed.set_y(-ue_point.y() * 0.01f);
+        transformed.set_z(ue_point.z() * 0.01f);
+        return transformed;
     }
-    
-    VCCTypes::Pose FromPbPose(const ::VCCSim::Pose& pb_pose) {
-        VCCTypes::Pose pose;
-        pose.x = pb_pose.x();
-        pose.y = pb_pose.y();
-        pose.z = pb_pose.z();
-        pose.roll = pb_pose.roll();
-        pose.pitch = pb_pose.pitch();
-        pose.yaw = pb_pose.yaw();
-        return pose;
+
+    // Transform point to UE (left-handed, cm) from right-handed (m)
+    VCCSim::Point TransformPointToUE(const VCCSim::Point& point) {
+        VCCSim::Point transformed;
+        // Convert m to cm and flip Y-axis for left-handed system
+        transformed.set_x(point.x() * 100.0f);
+        transformed.set_y(-point.y() * 100.0f);
+        transformed.set_z(point.z() * 100.0f);
+        return transformed;
     }
-    
-    ::VCCSim::PoseOnlyYaw ToPbPoseYaw(const VCCTypes::PoseYaw& pose) {
-        ::VCCSim::PoseOnlyYaw pb_pose;
-        pb_pose.set_x(pose.x);
-        pb_pose.set_y(pose.y);
-        pb_pose.set_z(pose.z);
-        pb_pose.set_yaw(pose.yaw);
-        return pb_pose;
+
+    // Transform pose from UE (left-handed, cm) to right-handed (m)
+    VCCSim::Pose TransformPoseFromUE(const VCCSim::Pose& ue_pose) {
+        VCCSim::Pose transformed;
+        // Convert cm to m and flip Y-axis for right-handed system
+        transformed.set_x(ue_pose.x() * 0.01f);
+        transformed.set_y(-ue_pose.y() * 0.01f);
+        transformed.set_z(ue_pose.z() * 0.01f);
+        
+        // For rotations, we need to adjust roll, pitch, yaw for coordinate system change
+        // In a Y-axis flip, roll and yaw change sign, pitch remains the same
+        transformed.set_roll(-ue_pose.roll());
+        transformed.set_pitch(ue_pose.pitch());
+        transformed.set_yaw(-ue_pose.yaw());
+        
+        return transformed;
     }
-    
-    VCCTypes::PoseYaw FromPbPoseYaw(const ::VCCSim::PoseOnlyYaw& pb_pose) {
-        VCCTypes::PoseYaw pose;
-        pose.x = pb_pose.x();
-        pose.y = pb_pose.y();
-        pose.z = pb_pose.z();
-        pose.yaw = pb_pose.yaw();
-        return pose;
+
+    // Transform pose to UE (left-handed, cm) from right-handed (m)
+    VCCSim::Pose TransformPoseToUE(const VCCSim::Pose& pose) {
+        VCCSim::Pose transformed;
+        // Convert m to cm and flip Y-axis for left-handed system
+        transformed.set_x(pose.x() * 100.0f);
+        transformed.set_y(-pose.y() * 100.0f);
+        transformed.set_z(pose.z() * 100.0f);
+        
+        // For rotations, invert the same angles as in TransformPoseFromUE
+        transformed.set_roll(-pose.roll());
+        transformed.set_pitch(pose.pitch());
+        transformed.set_yaw(-pose.yaw());
+        
+        return transformed;
     }
-    
-    VCCTypes::Twist FromPbTwist(const ::VCCSim::twist& pb_twist) {
-        VCCTypes::Twist twist;
-        twist.linear_x = pb_twist.linear_x();
-        twist.linear_y = pb_twist.linear_y();
-        twist.linear_z = pb_twist.linear_z();
-        twist.angular_x = pb_twist.angular_x();
-        twist.angular_y = pb_twist.angular_y();
-        twist.angular_z = pb_twist.angular_z();
-        return twist;
+
+    // Transform pose with only yaw from UE (left-handed, cm) to right-handed (m)
+    VCCSim::PoseOnlyYaw TransformPoseOnlyYawFromUE(const VCCSim::PoseOnlyYaw& ue_pose) {
+        VCCSim::PoseOnlyYaw transformed;
+        // Convert cm to m and flip Y-axis for right-handed system
+        transformed.set_x(ue_pose.x() * 0.01f);
+        transformed.set_y(-ue_pose.y() * 0.01f);
+        transformed.set_z(ue_pose.z() * 0.01f);
+        
+        // Flip yaw for coordinate system change
+        transformed.set_yaw(-ue_pose.yaw());
+        
+        return transformed;
     }
-    
-    VCCTypes::Odometry FromPbOdometry(const ::VCCSim::Odometry& pb_odom) {
-        VCCTypes::Odometry odom;
-        odom.pose = FromPbPose(pb_odom.pose());
-        odom.twist = FromPbTwist(pb_odom.twist());
-        return odom;
+
+    // Transform pose with only yaw to UE (left-handed, cm) from right-handed (m)
+    VCCSim::PoseOnlyYaw TransformPoseOnlyYawToUE(const VCCSim::PoseOnlyYaw& pose) {
+        VCCSim::PoseOnlyYaw transformed;
+        // Convert m to cm and flip Y-axis for left-handed system
+        transformed.set_x(pose.x() * 100.0f);
+        transformed.set_y(-pose.y() * 100.0f);
+        transformed.set_z(pose.z() * 100.0f);
+        
+        // Flip yaw for coordinate system change
+        transformed.set_yaw(-pose.yaw());
+        
+        return transformed;
     }
-    
-    VCCTypes::RGBImage FromPbRGBImage(const ::VCCSim::RGBCameraImageData& pb_image) {
-        VCCTypes::RGBImage image;
-        image.width = pb_image.width();
-        image.height = pb_image.height();
-        image.data = std::vector<uint8_t>(pb_image.data().begin(), pb_image.data().end());
-        image.format = static_cast<VCCTypes::Format>(pb_image.format());
-        image.timestamp = pb_image.timestamp();
-        return image;
+
+    // Transform odometry from UE (left-handed, cm) to right-handed (m)
+    VCCSim::Odometry TransformOdometryFromUE(const VCCSim::Odometry& ue_odom) {
+        VCCSim::Odometry transformed;
+        
+        // Transform pose
+        auto* pose = transformed.mutable_pose();
+        pose->set_x(ue_odom.pose().x() * 0.01f);
+        pose->set_y(-ue_odom.pose().y() * 0.01f);
+        pose->set_z(ue_odom.pose().z() * 0.01f);
+        pose->set_roll(-ue_odom.pose().roll());
+        pose->set_pitch(ue_odom.pose().pitch());
+        pose->set_yaw(-ue_odom.pose().yaw());
+        
+        // Transform twist (linear and angular velocities)
+        auto* twist = transformed.mutable_twist();
+        
+        // Linear velocity (cm/s to m/s, flip Y)
+        twist->set_linear_x(ue_odom.twist().linear_x() * 0.01f);
+        twist->set_linear_y(-ue_odom.twist().linear_y() * 0.01f);
+        twist->set_linear_z(ue_odom.twist().linear_z() * 0.01f);
+        
+        // Angular velocity (flip for roll and yaw due to coordinate system change)
+        twist->set_angular_x(-ue_odom.twist().angular_x());
+        twist->set_angular_y(ue_odom.twist().angular_y());
+        twist->set_angular_z(-ue_odom.twist().angular_z());
+        
+        return transformed;
     }
-    
-    VCCTypes::Point FromPbPoint(const ::VCCSim::Point& pb_point) {
-        VCCTypes::Point point;
-        point.x = pb_point.x();
-        point.y = pb_point.y();
-        point.z = pb_point.z();
-        return point;
-    }
-    
-    ::VCCSim::Point ToPbPoint(const VCCTypes::Point& point) {
-        ::VCCSim::Point pb_point;
-        pb_point.set_x(point.x);
-        pb_point.set_y(point.y);
-        pb_point.set_z(point.z);
-        return pb_point;
+
+    // Transform odometry to UE (left-handed, cm) from right-handed (m)
+    VCCSim::Odometry TransformOdometryToUE(const VCCSim::Odometry& odom) {
+        VCCSim::Odometry transformed;
+        
+        // Transform pose
+        auto* pose = transformed.mutable_pose();
+        pose->set_x(odom.pose().x() * 100.0f);
+        pose->set_y(-odom.pose().y() * 100.0f);
+        pose->set_z(odom.pose().z() * 100.0f);
+        pose->set_roll(-odom.pose().roll());
+        pose->set_pitch(odom.pose().pitch());
+        pose->set_yaw(-odom.pose().yaw());
+        
+        // Transform twist (linear and angular velocities)
+        auto* twist = transformed.mutable_twist();
+
+        // Linear velocity (m/s to cm/s, flip Y)
+        twist->set_linear_x(odom.twist().linear_x() * 100.0f);
+        twist->set_linear_y(-odom.twist().linear_y() * 100.0f);
+        twist->set_linear_z(odom.twist().linear_z() * 100.0f);
+
+        // Angular velocity (flip for roll and yaw due to coordinate system change)
+        twist->set_angular_x(-odom.twist().angular_x());
+        twist->set_angular_y(odom.twist().angular_y());
+        twist->set_angular_z(-odom.twist().angular_z());
+        
+        return transformed;
     }
     
     // gRPC channel and stubs
@@ -148,7 +200,6 @@ public:
     std::unique_ptr<::VCCSim::PointCloudService::Stub> point_cloud_service_;
 };
 
-// Constructor
 VCCSimClient::VCCSimClient(const std::string& host, int port, int max_message_length)
     : pImpl(std::make_unique<Impl>(host, port, max_message_length)) {
 }
@@ -163,43 +214,43 @@ void VCCSimClient::Close() {
 
 // RGB Camera Methods
 
-std::vector<uint8_t> VCCSimClient::GetRGBImageData(const std::string& robot_name, int index, VCCTypes::Format format) {
-    VCCTypes::RGBImage image = GetRGBIndexedCameraImageData(robot_name, index, format);
-    return image.data;
+std::vector<uint8_t> VCCSimClient::GetRGBImageData(const std::string& robot_name, int index, VCCSim::Format format) {
+    VCCSim::RGBCameraImageData image = GetRGBIndexedCameraImageData(robot_name, index, format);
+    return std::vector<uint8_t>(image.data().begin(), image.data().end());
 }
 
 bool VCCSimClient::GetAndSaveRGBImage(const std::string& robot_name, int index, 
-                                    const std::string& output_path, VCCTypes::Format format) {
-    VCCTypes::RGBImage image = GetRGBIndexedCameraImageData(robot_name, index, format);
+                                    const std::string& output_path, VCCSim::Format format) {
+    VCCSim::RGBCameraImageData image = GetRGBIndexedCameraImageData(robot_name, index, format);
     return SaveRGBImage(image, output_path);
 }
 
-VCCTypes::RGBImage VCCSimClient::GetRGBIndexedCameraImageData(const std::string& robot_name, int index, 
-                                                         VCCTypes::Format format) {
-    ::VCCSim::RGBCameraImageData response;
+VCCSim::RGBCameraImageData VCCSimClient::GetRGBIndexedCameraImageData(const std::string& robot_name, int index, 
+                                                         VCCSim::Format format) {
+    VCCSim::RGBCameraImageData response;
     grpc::ClientContext context;
     
     // Create request
-    ::VCCSim::IndexedCamera request;
+    VCCSim::IndexedCamera request;
     auto* robot = request.mutable_robot_name();
     robot->set_name(robot_name);
     request.set_index(index);
-    request.set_format(static_cast<::VCCSim::Format>(format));
+    request.set_format(format);
     
     // Call gRPC method
     grpc::Status status = pImpl->rgb_camera_service_->GetRGBIndexedCameraImageData(&context, request, &response);
     
-    return pImpl->FromPbRGBImage(response);
+    return response;
 }
 
-bool VCCSimClient::SaveRGBImage(const VCCTypes::RGBImage& image_data, const std::string& output_path) {
+bool VCCSimClient::SaveRGBImage(const VCCSim::RGBCameraImageData& image_data, const std::string& output_path) {
     try {
         std::ofstream file(output_path, std::ios::binary);
         if (!file.is_open()) {
             return false;
         }
         
-        file.write(reinterpret_cast<const char*>(image_data.data.data()), image_data.data.size());
+        file.write(image_data.data().data(), image_data.data().size());
         file.close();
         
         return true;
@@ -208,8 +259,8 @@ bool VCCSimClient::SaveRGBImage(const VCCTypes::RGBImage& image_data, const std:
     }
 }
 
-VCCTypes::Odometry VCCSimClient::GetRGBCameraOdom(const std::string& robot_name) {
-    ::VCCSim::Odometry response;
+VCCSim::Odometry VCCSimClient::GetRGBCameraOdom(const std::string& robot_name) {
+    VCCSim::Odometry response;
     grpc::ClientContext context;
     
     // Create request
@@ -218,15 +269,20 @@ VCCTypes::Odometry VCCSimClient::GetRGBCameraOdom(const std::string& robot_name)
     // Call gRPC method
     grpc::Status status = pImpl->rgb_camera_service_->GetRGBCameraOdom(&context, request, &response);
     
-    return pImpl->FromPbOdometry(response);
+    // Transform from UE coordinates
+    if (status.ok()) {
+        return pImpl->TransformOdometryFromUE(response);
+    }
+    
+    return response;
 }
 
 std::tuple<int, int> VCCSimClient::GetRGBCameraImageSize(const std::string& robot_name, int index) {
-    ::VCCSim::ImageSize response;
+    VCCSim::ImageSize response;
     grpc::ClientContext context;
     
     // Create request
-    ::VCCSim::IndexedCamera request;
+    VCCSim::IndexedCamera request;
     auto* robot = request.mutable_robot_name();
     robot->set_name(robot_name);
     request.set_index(index);
@@ -238,7 +294,7 @@ std::tuple<int, int> VCCSimClient::GetRGBCameraImageSize(const std::string& robo
 }
 
 std::tuple<int, int> VCCSimClient::GetDepthCameraImageSize(const std::string& robot_name) {
-    ::VCCSim::ImageSize response;
+    VCCSim::ImageSize response;
     grpc::ClientContext context;
     
     // Create request
@@ -251,8 +307,8 @@ std::tuple<int, int> VCCSimClient::GetDepthCameraImageSize(const std::string& ro
 }
 
 // LiDAR Methods
-std::vector<VCCTypes::Point> VCCSimClient::GetLidarData(const std::string& robot_name) {
-    ::VCCSim::LidarData response;
+std::vector<VCCSim::Point> VCCSimClient::GetLidarData(const std::string& robot_name) {
+    VCCSim::LidarData response;
     grpc::ClientContext context;
     
     // Create request
@@ -261,20 +317,20 @@ std::vector<VCCTypes::Point> VCCSimClient::GetLidarData(const std::string& robot
     // Call gRPC method
     grpc::Status status = pImpl->lidar_service_->GetLiDARData(&context, request, &response);
     
-    // Convert response to vector of points
-    std::vector<VCCTypes::Point> points;
+    // Convert response to vector of points with coordinate transformation
+    std::vector<VCCSim::Point> points;
     if (status.ok()) {
         points.reserve(response.data_size());
-        for (const auto& pb_point : response.data()) {
-            points.push_back(pImpl->FromPbPoint(pb_point));
+        for (int i = 0; i < response.data_size(); ++i) {
+            points.push_back(pImpl->TransformPointFromUE(response.data(i)));
         }
     }
     
     return points;
 }
 
-VCCTypes::Odometry VCCSimClient::GetLidarOdom(const std::string& robot_name) {
-    ::VCCSim::Odometry response;
+VCCSim::Odometry VCCSimClient::GetLidarOdom(const std::string& robot_name) {
+    VCCSim::Odometry response;
     grpc::ClientContext context;
     
     // Create request
@@ -283,12 +339,17 @@ VCCTypes::Odometry VCCSimClient::GetLidarOdom(const std::string& robot_name) {
     // Call gRPC method
     grpc::Status status = pImpl->lidar_service_->GetLiDAROdom(&context, request, &response);
     
-    return pImpl->FromPbOdometry(response);
+    // Transform from UE coordinates
+    if (status.ok()) {
+        return pImpl->TransformOdometryFromUE(response);
+    }
+    
+    return response;
 }
 
-std::tuple<std::vector<VCCTypes::Point>, VCCTypes::Odometry> 
+std::tuple<std::vector<VCCSim::Point>, VCCSim::Odometry> 
 VCCSimClient::GetLidarDataAndOdom(const std::string& robot_name) {
-    ::VCCSim::LidarDataAndOdom response;
+    VCCSim::LidarDataAndOdom response;
     grpc::ClientContext context;
     
     // Create request
@@ -297,21 +358,27 @@ VCCSimClient::GetLidarDataAndOdom(const std::string& robot_name) {
     // Call gRPC method
     grpc::Status status = pImpl->lidar_service_->GetLiDARDataAndOdom(&context, request, &response);
     
-    // Convert points to vector
-    std::vector<VCCTypes::Point> points;
+    // Convert points to vector with coordinate transformation
+    std::vector<VCCSim::Point> points;
+    VCCSim::Odometry transformed_odom;
+    
     if (status.ok()) {
+        // Transform points
         points.reserve(response.data().data_size());
-        for (const auto& pb_point : response.data().data()) {
-            points.push_back(pImpl->FromPbPoint(pb_point));
+        for (int i = 0; i < response.data().data_size(); ++i) {
+            points.push_back(pImpl->TransformPointFromUE(response.data().data(i)));
         }
+        
+        // Transform odometry
+        transformed_odom = pImpl->TransformOdometryFromUE(response.odom());
     }
     
-    return std::make_tuple(points, pImpl->FromPbOdometry(response.odom()));
+    return std::make_tuple(points, transformed_odom);
 }
 
 // Depth Camera Methods
-std::vector<VCCTypes::Point> VCCSimClient::GetDepthCameraPointData(const std::string& robot_name) {
-    ::VCCSim::DepthCameraPointData response;
+std::vector<VCCSim::Point> VCCSimClient::GetDepthCameraPointData(const std::string& robot_name) {
+    VCCSim::DepthCameraPointData response;
     grpc::ClientContext context;
     
     // Create request
@@ -320,12 +387,12 @@ std::vector<VCCTypes::Point> VCCSimClient::GetDepthCameraPointData(const std::st
     // Call gRPC method
     grpc::Status status = pImpl->depth_camera_service_->GetDepthCameraPointData(&context, request, &response);
     
-    // Convert response to vector of points
-    std::vector<VCCTypes::Point> points;
+    // Convert response to vector of points with coordinate transformation
+    std::vector<VCCSim::Point> points;
     if (status.ok()) {
         points.reserve(response.data_size());
-        for (const auto& pb_point : response.data()) {
-            points.push_back(pImpl->FromPbPoint(pb_point));
+        for (int i = 0; i < response.data_size(); ++i) {
+            points.push_back(pImpl->TransformPointFromUE(response.data(i)));
         }
     }
     
@@ -333,7 +400,7 @@ std::vector<VCCTypes::Point> VCCSimClient::GetDepthCameraPointData(const std::st
 }
 
 std::vector<float> VCCSimClient::GetDepthCameraImageData(const std::string& robot_name) {
-    ::VCCSim::DepthCameraImageData response;
+    VCCSim::DepthCameraImageData response;
     grpc::ClientContext context;
     
     // Create request
@@ -342,20 +409,21 @@ std::vector<float> VCCSimClient::GetDepthCameraImageData(const std::string& robo
     // Call gRPC method
     grpc::Status status = pImpl->depth_camera_service_->GetDepthCameraImageData(&context, request, &response);
     
-    // Convert response to vector of floats
+    // Convert response to vector of floats, transforming depth values from cm to m
     std::vector<float> data;
     if (status.ok()) {
         data.reserve(response.data_size());
         for (int i = 0; i < response.data_size(); ++i) {
-            data.push_back(response.data(i));
+            // Convert from cm to m
+            data.push_back(response.data(i) * 0.01f);
         }
     }
     
     return data;
 }
 
-VCCTypes::Odometry VCCSimClient::GetDepthCameraOdom(const std::string& robot_name) {
-    ::VCCSim::Odometry response;
+VCCSim::Odometry VCCSimClient::GetDepthCameraOdom(const std::string& robot_name) {
+    VCCSim::Odometry response;
     grpc::ClientContext context;
     
     // Create request
@@ -364,12 +432,17 @@ VCCTypes::Odometry VCCSimClient::GetDepthCameraOdom(const std::string& robot_nam
     // Call gRPC method
     grpc::Status status = pImpl->depth_camera_service_->GetDepthCameraOdom(&context, request, &response);
     
-    return pImpl->FromPbOdometry(response);
+    // Transform from UE coordinates
+    if (status.ok()) {
+        return pImpl->TransformOdometryFromUE(response);
+    }
+    
+    return response;
 }
 
 // Drone Methods
-VCCTypes::Pose VCCSimClient::GetDronePose(const std::string& robot_name) {
-    ::VCCSim::Pose response;
+VCCSim::Pose VCCSimClient::GetDronePose(const std::string& robot_name) {
+    VCCSim::Pose response;
     grpc::ClientContext context;
     
     // Create request
@@ -378,27 +451,26 @@ VCCTypes::Pose VCCSimClient::GetDronePose(const std::string& robot_name) {
     // Call gRPC method
     grpc::Status status = pImpl->drone_service_->GetDronePose(&context, request, &response);
     
-    return pImpl->FromPbPose(response);
+    // Transform from UE coordinates
+    if (status.ok()) {
+        return pImpl->TransformPoseFromUE(response);
+    }
+    
+    return response;
 }
 
-bool VCCSimClient::SendDronePose(const std::string& name, const VCCTypes::Pose& pose) {
-    return SendDronePose(name, pose.x, pose.y, pose.z, pose.roll, pose.pitch, pose.yaw);
-}
-
-bool VCCSimClient::SendDronePose(const std::string& name, float x, float y, float z, float roll, float pitch, float yaw) {
-    ::VCCSim::Status response;
+bool VCCSimClient::SendDronePose(const std::string& name, const VCCSim::Pose& pose) {
+    VCCSim::Status response;
     grpc::ClientContext context;
     
+    // Transform to UE coordinates
+    VCCSim::Pose ue_pose = pImpl->TransformPoseToUE(pose);
+    
     // Create request
-    ::VCCSim::DronePose request;
+    VCCSim::DronePose request;
     request.set_name(name);
-    auto* pose = request.mutable_pose();
-    pose->set_x(x);
-    pose->set_y(y);
-    pose->set_z(z);
-    pose->set_roll(roll);
-    pose->set_pitch(pitch);
-    pose->set_yaw(yaw);
+    auto* pose_ptr = request.mutable_pose();
+    *pose_ptr = ue_pose;
     
     // Call gRPC method
     grpc::Status status = pImpl->drone_service_->SendDronePose(&context, request, &response);
@@ -406,22 +478,32 @@ bool VCCSimClient::SendDronePose(const std::string& name, float x, float y, floa
     return status.ok() && response.status();
 }
 
-bool VCCSimClient::SendDronePath(const std::string& name, const std::vector<VCCTypes::Pose>& poses) {
-    ::VCCSim::Status response;
+bool VCCSimClient::SendDronePose(const std::string& name, float x, float y, float z, float roll, float pitch, float yaw) {
+    // Create a pose and use the existing method
+    VCCSim::Pose pose;
+    pose.set_x(x);
+    pose.set_y(y);
+    pose.set_z(z);
+    pose.set_roll(roll);
+    pose.set_pitch(pitch);
+    pose.set_yaw(yaw);
+    
+    return SendDronePose(name, pose);
+}
+
+bool VCCSimClient::SendDronePath(const std::string& name, const std::vector<VCCSim::Pose>& poses) {
+    VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    ::VCCSim::DronePath request;
+    VCCSim::DronePath request;
     request.set_name(name);
     
+    // Transform each pose to UE coordinates
     for (const auto& pose : poses) {
+        auto ue_pose = pImpl->TransformPoseToUE(pose);
         auto* pb_pose = request.add_path();
-        pb_pose->set_x(pose.x);
-        pb_pose->set_y(pose.y);
-        pb_pose->set_z(pose.z);
-        pb_pose->set_roll(pose.roll);
-        pb_pose->set_pitch(pose.pitch);
-        pb_pose->set_yaw(pose.yaw);
+        *pb_pose = ue_pose;
     }
     
     // Call gRPC method
@@ -431,8 +513,8 @@ bool VCCSimClient::SendDronePath(const std::string& name, const std::vector<VCCT
 }
 
 // Car Methods
-VCCTypes::Odometry VCCSimClient::GetCarOdom(const std::string& robot_name) {
-    ::VCCSim::Odometry response;
+VCCSim::Odometry VCCSimClient::GetCarOdom(const std::string& robot_name) {
+    VCCSim::Odometry response;
     grpc::ClientContext context;
     
     // Create request
@@ -441,25 +523,26 @@ VCCTypes::Odometry VCCSimClient::GetCarOdom(const std::string& robot_name) {
     // Call gRPC method
     grpc::Status status = pImpl->car_service_->GetCarOdom(&context, request, &response);
     
-    return pImpl->FromPbOdometry(response);
+    // Transform from UE coordinates
+    if (status.ok()) {
+        return pImpl->TransformOdometryFromUE(response);
+    }
+    
+    return response;
 }
 
-bool VCCSimClient::SendCarPose(const std::string& name, const VCCTypes::PoseYaw& pose) {
-    return SendCarPose(name, pose.x, pose.y, pose.z, pose.yaw);
-}
-
-bool VCCSimClient::SendCarPose(const std::string& name, float x, float y, float z, float yaw) {
-    ::VCCSim::Status response;
+bool VCCSimClient::SendCarPose(const std::string& name, const VCCSim::PoseOnlyYaw& pose) {
+    VCCSim::Status response;
     grpc::ClientContext context;
     
+    // Transform to UE coordinates
+    VCCSim::PoseOnlyYaw ue_pose = pImpl->TransformPoseOnlyYawToUE(pose);
+    
     // Create request
-    ::VCCSim::CarPose request;
+    VCCSim::CarPose request;
     request.set_name(name);
-    auto* pose = request.mutable_pose();
-    pose->set_x(x);
-    pose->set_y(y);
-    pose->set_z(z);
-    pose->set_yaw(yaw);
+    auto* pose_ptr = request.mutable_pose();
+    *pose_ptr = ue_pose;
     
     // Call gRPC method
     grpc::Status status = pImpl->car_service_->SendCarPose(&context, request, &response);
@@ -467,20 +550,30 @@ bool VCCSimClient::SendCarPose(const std::string& name, float x, float y, float 
     return status.ok() && response.status();
 }
 
-bool VCCSimClient::SendCarPath(const std::string& name, const std::vector<VCCTypes::PoseYaw>& poses) {
-    ::VCCSim::Status response;
+bool VCCSimClient::SendCarPose(const std::string& name, float x, float y, float z, float yaw) {
+    // Create a pose and use the existing method
+    VCCSim::PoseOnlyYaw pose;
+    pose.set_x(x);
+    pose.set_y(y);
+    pose.set_z(z);
+    pose.set_yaw(yaw);
+    
+    return SendCarPose(name, pose);
+}
+
+bool VCCSimClient::SendCarPath(const std::string& name, const std::vector<VCCSim::PoseOnlyYaw>& poses) {
+    VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    ::VCCSim::CarPath request;
+    VCCSim::CarPath request;
     request.set_name(name);
     
+    // Transform each pose to UE coordinates
     for (const auto& pose : poses) {
+        auto ue_pose = pImpl->TransformPoseOnlyYawToUE(pose);
         auto* pb_pose = request.add_path();
-        pb_pose->set_x(pose.x);
-        pb_pose->set_y(pose.y);
-        pb_pose->set_z(pose.z);
-        pb_pose->set_yaw(pose.yaw);
+        *pb_pose = ue_pose;
     }
     
     // Call gRPC method
@@ -490,8 +583,8 @@ bool VCCSimClient::SendCarPath(const std::string& name, const std::vector<VCCTyp
 }
 
 // Flash Methods
-VCCTypes::Pose VCCSimClient::GetFlashPose(const std::string& robot_name) {
-    ::VCCSim::Pose response;
+VCCSim::Pose VCCSimClient::GetFlashPose(const std::string& robot_name) {
+    VCCSim::Pose response;
     grpc::ClientContext context;
     
     // Create request
@@ -500,27 +593,26 @@ VCCTypes::Pose VCCSimClient::GetFlashPose(const std::string& robot_name) {
     // Call gRPC method
     grpc::Status status = pImpl->flash_service_->GetFlashPose(&context, request, &response);
     
-    return pImpl->FromPbPose(response);
+    // Transform from UE coordinates
+    if (status.ok()) {
+        return pImpl->TransformPoseFromUE(response);
+    }
+    
+    return response;
 }
 
-bool VCCSimClient::SendFlashPose(const std::string& name, const VCCTypes::Pose& pose) {
-    return SendFlashPose(name, pose.x, pose.y, pose.z, pose.roll, pose.pitch, pose.yaw);
-}
-
-bool VCCSimClient::SendFlashPose(const std::string& name, float x, float y, float z, float roll, float pitch, float yaw) {
-    ::VCCSim::Status response;
+bool VCCSimClient::SendFlashPose(const std::string& name, const VCCSim::Pose& pose) {
+    VCCSim::Status response;
     grpc::ClientContext context;
     
+    // Transform to UE coordinates
+    VCCSim::Pose ue_pose = pImpl->TransformPoseToUE(pose);
+    
     // Create request
-    ::VCCSim::FlashPose request;
+    VCCSim::FlashPose request;
     request.set_name(name);
-    auto* pose = request.mutable_pose();
-    pose->set_x(x);
-    pose->set_y(y);
-    pose->set_z(z);
-    pose->set_roll(roll);
-    pose->set_pitch(pitch);
-    pose->set_yaw(yaw);
+    auto* pose_ptr = request.mutable_pose();
+    *pose_ptr = ue_pose;
     
     // Call gRPC method
     grpc::Status status = pImpl->flash_service_->SendFlashPose(&context, request, &response);
@@ -528,22 +620,32 @@ bool VCCSimClient::SendFlashPose(const std::string& name, float x, float y, floa
     return status.ok() && response.status();
 }
 
-bool VCCSimClient::SendFlashPath(const std::string& name, const std::vector<VCCTypes::Pose>& poses) {
-    ::VCCSim::Status response;
+bool VCCSimClient::SendFlashPose(const std::string& name, float x, float y, float z, float roll, float pitch, float yaw) {
+    // Create a pose and use the existing method
+    VCCSim::Pose pose;
+    pose.set_x(x);
+    pose.set_y(y);
+    pose.set_z(z);
+    pose.set_roll(roll);
+    pose.set_pitch(pitch);
+    pose.set_yaw(yaw);
+    
+    return SendFlashPose(name, pose);
+}
+
+bool VCCSimClient::SendFlashPath(const std::string& name, const std::vector<VCCSim::Pose>& poses) {
+    VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    ::VCCSim::FlashPath request;
+    VCCSim::FlashPath request;
     request.set_name(name);
     
+    // Transform each pose to UE coordinates
     for (const auto& pose : poses) {
+        auto ue_pose = pImpl->TransformPoseToUE(pose);
         auto* pb_pose = request.add_path();
-        pb_pose->set_x(pose.x);
-        pb_pose->set_y(pose.y);
-        pb_pose->set_z(pose.z);
-        pb_pose->set_roll(pose.roll);
-        pb_pose->set_pitch(pose.pitch);
-        pb_pose->set_yaw(pose.yaw);
+        *pb_pose = ue_pose;
     }
     
     // Call gRPC method
@@ -553,7 +655,7 @@ bool VCCSimClient::SendFlashPath(const std::string& name, const std::vector<VCCT
 }
 
 bool VCCSimClient::CheckFlashReady(const std::string& robot_name) {
-    ::VCCSim::Status response;
+    VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
@@ -566,7 +668,7 @@ bool VCCSimClient::CheckFlashReady(const std::string& robot_name) {
 }
 
 bool VCCSimClient::MoveToNext(const std::string& robot_name) {
-    ::VCCSim::Status response;
+    VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
@@ -580,12 +682,15 @@ bool VCCSimClient::MoveToNext(const std::string& robot_name) {
 
 // Mesh Methods
 bool VCCSimClient::SendMesh(const std::string& data, int format, int version, bool simplified,
-                          const VCCTypes::Pose& transform_pose) {
-    ::VCCSim::Status response;
+                          const VCCSim::Pose& transform_pose) {
+    VCCSim::Status response;
     grpc::ClientContext context;
     
+    // Transform pose to UE coordinates
+    VCCSim::Pose ue_transform_pose = pImpl->TransformPoseToUE(transform_pose);
+    
     // Create request
-    ::VCCSim::MeshData request;
+    VCCSim::MeshData request;
     request.set_data(data);
     request.set_format(format);
     request.set_version(version);
@@ -593,12 +698,7 @@ bool VCCSimClient::SendMesh(const std::string& data, int format, int version, bo
     
     // Set transform pose
     auto* transform = request.mutable_transform();
-    transform->set_x(transform_pose.x);
-    transform->set_y(transform_pose.y);
-    transform->set_z(transform_pose.z);
-    transform->set_roll(transform_pose.roll);
-    transform->set_pitch(transform_pose.pitch);
-    transform->set_yaw(transform_pose.yaw);
+    *transform = ue_transform_pose;
     
     // Call gRPC method
     grpc::Status status = pImpl->mesh_service_->SendMesh(&context, request, &response);
@@ -607,12 +707,15 @@ bool VCCSimClient::SendMesh(const std::string& data, int format, int version, bo
 }
 
 int VCCSimClient::SendGlobalMesh(const std::string& data, int format, int version, bool simplified,
-                               const VCCTypes::Pose& transform_pose) {
-    ::VCCSim::MeshID response;
+                               const VCCSim::Pose& transform_pose) {
+    VCCSim::MeshID response;
     grpc::ClientContext context;
     
+    // Transform pose to UE coordinates
+    VCCSim::Pose ue_transform_pose = pImpl->TransformPoseToUE(transform_pose);
+    
     // Create request
-    ::VCCSim::MeshData request;
+    VCCSim::MeshData request;
     request.set_data(data);
     request.set_format(format);
     request.set_version(version);
@@ -620,12 +723,7 @@ int VCCSimClient::SendGlobalMesh(const std::string& data, int format, int versio
     
     // Set transform pose
     auto* transform = request.mutable_transform();
-    transform->set_x(transform_pose.x);
-    transform->set_y(transform_pose.y);
-    transform->set_z(transform_pose.z);
-    transform->set_roll(transform_pose.roll);
-    transform->set_pitch(transform_pose.pitch);
-    transform->set_yaw(transform_pose.yaw);
+    *transform = ue_transform_pose;
     
     // Call gRPC method
     grpc::Status status = pImpl->mesh_service_->SendGlobalMesh(&context, request, &response);
@@ -638,11 +736,11 @@ int VCCSimClient::SendGlobalMesh(const std::string& data, int format, int versio
 }
 
 bool VCCSimClient::RemoveGlobalMesh(int mesh_id) {
-    ::VCCSim::Status response;
+    VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    ::VCCSim::MeshID request;
+    VCCSim::MeshID request;
     request.set_id(mesh_id);
     
     // Call gRPC method
@@ -652,26 +750,28 @@ bool VCCSimClient::RemoveGlobalMesh(int mesh_id) {
 }
 
 // Point Cloud Methods
-bool VCCSimClient::SendPointCloudWithColor(const std::vector<VCCTypes::Point>& points,
+bool VCCSimClient::SendPointCloudWithColor(const std::vector<VCCSim::Point>& points,
                                          const std::vector<int>& colors) {
     if (points.size() != colors.size()) {
         // Number of points must match number of colors
         return false;
     }
 
-    ::VCCSim::Status response;
+    VCCSim::Status response;
     grpc::ClientContext context;
     
     // Create request
-    ::VCCSim::PointCloudWithColor request;
+    VCCSim::PointCloudWithColor request;
     
-    // Add points and colors
+    // Add points and colors, transforming each point to UE coordinates
     for (size_t i = 0; i < points.size(); ++i) {
         auto* point_with_color = request.add_data();
         auto* pb_point = point_with_color->mutable_point();
-        pb_point->set_x(points[i].x);
-        pb_point->set_y(points[i].y);
-        pb_point->set_z(points[i].z);
+        
+        // Transform point to UE coordinates
+        VCCSim::Point ue_point = pImpl->TransformPointToUE(points[i]);
+        *pb_point = ue_point;
+        
         point_with_color->set_color(colors[i]);
     }
     

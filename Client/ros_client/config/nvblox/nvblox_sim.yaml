@@ -2,18 +2,25 @@
   ros__parameters:
     # Lidar settings
     cuda_stream_type: 0
-    voxel_size: 1.0
+    voxel_size: 0.05
     use_lidar: false
     # QoS settings
     input_qos: "DEFAULT" # NOTE(2024.09.20): Needed to for reliable delivery of messages from Isaac Sim.
     # Map clearing settings
-    map_clearing_radius_m: 15.0 # no map clearing if < 0.0
+    map_clearing_radius_m: -15.0 # no map clearing if < 0.0
     map_clearing_frame_id: "base_link"
     # Rviz visualization
     esdf_slice_bounds_visualization_attachment_frame_id: "base_link"
 
     # Increase visualization distance (due to lidar)
-    layer_visualization_exclusion_radius_m: 15.0
+    layer_visualization_exclusion_radius_m: 30.0
+
+    # printing statistics on console
+    print_rates_to_console: true
+    print_timings_to_console: true
+    print_delays_to_console: true
+    print_queue_drops_to_console: true
+    print_statistics_on_console_period_ms: 10000
 
     static_mapper:
       # lidar integration

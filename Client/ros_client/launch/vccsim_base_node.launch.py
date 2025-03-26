@@ -6,6 +6,12 @@ from launch.conditions import IfCondition
 from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
+    log_level_arg = DeclareLaunchArgument(
+        'log_level',
+        default_value='info',
+        description='Logging level (debug, info, warn, error, fatal)'
+    )
+    
     # Declare launch arguments for component activation
     rgb_active_arg = DeclareLaunchArgument(
         'rgb_active',
@@ -34,19 +40,19 @@ def generate_launch_description():
     # Declare launch arguments for component frequencies
     rgb_freq_arg = DeclareLaunchArgument(
         'rgb_frequency',
-        default_value='5.0',
+        default_value='10.0',
         description='Frequency (Hz) of RGB camera publishing'
     )
     
     depth_freq_arg = DeclareLaunchArgument(
         'depth_frequency',
-        default_value='5.0',
+        default_value='10.0',
         description='Frequency (Hz) of depth camera publishing'
     )
     
     lidar_freq_arg = DeclareLaunchArgument(
         'lidar_frequency',
-        default_value='5.0',
+        default_value='10.0',
         description='Frequency (Hz) of LiDAR publishing'
     )
     
@@ -125,7 +131,8 @@ def generate_launch_description():
             'lidar_frequency': LaunchConfiguration('lidar_frequency'),
             'drone_pose_frequency': LaunchConfiguration('drone_pose_frequency'),
         }],
-        output='screen'
+        output='screen',
+        arguments=['--ros-args', '--log-level', ['vccsim_ros2_node:=', LaunchConfiguration('log_level')]]
     )
     
     # RViz node
@@ -161,6 +168,8 @@ def generate_launch_description():
         port_arg,
         robot_name_arg,
         camera_index_arg,
+        
+        log_level_arg,
         
         # Nodes
         vccsim_node,
