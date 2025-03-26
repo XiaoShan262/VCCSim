@@ -22,6 +22,8 @@
 #include "Utils/ImageProcesser.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Sensors/CameraSensor.h"
+#include "Sensors/DepthCamera.h"
 #include "EngineUtils.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -185,12 +187,14 @@ void UVCCSIMDisplayWidget::InitFromConfig(const struct FVCCSimConfig& Config)
     }    
 }
 
-void UVCCSIMDisplayWidget::SetDepthTexture(UTextureRenderTarget2D* DepthTexture)
+void UVCCSIMDisplayWidget::SetDepthContext(
+    UTextureRenderTarget2D* DepthTexture, UDepthCameraComponent* InCamera)
 {    
     if (DepthMaterial && DepthTexture)
     {
         DepthRenderTarget = DepthTexture;
         DepthMaterial->SetTextureParameterValue(TEXT("DepthTexture"), DepthRenderTarget);
+        DepthCameraComponent = InCamera;
     }
     else
     {
@@ -201,12 +205,14 @@ void UVCCSIMDisplayWidget::SetDepthTexture(UTextureRenderTarget2D* DepthTexture)
     }
 }
 
-void UVCCSIMDisplayWidget::SetRGBTexture(UTextureRenderTarget2D* RGBTexture)
+void UVCCSIMDisplayWidget::SetRGBContext(
+    UTextureRenderTarget2D* RGBTexture, URGBCameraComponent* InCamera)
 {
     if (RGBMaterial && RGBTexture)
     {
         RGBRenderTarget = RGBTexture;
         RGBMaterial->SetTextureParameterValue(TEXT("RGBTexture"), RGBRenderTarget);
+        RGBCameraComponent = InCamera;
     }
     else
     {
@@ -573,6 +579,7 @@ void UVCCSIMDisplayWidget::ProcessCapture(const int32 ID)
     case 6:
         if (RGBRenderTarget)
         {
+            RGBCameraComponent->CaptureRGBScene();
             SaveRenderTargetToDisk(RGBRenderTarget, "RGBCapture");
         }
         else
@@ -617,6 +624,7 @@ void UVCCSIMDisplayWidget::ProcessCapture(const int32 ID)
     case 0:
         if (DepthRenderTarget)
         {
+            DepthCameraComponent->CaptureDepthScene();
             SaveRenderTargetToDisk(DepthRenderTarget, "DepthCapture");
         }
         else
@@ -660,8 +668,7 @@ void UVCCSIMDisplayWidget::SaveRenderTargetToDisk(
     }
 
     auto CurTime = FDateTime::Now();
-    FString FilePath = LogSavePath + "/" + FileName + "_" + 
-        CurTime.ToString() + ".png";
+    FString FilePath = LogSavePath + "/LiveCaptures/" + FileName + "_" + CurTime.ToString() + ".png";
 
     // Create directory synchronously as it's typically quick
     FFileManagerGeneric FileManager;

@@ -1,8 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CollisionQueryParams.h"
-#include "Engine/World.h"
 #include "SceneAnalysisManager.generated.h"
 
 class URGBCameraComponent;
@@ -37,7 +35,7 @@ class VCCSIM_API USceneAnalysisManager : public UObject
 public:
     USceneAnalysisManager();
     
-    bool Initialize(UWorld* InWorld);
+    bool Initialize(UWorld* InWorld, FString&& Path);
     void ScanScene();
     
     void RegisterCamera(URGBCameraComponent* CameraComponent);
@@ -76,4 +74,11 @@ private:
     float SamplingDensity;
     bool bUseVertexSampling;
     float GridResolution;
+
+    /* ----------------------------- Test ----------------------------- */
+    FString LogPath;
+    void ExportMeshesToPly();
+    FString GeneratePlyContent(const FMeshInfo& MeshInfo);
+    void VisualizeSceneMeshes(float Duration, bool bShowWireframe,
+        bool bShowVertices, float VertexSize);
 };

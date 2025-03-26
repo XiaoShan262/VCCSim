@@ -473,16 +473,11 @@ void ARecorder::StartRecording()
 {
     if (bRecording) return;
 
-    CurrentRecordingPath = FPaths::Combine(
-        LogBasePath,
-        FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S"))
-    );
-
     IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
-    if (!PlatformFile.CreateDirectoryTree(*CurrentRecordingPath))
+    if (!PlatformFile.CreateDirectoryTree(*RecordingPath))
     {
         UE_LOG(LogTemp, Error, TEXT("Failed to create recording directory: %s"),
-            *CurrentRecordingPath);
+            *RecordingPath);
         return;
     }
 
@@ -497,7 +492,7 @@ void ARecorder::StartRecording()
     }
 
     // Initialize worker
-    RecorderWorker = MakeUnique<FRecorderWorker>(CurrentRecordingPath, BufferSize);
+    RecorderWorker = MakeUnique<FRecorderWorker>(RecordingPath, BufferSize);
     bRecording = true;
 }
 
@@ -569,10 +564,7 @@ void ARecorder::RegisterPawn(AActor* Pawn, bool bHasLidar, bool bHasDepth, bool 
     DirInfo.bHasRGB = bHasRGB;
 
     // Store the full directory path
-    DirInfo.PawnDirectory = FPaths::Combine(
-        CurrentRecordingPath.IsEmpty() ? LogBasePath : CurrentRecordingPath,
-        Pawn->GetName()
-    );
+    DirInfo.PawnDirectory = FPaths::Combine(RecordingPath, Pawn->GetName());
 
     if (bRecording)
     {
@@ -603,7 +595,7 @@ bool ARecorder::CreatePawnDirectories(
 
     // Create pawn base directory
     const FString PawnName = Pawn->GetName();
-    const FString PawnDirectory = FPaths::Combine(CurrentRecordingPath, PawnName);
+    const FString PawnDirectory = FPaths::Combine(RecordingPath, PawnName);
 
     if (!PlatformFile.CreateDirectoryTree(*PawnDirectory))
     {

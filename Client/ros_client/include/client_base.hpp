@@ -44,9 +44,11 @@ protected:
     bool is_running_;
     std::thread executor_thread_;
     std::string sensor_type_;
+    bool enable_timing_;
     
     // Frequency stats
     struct FrequencyStats {
+        std::chrono::steady_clock::time_point first_publish_time;
         std::chrono::steady_clock::time_point last_publish_time;
         int publish_count = 0;
         double current_frequency = 0.0;
@@ -75,6 +77,8 @@ protected:
     
 private:
     int camera_index_;
+    int width_;
+    int height_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
     rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
@@ -93,6 +97,8 @@ protected:
     void publish_data() override;
     
 private:
+    int width_;
+    int height_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
     rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_pub_;
     rclcpp::TimerBase::SharedPtr timer_;

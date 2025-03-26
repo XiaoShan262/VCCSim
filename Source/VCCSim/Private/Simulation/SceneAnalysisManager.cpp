@@ -2,6 +2,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Sensors/CameraSensor.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/StaticMeshActor.h"
 #include "DrawDebugHelpers.h"
 #include "EngineUtils.h"
 
@@ -14,14 +15,16 @@ USceneAnalysisManager::USceneAnalysisManager()
     SamplingDensity = 1.0f;
     bUseVertexSampling = false;
     GridResolution = 10.0f;
+    LogPath = FPaths::ProjectLogDir();
 }
 
-bool USceneAnalysisManager::Initialize(UWorld* InWorld)
+bool USceneAnalysisManager::Initialize(UWorld* InWorld, FString&& Path)
 {
     if (!InWorld)
         return false;
     
     World = InWorld;
+    LogPath = std::move(Path) + "/SceneAnalysisLog";
     return true;
 }
 
@@ -35,28 +38,25 @@ void USceneAnalysisManager::ScanScene()
     TotalPointsInScene = 0;
     TotalTrianglesInScene = 0;
     
-    // Iterate through all static mesh components in the world
-    for (TActorIterator<AActor> ActorItr(World); ActorItr; ++ActorItr)
+    // Iterate only through StaticMeshActor objects in the world
+    for (TActorIterator<AStaticMeshActor> ActorItr(World); ActorItr; ++ActorItr)
     {
-        TArray<UStaticMeshComponent*> MeshComponents;
-        ActorItr->GetComponents<UStaticMeshComponent>(MeshComponents);
+        AStaticMeshActor* StaticMeshActor = *ActorItr;
+        UStaticMeshComponent* MeshComp = StaticMeshActor->GetStaticMeshComponent();
         
-        for (UStaticMeshComponent* MeshComp : MeshComponents)
+        if (MeshComp && MeshComp->GetStaticMesh())
         {
-            if (MeshComp && MeshComp->GetStaticMesh())
-            {
-                FMeshInfo MeshInfo;
-                ExtractMeshData(MeshComp, MeshInfo);
-                SceneMeshes.Add(MeshInfo);
-                
-                TotalTrianglesInScene += MeshInfo.NumTriangles;
-                TotalPointsInScene += MeshInfo.NumVertices;
-            }
+            FMeshInfo MeshInfo;
+            ExtractMeshData(MeshComp, MeshInfo);
+            SceneMeshes.Add(MeshInfo);
+            
+            TotalTrianglesInScene += MeshInfo.NumTriangles;
+            TotalPointsInScene += MeshInfo.NumVertices;
         }
     }
     
-    // Reset coverage data
     ResetCoverage();
+    VisualizeSceneMeshes(10.0f, true, false, 0);
 }
 
 void USceneAnalysisManager::RegisterCamera(URGBCameraComponent* CameraComponent)
@@ -378,4 +378,138 @@ TArray<FVector> USceneAnalysisManager::SamplePointsOnMesh(const FMeshInfo& MeshI
     }
     
     return SampledPoints;
+}
+
+/* ----------------------------- Test ----------------------------- */
+
+void USceneAnalysisManager::ExportMeshesToPly()
+{
+    if (!World)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("USceneAnalysisManager::ExportMeshesToPly:"
+            " World not set!"));
+        return;
+    }
+
+    if (SceneMeshes.Num() == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("USceneAnalysisManager::ExportMeshesToPly:"
+            " No meshes found in the scene!"));
+        return;
+    }
+    
+    // Create export directory if it doesn't exist
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    if (!PlatformFile.DirectoryExists(*LogPath))
+    {
+        PlatformFile.CreateDirectory(*LogPath);
+    }
+
+    
+    // Export each mesh to a separate PLY file
+    for (const FMeshInfo& MeshInfo : SceneMeshes)
+    {
+        FString FilePath = FPaths::Combine(LogPath, FString::Printf(TEXT("%s_%d.ply"),
+            *MeshInfo.MeshName, MeshInfo.MeshID));
+        FFileHelper::SaveStringToFile(GeneratePlyContent(MeshInfo), *FilePath);
+    }
+}
+
+FString USceneAnalysisManager::GeneratePlyContent(const FMeshInfo& MeshInfo)
+{
+    FString PLYContent;
+    
+    // PLY Header
+    PLYContent += TEXT("ply\n");
+    PLYContent += TEXT("format ascii 1.0\n");
+    PLYContent += FString::Printf(TEXT("element vertex %d\n"), MeshInfo.VertexPositions.Num());
+    PLYContent += TEXT("property float x\n");
+    PLYContent += TEXT("property float y\n");
+    PLYContent += TEXT("property float z\n");
+    PLYContent += FString::Printf(TEXT("element face %d\n"), MeshInfo.NumTriangles);
+    PLYContent += TEXT("property list uchar int vertex_indices\n");
+    PLYContent += TEXT("end_header\n");
+    
+    // Vertex data
+    for (const FVector& Vertex : MeshInfo.VertexPositions)
+    {
+        PLYContent += FString::Printf(TEXT("%f %f %f\n"), Vertex.X, Vertex.Y, Vertex.Z);
+    }
+    
+    // Face data
+    for (int32 i = 0; i < MeshInfo.Indices.Num(); i += 3)
+    {
+        if (i + 2 < MeshInfo.Indices.Num())
+        {
+            PLYContent += FString::Printf(TEXT("3 %d %d %d\n"), 
+                MeshInfo.Indices[i], 
+                MeshInfo.Indices[i + 1], 
+                MeshInfo.Indices[i + 2]);
+        }
+    }
+    
+    return PLYContent;
+}
+
+void USceneAnalysisManager::VisualizeSceneMeshes(
+    float Duration, bool bShowWireframe, bool bShowVertices, float VertexSize)
+{
+    if (!World || SceneMeshes.Num() == 0)
+        return;
+    
+    // Generate a unique color for each mesh for easier distinction
+    TArray<FColor> MeshColors;
+    for (int32 i = 0; i < SceneMeshes.Num(); ++i)
+    {
+        // Create visually distinct colors using golden ratio
+        const float Hue = fmodf(i * 0.618033988749895f, 1.0f);
+        FLinearColor LinearColor = FLinearColor::MakeFromHSV8(Hue * 255.0f, 200, 200);
+        MeshColors.Add(LinearColor.ToFColor(false));
+    }
+    
+    // Visualize each mesh
+    for (int32 MeshIdx = 0; MeshIdx < SceneMeshes.Num(); ++MeshIdx)
+    {
+        const FMeshInfo& MeshInfo = SceneMeshes[MeshIdx];
+        const FColor& Color = MeshColors[MeshIdx];
+        
+        // Draw mesh bounds
+        DrawDebugBox(World, MeshInfo.Bounds.Origin, MeshInfo.Bounds.BoxExtent, Color, false, Duration, 0, 2.0f);
+        
+        // Draw mesh ID text
+        FString MeshText = FString::Printf(TEXT("Mesh ID: %d\nName: %s\nTriangles: %d"), 
+            MeshInfo.MeshID, *MeshInfo.MeshName, MeshInfo.NumTriangles);
+        DrawDebugString(World, MeshInfo.Bounds.Origin, MeshText, nullptr, Color, Duration);
+        
+        // Draw wireframe if requested
+        if (bShowWireframe)
+        {
+            for (int32 i = 0; i < MeshInfo.Indices.Num(); i += 3)
+            {
+                if (i + 2 < MeshInfo.Indices.Num())
+                {
+                    const FVector& V0 = MeshInfo.VertexPositions[MeshInfo.Indices[i]];
+                    const FVector& V1 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 1]];
+                    const FVector& V2 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 2]];
+                    
+                    DrawDebugLine(World, V0, V1, Color, false, Duration, 0, 1.0f);
+                    DrawDebugLine(World, V1, V2, Color, false, Duration, 0, 1.0f);
+                    DrawDebugLine(World, V2, V0, Color, false, Duration, 0, 1.0f);
+                }
+            }
+        }
+        
+        // Draw vertices if requested
+        if (bShowVertices)
+        {
+            for (const FVector& Vertex : MeshInfo.VertexPositions)
+            {
+                DrawDebugPoint(World, Vertex, VertexSize, Color, false, Duration);
+            }
+        }
+    }
+    
+    // Log some statistics
+    UE_LOG(LogTemp, Display, TEXT("Visualized %d meshes with %d total triangles and %d total vertices"), 
+        SceneMeshes.Num(), TotalTrianglesInScene, TotalPointsInScene);
 }

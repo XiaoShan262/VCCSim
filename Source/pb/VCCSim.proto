@@ -217,5 +217,5 @@ service PointCloudService {
 service SafeCheckService {
   rpc CheckSafetyPawn (RobotName) returns (Status);  // todo
   rpc CheckSafetyPosition (Position) returns (Status);  // todo
-  rpc CheckSafetyPath (Pose) returns (Status);  // todo
+  rpc CheckSafetyDronePath (DronePath) returns (Status);  // todo
 }

@@ -30,32 +30,33 @@ DefaultFlashPawn = "/VCCSim/Pawn/Flash/BP_FlashPawn.BP_FlashPawn_C"
 
 UETag = "Mavic"
 Type = "Drone"
-RecordInterval = 0.5
+RecordInterval = -0.5
 
 [Robots.ComponentConfigs.Lidar]
-RecordInterval = 0.5
+RecordInterval = -0.5
 NumRays = 32
 NumPoints = 16000
 ScannerRangeInner = 300
 ScannerRangeOuter = 3000
 ScannerAngleUp = 25
 ScannerAngleDown = 25
-bVisualizePoints = true
+bVisualizePoints = false
 
 [Robots.ComponentConfigs.RGBCamera]
-RecordInterval = 0.5
+RecordInterval = -0.5
 FOV = 90
-Width = 512
-Height = 512
+Width = 1024
+Height = 1024
 bOrthographic = false
 
-#[Robots.ComponentConfigs.DepthCamera]
-#FOV = 90
-#Width = 512
-#Height = 512
-#MaxRange = 2000.0
-#MinRange = 0.0
-#bOrthographic = false
+[Robots.ComponentConfigs.DepthCamera]
+RecordInterval = -0.5
+FOV = 90
+Width = 1024
+Height = 1024
+MaxRange = 5000.0
+MinRange = 0.0
+bOrthographic = false
 
 #[[Robots]]
 #

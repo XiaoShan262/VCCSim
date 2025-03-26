@@ -29,6 +29,7 @@ class UInputAction;
 class UInputMappingContext;
 class ARecorder;
 class UFMeshManager;
+class USceneAnalysisManager;
 struct FRobotGrpcMaps;
 
 UCLASS()
@@ -37,7 +38,7 @@ class VCCSIM_API AVCCHUD : public AHUD
 	GENERATED_BODY()
 
 public:
-	void SetupRecorder(const FVCCSimConfig& Config);
+	void SetupRecorder(FVCCSimConfig& Config);
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     
@@ -81,6 +82,8 @@ private:
 	ARecorder* Recorder;
 	UPROPERTY()
 	UFMeshManager* MeshManager = nullptr;
+	UPROPERTY()
+	USceneAnalysisManager* SceneAnalysisManager = nullptr;
 
 	AActor* FindPawnInTagAndName(const std::string& Target, TArray<AActor*> FoundPawns);
 };
