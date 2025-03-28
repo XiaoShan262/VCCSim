@@ -56,7 +56,7 @@ void USceneAnalysisManager::ScanScene()
     }
     
     ResetCoverage();
-    VisualizeSceneMeshes(10.0f, true, false, 0);
+    // VisualizeSceneMeshes(10.0f, true, false, 0);
 }
 
 void USceneAnalysisManager::RegisterCamera(URGBCameraComponent* CameraComponent)
