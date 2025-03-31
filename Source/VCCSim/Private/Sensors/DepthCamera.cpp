@@ -128,12 +128,12 @@ void UDepthCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                 DepthCameraData.SensorIndex = CameraIndex;
                 DepthCameraData.Width = Width;
                 DepthCameraData.Height = Height;
-                while(!dirty)
+                while(!Dirty)
                 {
                     FPlatformProcess::Sleep(0.01f);
                 }
                 DepthCameraData.Data = GetDepthImage();
-                dirty = false;
+                Dirty = false;
                 RecorderPtr->SubmitDepthData(ParentActor, MoveTemp(DepthCameraData));
             }
         }
@@ -182,7 +182,7 @@ void UDepthCameraComponent::CaptureDepthScene()
     
     ProcessDepthTexture([this]()
         {
-            dirty = true;
+            Dirty = true;
         });
 }
 

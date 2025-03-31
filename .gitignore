@@ -76,6 +76,7 @@ DerivedDataCache/*
 Source/grpc/*
 Logs/*
 test/*
+Demo/*
 .vscode/*
 
 Client/PyClient/GRPC/VCCSim_pb2_grpc.py

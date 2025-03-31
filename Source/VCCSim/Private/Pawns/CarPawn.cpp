@@ -467,6 +467,7 @@ bool ACarPawn::SetTarget(const FVector& TargetPosition, const FRotator& TargetRo
 
 	return true;
 }
+
 bool ACarPawn::SetPath(const TArray<FVector>& Positions, const TArray<FRotator>& Rotations)
 {
 	if (!Path)

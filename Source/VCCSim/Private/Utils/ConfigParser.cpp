@@ -50,6 +50,7 @@ FVCCSimConfig ParseConfig()
             std::string((*VCCSim)["IP"].value_or("0.0.0.0"sv)) + ":" +
             std::to_string((*VCCSim)["Port"].value_or(50996));
         Config.VCCSim.MainCharacter = (*VCCSim)["MainCharacter"].value_or("");
+        Config.VCCSim.ManualControl = (*VCCSim)["ManualControl"].value_or(true);
         Config.VCCSim.LS_StartOffset = (*VCCSim)["LS_StartOffset"].value_or(0);
         Config.VCCSim.LogSavePath = (*VCCSim)["LogSavePath"].value_or(
             TCHAR_TO_UTF8(FPlatformProcess::UserDir()));

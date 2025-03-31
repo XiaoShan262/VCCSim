@@ -60,7 +60,7 @@ public:
     void SetCaptureComponent() const;
     void InitializeRenderTargets();
     
-    void ProcessRGBTextureAsyncRaw();
+    void ProcessRGBTextureAsyncRaw(TFunction<void()> OnComplete);
     void ProcessRGBTextureAsync(TFunction<void(const TArray<FLinearColor>&)> OnComplete);
 
     UFUNCTION(BlueprintCallable, Category = "RGBCamera")
@@ -130,4 +130,6 @@ private:
     bool RecordState = false;
     float RecordInterval = -1.f;
     float TimeSinceLastCapture;
+
+    bool Dirty = false;
 };

@@ -41,10 +41,15 @@ public:
 	void SetRecordInterval(const float& Interval);
 	UFUNCTION()
 	void SetRecordState(bool RState){ RecordState = RState; }
+	UFUNCTION()
+	void SetManualControl(bool Manual){ ManualControl = Manual; }
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VCCSim|Debug")
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "VCCSim|Debug")
 	bool bRecorded = false;
 	bool RecordState = false;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="VCCSim|Debug")
+	bool ManualControl = false;
 
 	UPROPERTY()
 	ARecorder* Recorder;

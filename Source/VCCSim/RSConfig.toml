@@ -11,16 +11,17 @@ Port = 50996
 
 # Name or Tag, but tag is recommended.
 # If there is only one robot, the tag is not necessary.
-MainCharacter = "Flash"                         
+MainCharacter = "Flash"
 StaticMeshActor = ["MFMesh", "CompanionCube"]   # Name or Tag
+ManualControl = false
 
 SubWindows = ["Lit", "Unit", "PointCloud"]
 SubWindowsOpacities = [0.95, 0.85, 0.75]
-StartWithRecording = false
+StartWithRecording = true
 UseMeshManager = true
 MeshMaterial = "/VCCSim/Materials/M_Static_mesh"
 LS_StartOffset = 0                              # Frame
-BufferSize = 10
+BufferSize = 100
 LogSavePath = "C:/UEProjects/VCCSimDev/Plugins/VCCSim/Logs"
 DefaultDronePawn = "/VCCSim/Pawn/Drone/BP_PreciseDrone_1C_1D_L.BP_PreciseDrone_1C_1D_L_C"
 DefaultCarPawn = "/VCCSim/Pawn/Husky/Blueprints/BP_CarPawn_Husky.BP_CarPawn_Husky_C"
@@ -43,18 +44,18 @@ ScannerAngleDown = 25
 bVisualizePoints = false
 
 [Robots.ComponentConfigs.RGBCamera]
-RecordInterval = -0.5
+RecordInterval = -0.033333
 FOV = 90
-Width = 1024
-Height = 1024
+Width = 1280
+Height = 720
 bOrthographic = false
 
 [Robots.ComponentConfigs.DepthCamera]
-RecordInterval = -0.5
+RecordInterval = 0.033333
 FOV = 90
-Width = 1024
-Height = 1024
-MaxRange = 5000.0
+Width = 1280
+Height = 720
+MaxRange = 3000.0
 MinRange = 0.0
 bOrthographic = false
 

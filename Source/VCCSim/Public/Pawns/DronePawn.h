@@ -39,10 +39,10 @@ public:
 	UFUNCTION()
     void AddMapContext();
 
+	UFUNCTION(BlueprintCallable)
 	void CalculateDistance();
-	
-	virtual void FollowThePathAndSteer(float DeltaTime);
-	void AutoMove(double DeltaSeconds);
+
+	void InitPose();
 	
     UFUNCTION(BlueprintCallable, Category = "API")
     void SetTarget(FVector Location, FRotator Rotation);
@@ -60,6 +60,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Target")
     float RotationThreshold = 0.5f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Target")
+	bool bUsePath = false;
+	
     // Enhanced Input Components
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VCCSim|Input")
     class UInputMappingContext* DroneInputMappingContext;
@@ -86,15 +89,13 @@ public:
     UPROPERTY(VisibleAnywhere)
     class UEnhancedInputComponent* EnhancedInputComponent;
 
-	UPROPERTY(BlueprintReadWrite, EditInstanceOnly, Category="Driving", Interp)
+	UPROPERTY(BlueprintReadWrite, EditInstanceOnly, Category="VCCSim|Driving", Interp)
 	TObjectPtr<AVCCSimPath> Path;
 	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Driving", Interp, meta=(UIMin="0", ClampMin="0"))
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="VCCSim|Driving", Interp, meta=(UIMin="0", ClampMin="0"))
 	float DistanceTraveled;
-	
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Driving")
-	bool IfAutoMove;
-	
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="VCCSim|Debug")
 	float CourseDistance;
 	float LastCourseDistance;
 	float Laps;

@@ -23,20 +23,16 @@
 void ADronePawn::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
-    DistanceTraveled = 0.f;
-    CourseDistance = 0.f;
-    LastCourseDistance = 0.f; 
-    Laps = 1.f;
+    
     CalculateDistance();
-    FollowThePathAndSteer(1);
+    InitPose();
 }
+
 void ADronePawn::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
-    CalculateDistance();
-    FollowThePathAndSteer(DeltaSeconds);
-    AutoMove(DeltaSeconds);
 }
+
 void ADronePawn::AddMapContext()
 {
     if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -79,12 +75,20 @@ bool ADronePawn::SetPath(
            {
                 Path = GetWorld()->SpawnActor<AVCCSimPath>();
                 Path->SetNewTrajectory(Positions, Rotations);
+                DistanceTraveled = 0.f;
+                CourseDistance = 0.f;
+                LastCourseDistance = 0.f;
            });
 
         return true;
     }
 
     Path->SetNewTrajectory(Positions, Rotations);
+    DistanceTraveled = 0.f;
+    CourseDistance = 0.f;
+    LastCourseDistance = 0.f;
+    bUsePath = true;
+    
     return true;
 }
 
@@ -93,6 +97,7 @@ void ADronePawn::CalculateDistance()
     if (Path)
     {
         Laps = FMath::Floor(DistanceTraveled / Path->Spline->GetSplineLength());
+        LastCourseDistance = CourseDistance;
         CourseDistance = DistanceTraveled - Laps * Path->Spline->GetSplineLength();
     }
     else
@@ -101,25 +106,14 @@ void ADronePawn::CalculateDistance()
     }
 }
 
-void ADronePawn::FollowThePathAndSteer(float DeltaTime)
+void ADronePawn::InitPose()
 {
     if (Path)
     {
-        const auto NewLocation = Path->Spline->GetLocationAtDistanceAlongSpline(
-            CourseDistance, ESplineCoordinateSpace::World);
-        const auto NextRotation = Path->Spline->GetRotationAtDistanceAlongSpline(
-            CourseDistance, ESplineCoordinateSpace::World);
-        const auto NewRotation = FMath::RInterpTo(GetActorRotation(), NextRotation,
-            DeltaTime, 8.f);
-        SetActorLocationAndRotation(NewLocation,
-                FRotator(0, NewRotation.Yaw, 0));
-    }
-}
-
-void ADronePawn::AutoMove(double DeltaSeconds)
-{
-    if (IfAutoMove)
-    {
-        DistanceTraveled += DeltaSeconds * 100;
+        SetActorLocationAndRotation(
+            Path->Spline->GetLocationAtDistanceAlongSpline(
+            CourseDistance, ESplineCoordinateSpace::World),
+            Path->Spline->GetRotationAtDistanceAlongSpline(
+            CourseDistance, ESplineCoordinateSpace::World));
     }
 }

@@ -130,5 +130,5 @@ private:
     float RecordInterval = -1.f;
     bool RecordState = false;
     float TimeSinceLastCapture;
-    bool dirty = false;
+    bool Dirty = false;
 };

@@ -36,17 +36,41 @@ public:
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(
         class UInputComponent* PlayerInputComponent) override;
+
+    UFUNCTION(BlueprintCallable)
+    void FollowThePathAndSteer();
+    
+    UFUNCTION(BlueprintCallable, Category = "VCCSim|Sequencer")
+    void UpdatePoseFromDistance();
     
     virtual bool IfCloseToTarget(FVector Location, FRotator Rotation) const override;
     
     // Movement parameters
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
-    float MovementSpeed = 500.0f;
+    float MaxVerticalSpeed = 500.0f;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
-    float RotationSpeed = 180.0f;
+    float MaxHorizontalSpeed = 800.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
+    float VerticalAcceleration = 100.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
+    float HorizontalAcceleration = 100.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
+    float YawAcceleration = 180.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
+    float MaxPitch = 20.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
+    float MaxRoll = 20.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VCCSim|Movement")
+    float PitchRollAcceleration = 5.0f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VCCSim|Debug")
+    float CurrentVerticalSpeed = 0.0f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VCCSim|Debug")
+    float CurrentHorizontalSpeed = 0.0f;
     
 protected:
     virtual void BeginPlay() override;
+    virtual void OnConstruction(const FTransform& Transform) override;
 
     UPROPERTY(VisibleAnywhere)
     class UStaticMeshComponent* RotorMesh1;
@@ -74,5 +98,7 @@ private:
     float YawInput = 0.0f;
 
     void MoveToTarget(float DeltaTime);
+    
+    UFUNCTION(BlueprintCallable)
     void RotateRotors(float DeltaTime);
 };

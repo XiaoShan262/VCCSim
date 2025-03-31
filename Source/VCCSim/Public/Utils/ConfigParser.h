@@ -38,6 +38,7 @@ struct FVCCSimPresets
 	std::string Server;
 	std::string MainCharacter;
 	std::vector<std::string> StaticMeshActor;
+	bool ManualControl;
 	std::vector<std::string> SubWindows{};
 	std::vector<float> SubWindowsOpacities;
 	int LS_StartOffset;

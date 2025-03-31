@@ -67,16 +67,26 @@ void URGBCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
         {
             TimeSinceLastCapture = 0.0f;
             CaptureRGBScene();
-            ProcessRGBTextureAsyncRaw(); // todo: Maybe need check if it finished
+            
+            ProcessRGBTextureAsyncRaw([this]
+            {
+                Dirty = true;
+            });
+            
             if (RecorderPtr)
             {
-                FRGBCameraData DepthData;
-                DepthData.Timestamp = FPlatformTime::Seconds();
-                DepthData.SensorIndex = CameraIndex;
-                DepthData.Width = Width;
-                DepthData.Height = Height;
-                DepthData.Data = RGBData;
-                RecorderPtr->SubmitRGBData(ParentActor, MoveTemp(DepthData));
+                FRGBCameraData CameraData;
+                CameraData.Timestamp = FPlatformTime::Seconds();
+                CameraData.SensorIndex = CameraIndex;
+                CameraData.Width = Width;
+                CameraData.Height = Height;
+                while(!Dirty)
+                {
+                    FPlatformProcess::Sleep(0.01f);
+                }
+                CameraData.Data = RGBData;
+                Dirty = false;
+                RecorderPtr->SubmitRGBData(ParentActor, MoveTemp(CameraData));
             }
         }
     }
@@ -95,7 +105,8 @@ void URGBCameraComponent::RConfigure(
     float fx = (Width / 2.0f) / FMath::Tan(HorizontalFOVRad / 2.0f);
 
     // Compute vertical FOV from horizontal FOV and aspect ratio.
-    float verticalFOVRad = 2.0f * FMath::Atan((Height / Width) * FMath::Tan(HorizontalFOVRad / 2.0f));
+    float verticalFOVRad = 2.0f * FMath::Atan((Height / Width) *
+        FMath::Tan(HorizontalFOVRad / 2.0f));
     float fy = (Height / 2.0f) / FMath::Tan(verticalFOVRad / 2.0f);
 
     float cx = Width / 2.0f;
@@ -150,12 +161,10 @@ void URGBCameraComponent::SetCaptureComponent() const
         ShowFlags.SetPostProcessing(true);
         ShowFlags.SetTonemapper(true);
         ShowFlags.SetBloom(true);
-        ShowFlags.SetColorGrading(true);
         
-        ShowFlags.SetAntiAliasing(true);
-        ShowFlags.SetTemporalAA(true);
-        ShowFlags.SetEyeAdaptation(true);
-        ShowFlags.SetFog(false);
+        ShowFlags.SetLumenGlobalIllumination(true);
+        ShowFlags.SetLumenReflections(true);
+        // ShowFlags.SetFog(false);
     }
     else 
     {
@@ -217,7 +226,7 @@ void URGBCameraComponent::AsyncGetRGBImageData(
     });
 }
 
-void URGBCameraComponent::ProcessRGBTextureAsyncRaw()
+void URGBCameraComponent::ProcessRGBTextureAsyncRaw(TFunction<void()> OnComplete)
 {
     FTextureRenderTargetResource* RenderTargetResource = 
         RGBRenderTarget->GameThread_GetRenderTargetResource();
@@ -242,8 +251,10 @@ void URGBCameraComponent::ProcessRGBTextureAsyncRaw()
         FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX)
     };
 
+    auto SharedCallback = MakeShared<TFunction<void()>>(OnComplete);
+    
     ENQUEUE_RENDER_COMMAND(ReadSurfaceCommand)(
-        [Context](FRHICommandListImmediate& RHICmdList)
+        [Context, SharedCallback](FRHICommandListImmediate& RHICmdList)
         {
             RHICmdList.ReadSurfaceData(
                 Context.RenderTarget->GetRenderTargetTexture(),
@@ -251,6 +262,7 @@ void URGBCameraComponent::ProcessRGBTextureAsyncRaw()
                 *Context.OutData,
                 Context.Flags
             );
+            (*SharedCallback)();
         });
 }
 

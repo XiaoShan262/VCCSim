@@ -190,5 +190,5 @@ def test_depth_camera():
 
 if __name__ == "__main__":
     
-    # test_rgb_camera()
-    test_depth_camera()
+    test_rgb_camera()
+    # test_depth_camera()

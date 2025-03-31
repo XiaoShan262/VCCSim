@@ -49,9 +49,9 @@ void AVCCHUD::BeginPlay()
         MeshManager->RConfigure(Config);
     }
 
-    SceneAnalysisManager = NewObject<USceneAnalysisManager>(Holder);
-    SceneAnalysisManager->Initialize(GetWorld(), Config.VCCSim.LogSavePath.c_str());
-    SceneAnalysisManager->ScanScene();
+    // SceneAnalysisManager = NewObject<USceneAnalysisManager>(Holder);
+    // SceneAnalysisManager->Initialize(GetWorld(), Config.VCCSim.LogSavePath.c_str());
+    // SceneAnalysisManager->ScanScene();
     
     RunServer(Config, Holder, RCMaps, MeshManager);
 }
@@ -246,6 +246,15 @@ void AVCCHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> Fo
         UE_LOG(LogTemp, Warning, TEXT("AVCCHUD::SetupMainCharacter: "
                                       "MainCharacter not found!"));
         return;
+    }
+
+    if (const auto SetManualControlFuc = MainCharacter->FindFunction(FName(TEXT("SetManualControl"))))
+    {
+        MainCharacter->ProcessEvent(SetManualControlFuc, (void*)&Config.VCCSim.ManualControl);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("AVCCHUD: SetManualControl function not found!"));
     }
 
     // Set the camera as the view target
