@@ -59,11 +59,11 @@ MaxRange = 3000.0
 MinRange = 0.0
 bOrthographic = false
 
-[Robots.ComponentConfigs.RGBCamera]
-RecordInterval = -0.033333
-FOV = 90
-Width = 1280
-Height = 720
+#[Robots.ComponentConfigs.SegmentationCamera]
+#RecordInterval = -0.033333
+#FOV = 90
+#Width = 1280
+#Height = 720
 
 #[[Robots]]
 #

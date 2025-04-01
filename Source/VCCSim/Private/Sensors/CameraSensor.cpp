@@ -151,12 +151,13 @@ void URGBCameraComponent::SetCaptureComponent() const
         CaptureComponent->OrthoWidth = OrthoWidth;
 
         // Change the capture source to HDR for better quality
-        CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
+        CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
         CaptureComponent->bCaptureEveryFrame = false;
         CaptureComponent->bCaptureOnMovement = false;
         CaptureComponent->bAlwaysPersistRenderingState = true;
         
         FEngineShowFlags& ShowFlags = CaptureComponent->ShowFlags;
+        ShowFlags.SetTemporalAA(true);
         ShowFlags.EnableAdvancedFeatures();
         ShowFlags.SetPostProcessing(true);
         ShowFlags.SetTonemapper(true);
@@ -164,7 +165,6 @@ void URGBCameraComponent::SetCaptureComponent() const
         
         ShowFlags.SetLumenGlobalIllumination(true);
         ShowFlags.SetLumenReflections(true);
-        // ShowFlags.SetFog(false);
     }
     else 
     {
@@ -175,9 +175,12 @@ void URGBCameraComponent::SetCaptureComponent() const
 void URGBCameraComponent::InitializeRenderTargets()
 {
     RGBRenderTarget = NewObject<UTextureRenderTarget2D>(this);
+
+    RGBRenderTarget->TargetGamma = GEngine->GetDisplayGamma();
     RGBRenderTarget->InitCustomFormat(Width, Height,
-        PF_FloatRGBA, true);  
-    
+        PF_B8G8R8A8, true);
+    RGBRenderTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
+    RGBRenderTarget->bGPUSharedFlag = true;
     RGBRenderTarget->bAutoGenerateMips = true;
     
     RGBRenderTarget->UpdateResource();
@@ -208,7 +211,7 @@ void URGBCameraComponent::CaptureRGBScene()
 }
 
 void URGBCameraComponent::AsyncGetRGBImageData(
-    TFunction<void(const TArray<FLinearColor>&)> Callback)
+    TFunction<void(const TArray<FColor>&)> Callback)
 {
     AsyncTask(ENamedThreads::GameThread, [this, Callback = MoveTemp(Callback)]()
     {
@@ -219,7 +222,7 @@ void URGBCameraComponent::AsyncGetRGBImageData(
         
         CaptureComponent->CaptureScene();
         
-        ProcessRGBTextureAsync([Callback](const TArray<FLinearColor>& ColorData)
+        ProcessRGBTextureAsync([Callback](const TArray<FColor>& ColorData)
         {
             Callback(ColorData);
         });
@@ -267,7 +270,7 @@ void URGBCameraComponent::ProcessRGBTextureAsyncRaw(TFunction<void()> OnComplete
 }
 
 void URGBCameraComponent::ProcessRGBTextureAsync(
-    TFunction<void(const TArray<FLinearColor>&)> OnComplete)
+    TFunction<void(const TArray<FColor>&)> OnComplete)
 {
     FTextureRenderTargetResource* RenderTargetResource = 
         RGBRenderTarget->GameThread_GetRenderTargetResource();
@@ -293,7 +296,7 @@ void URGBCameraComponent::ProcessRGBTextureAsync(
     };
 
     auto SharedCallback = MakeShared<
-        TFunction<void(const TArray<FLinearColor>&)>>(MoveTemp(OnComplete));
+        TFunction<void(const TArray<FColor>&)>>(MoveTemp(OnComplete));
     // Capture the OnComplete callback in the render command
     ENQUEUE_RENDER_COMMAND(ReadSurfaceCommand)(
         [Context, SharedCallback](FRHICommandListImmediate& RHICmdList)

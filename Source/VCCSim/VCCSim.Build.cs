@@ -34,7 +34,8 @@ public class VCCSim : ModuleRules
                 "ProceduralMeshComponent",
                 "LevelSequence",
 				"MovieScene", "EnhancedInput", 
-				"ChaosVehicles"
+				"ChaosVehicles",
+				"LevelEditor", "UnrealEd"
 				// "Serialization",
 				// ... add other public dependencies that you statically link with here ...
 			}

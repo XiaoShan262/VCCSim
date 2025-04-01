@@ -96,7 +96,7 @@ struct FRGBCameraData final : public FSensorData
     int32 Width;
     int32 Height;
     int32 SensorIndex;
-    TArray<FLinearColor> Data;
+    TArray<FColor> Data;
 };
 
 struct FSegmentationCameraData final : public FSensorData

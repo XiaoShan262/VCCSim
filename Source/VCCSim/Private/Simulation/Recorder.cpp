@@ -360,11 +360,10 @@ bool FRecorderWorker::SaveRGBData(
     {
         const auto& Color = RGBData.Data[i];
         const int32 Base = i * 4;
-        FColor SDRColor = Color.ToFColor(false); // Apply sRGB conversion
-        Dest[Base] = SDRColor.R;
-        Dest[Base + 1] = SDRColor.G;
-        Dest[Base + 2] = SDRColor.B;
-        Dest[Base + 3] = SDRColor.A;
+        Dest[Base] = Color.R;
+        Dest[Base + 1] = Color.G;
+        Dest[Base + 2] = Color.B;
+        Dest[Base + 3] = Color.A;
     }
 
     // Use cached wrapper
