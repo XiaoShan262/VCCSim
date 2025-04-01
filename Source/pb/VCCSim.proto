@@ -130,6 +130,13 @@ message RGBCameraImageData {
   optional bool is_compressed = 8;      // Whether data is compressed
 }
 
+// Segmentation Camera:
+message SegmentationCameraImageData {
+  uint32 width = 1;
+  uint32 height = 2;
+  bytes data = 3;         // JPEG compressed image data
+}
+
 // Drone:
 message DronePose {
   string name = 1;
@@ -182,6 +189,12 @@ service RGBCameraService {
   rpc GetRGBCameraOdom (RobotName) returns (Odometry);
   rpc GetRGBIndexedCameraImageData (IndexedCamera) returns (RGBCameraImageData);
   rpc GetRGBIndexedCameraImageSize (IndexedCamera) returns (ImageSize);
+}
+
+service SegmentationCameraService {
+  rpc GetSegmentationCameraOdom (RobotName) returns (Odometry);
+  rpc GetSegmentationCameraImageData (RobotName) returns (SegmentationCameraImageData);
+  rpc GetSegmentationCameraImageSize (RobotName) returns (ImageSize);
 }
 
 service DroneService {

@@ -21,6 +21,7 @@
 #include "Sensors/LidarSensor.h"
 #include "Sensors/DepthCamera.h"
 #include "Sensors/CameraSensor.h"
+#include "Sensors/SegmentCamera.h"
 #include "Simulation/Recorder.h"
 #include "Simulation/MeshManager.h"
 #include "Simulation/SceneAnalysisManager.h"
@@ -445,6 +446,15 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                         bHasRGB = true;
                     }
                 }
+            }
+            else if (Component.first == ESensorType::SegmentationCamera)
+            {
+                USegmentationCameraComponent* SegmentationCamera =
+                    RobotPawn->FindComponentByClass<USegmentationCameraComponent>();
+                SegmentationCamera->RConfigure(
+                    *static_cast<FSegmentationCameraConfig*>(Component.second.get()),
+                    Recorder);
+                RGrpcMaps.RCMaps.RSegMap[Robot.UETag] = SegmentationCamera;
             }
             else
             {

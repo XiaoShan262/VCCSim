@@ -19,6 +19,7 @@
 #include "Sensors/LidarSensor.h"
 #include "Sensors/DepthCamera.h"
 #include "Sensors/CameraSensor.h"
+#include "Sensors/SegmentCamera.h"
 #include "Utils/MeshHandlerComponent.h"
 #include "Utils/InsMeshHolder.h"
 #include "Pawns/DronePawn.h"
@@ -575,6 +576,59 @@ void RGBIndexedCameraImageDataCall::ProcessRequest()
             responder_.Finish(response_, grpc::Status::OK, this);
         });
     });
+}
+
+SegmentCameraGetOdomCall::SegmentCameraGetOdomCall(
+    VCCSim::SegmentationCameraService::AsyncService* service,
+    grpc::ServerCompletionQueue* cq,
+    std::map<std::string, USegmentationCameraComponent*> rscmap)
+        : AsyncCallTemplateM(service, cq, rscmap)
+{
+    Proceed(true);
+}
+
+void SegmentCameraGetOdomCall::PrepareNextCall()
+{
+    new SegmentCameraGetOdomCall(service_, cq_, RCMap_);
+}
+
+void SegmentCameraGetOdomCall::InitializeRequest()
+{
+    service_->RequestGetSegmentationCameraOdom(&ctx_, &request_, &responder_, cq_, cq_, this);
+}
+
+void SegmentCameraGetOdomCall::ProcessRequest()
+{
+    if (RCMap_.contains(request_.name()))
+    {
+        const FVector Pose = RCMap_[request_.name()]->GetComponentLocation();
+        const FRotator Rot = RCMap_[request_.name()]->GetComponentRotation();
+        const FVector LinearVelocity =
+            RCMap_[request_.name()]->GetPhysicsLinearVelocity();
+        const FVector AngularVelocity =
+            RCMap_[request_.name()]->GetPhysicsAngularVelocityInDegrees();
+
+        VCCSim::Pose* PoseData = response_.mutable_pose();
+        PoseData->set_x(Pose.X);
+        PoseData->set_y(Pose.Y);
+        PoseData->set_z(Pose.Z);
+        PoseData->set_roll(Rot.Roll);
+        PoseData->set_pitch(Rot.Pitch);
+        PoseData->set_yaw(Rot.Yaw);
+
+        VCCSim::twist* TwistData = response_.mutable_twist();
+        TwistData->set_linear_x(LinearVelocity.X);
+        TwistData->set_linear_y(LinearVelocity.Y);
+        TwistData->set_linear_z(LinearVelocity.Z);
+        TwistData->set_angular_x(AngularVelocity.X);
+        TwistData->set_angular_y(AngularVelocity.Y);
+        TwistData->set_angular_z(AngularVelocity.Z);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("SegmentCameraGetOdomCall: "
+                                      "Segmentation Camera component not found!"));
+    }
 }
 
 SendMeshCall::SendMeshCall(VCCSim::MeshService::AsyncService* service,

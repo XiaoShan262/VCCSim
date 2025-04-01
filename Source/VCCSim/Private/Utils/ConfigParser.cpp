@@ -19,6 +19,7 @@
 #include "Sensors/LidarSensor.h"
 #include "Sensors/DepthCamera.h"
 #include "Sensors/CameraSensor.h"
+#include "Sensors/SegmentCamera.h"
 #include "toml++/toml.hpp"
 #include <filesystem>
 #include "CoreMinimal.h"
@@ -192,6 +193,22 @@ FVCCSimConfig ParseConfig()
                                 (*Table)["OrthoWidth"].value_or(RGBConfig->OrthoWidth);
                         }
                         r.ComponentConfigs.push_back({ESensorType::RGBCamera, RGBConfig});
+                    }
+                    else if (comp_name == "SegmentationCamera")
+                    {
+                        auto SegmentationConfig = std::make_shared<FSegmentationCameraConfig>();
+                        if (auto Table = comp_config.as_table())
+                        {
+                            SegmentationConfig->RecordInterval =
+                                (*Table)["RecordInterval"].value_or(SegmentationConfig->RecordInterval);
+                            SegmentationConfig->FOV =
+                                (*Table)["FOV"].value_or(SegmentationConfig->FOV);
+                            SegmentationConfig->Width =
+                                (*Table)["Width"].value_or(SegmentationConfig->Width);
+                            SegmentationConfig->Height =
+                                (*Table)["Height"].value_or(SegmentationConfig->Height);
+                        }
+                        r.ComponentConfigs.push_back({ESensorType::SegmentationCamera, SegmentationConfig});
                     }
                     else
                     {

@@ -750,3 +750,8 @@ void ARecorder::SubmitRGBData(AActor* Pawn, FRGBCameraData&& Data)
 
     SubmitData<FRGBCameraData>(Pawn, MoveTemp(Data), EDataType::RGBC);
 }
+
+void ARecorder::SubmitSegmentationData(AActor* Pawn, FSegmentationCameraData&& Data)
+{
+    
+}

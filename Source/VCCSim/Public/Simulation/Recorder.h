@@ -99,6 +99,13 @@ struct FRGBCameraData final : public FSensorData
     TArray<FLinearColor> Data;
 };
 
+struct FSegmentationCameraData final : public FSensorData
+{
+    int32 Width;
+    int32 Height;
+    TArray<FColor> Data;
+};
+
 // Buffer pool for efficient memory management
 class FBufferPool
 {
@@ -381,6 +388,7 @@ public:
     void SubmitLidarData(AActor* Pawn, FLidarData&& Data);
     void SubmitDepthData(AActor* Pawn, FDepthCameraData&& Data);
     void SubmitRGBData(AActor* Pawn, FRGBCameraData&& Data);
+    void SubmitSegmentationData(AActor* Pawn, FSegmentationCameraData&& Data);
 
     // Configuration properties
     UPROPERTY(EditAnywhere, Category = "Recording")

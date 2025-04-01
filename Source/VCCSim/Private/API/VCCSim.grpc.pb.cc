@@ -498,6 +498,151 @@ RGBCameraService::Service::~Service() {
 }
 
 
+static const char* SegmentationCameraService_method_names[] = {
+  "/VCCSim.SegmentationCameraService/GetSegmentationCameraOdom",
+  "/VCCSim.SegmentationCameraService/GetSegmentationCameraImageData",
+  "/VCCSim.SegmentationCameraService/GetSegmentationCameraImageSize",
+};
+
+std::unique_ptr< SegmentationCameraService::Stub> SegmentationCameraService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
+  (void)options;
+  std::unique_ptr< SegmentationCameraService::Stub> stub(new SegmentationCameraService::Stub(channel, options));
+  return stub;
+}
+
+SegmentationCameraService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
+  : channel_(channel), rpcmethod_GetSegmentationCameraOdom_(SegmentationCameraService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_GetSegmentationCameraImageData_(SegmentationCameraService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_GetSegmentationCameraImageSize_(SegmentationCameraService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  {}
+
+::grpc::Status SegmentationCameraService::Stub::GetSegmentationCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Odometry* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::RobotName, ::VCCSim::Odometry, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_GetSegmentationCameraOdom_, context, request, response);
+}
+
+void SegmentationCameraService::Stub::async::GetSegmentationCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::RobotName, ::VCCSim::Odometry, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetSegmentationCameraOdom_, context, request, response, std::move(f));
+}
+
+void SegmentationCameraService::Stub::async::GetSegmentationCameraOdom(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetSegmentationCameraOdom_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>* SegmentationCameraService::Stub::PrepareAsyncGetSegmentationCameraOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Odometry, ::VCCSim::RobotName, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_GetSegmentationCameraOdom_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::Odometry>* SegmentationCameraService::Stub::AsyncGetSegmentationCameraOdomRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncGetSegmentationCameraOdomRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status SegmentationCameraService::Stub::GetSegmentationCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::SegmentationCameraImageData* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::RobotName, ::VCCSim::SegmentationCameraImageData, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_GetSegmentationCameraImageData_, context, request, response);
+}
+
+void SegmentationCameraService::Stub::async::GetSegmentationCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::SegmentationCameraImageData* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::RobotName, ::VCCSim::SegmentationCameraImageData, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetSegmentationCameraImageData_, context, request, response, std::move(f));
+}
+
+void SegmentationCameraService::Stub::async::GetSegmentationCameraImageData(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::SegmentationCameraImageData* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetSegmentationCameraImageData_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::SegmentationCameraImageData>* SegmentationCameraService::Stub::PrepareAsyncGetSegmentationCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::SegmentationCameraImageData, ::VCCSim::RobotName, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_GetSegmentationCameraImageData_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::SegmentationCameraImageData>* SegmentationCameraService::Stub::AsyncGetSegmentationCameraImageDataRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncGetSegmentationCameraImageDataRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+::grpc::Status SegmentationCameraService::Stub::GetSegmentationCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::ImageSize* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::RobotName, ::VCCSim::ImageSize, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_GetSegmentationCameraImageSize_, context, request, response);
+}
+
+void SegmentationCameraService::Stub::async::GetSegmentationCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::ImageSize* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::RobotName, ::VCCSim::ImageSize, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetSegmentationCameraImageSize_, context, request, response, std::move(f));
+}
+
+void SegmentationCameraService::Stub::async::GetSegmentationCameraImageSize(::grpc::ClientContext* context, const ::VCCSim::RobotName* request, ::VCCSim::ImageSize* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_GetSegmentationCameraImageSize_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>* SegmentationCameraService::Stub::PrepareAsyncGetSegmentationCameraImageSizeRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::ImageSize, ::VCCSim::RobotName, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_GetSegmentationCameraImageSize_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::VCCSim::ImageSize>* SegmentationCameraService::Stub::AsyncGetSegmentationCameraImageSizeRaw(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncGetSegmentationCameraImageSizeRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
+SegmentationCameraService::Service::Service() {
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SegmentationCameraService_method_names[0],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SegmentationCameraService::Service, ::VCCSim::RobotName, ::VCCSim::Odometry, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](SegmentationCameraService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::RobotName* req,
+             ::VCCSim::Odometry* resp) {
+               return service->GetSegmentationCameraOdom(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SegmentationCameraService_method_names[1],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SegmentationCameraService::Service, ::VCCSim::RobotName, ::VCCSim::SegmentationCameraImageData, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](SegmentationCameraService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::RobotName* req,
+             ::VCCSim::SegmentationCameraImageData* resp) {
+               return service->GetSegmentationCameraImageData(ctx, req, resp);
+             }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SegmentationCameraService_method_names[2],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SegmentationCameraService::Service, ::VCCSim::RobotName, ::VCCSim::ImageSize, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](SegmentationCameraService::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::VCCSim::RobotName* req,
+             ::VCCSim::ImageSize* resp) {
+               return service->GetSegmentationCameraImageSize(ctx, req, resp);
+             }, this)));
+}
+
+SegmentationCameraService::Service::~Service() {
+}
+
+::grpc::Status SegmentationCameraService::Service::GetSegmentationCameraOdom(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::Odometry* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SegmentationCameraService::Service::GetSegmentationCameraImageData(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::SegmentationCameraImageData* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SegmentationCameraService::Service::GetSegmentationCameraImageSize(::grpc::ServerContext* context, const ::VCCSim::RobotName* request, ::VCCSim::ImageSize* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+
 static const char* DroneService_method_names[] = {
   "/VCCSim.DroneService/GetDronePose",
   "/VCCSim.DroneService/SendDronePose",
@@ -1226,7 +1371,7 @@ PointCloudService::Service::~Service() {
 static const char* SafeCheckService_method_names[] = {
   "/VCCSim.SafeCheckService/CheckSafetyPawn",
   "/VCCSim.SafeCheckService/CheckSafetyPosition",
-  "/VCCSim.SafeCheckService/CheckSafetyPath",
+  "/VCCSim.SafeCheckService/CheckSafetyDronePath",
 };
 
 std::unique_ptr< SafeCheckService::Stub> SafeCheckService::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -1238,7 +1383,7 @@ std::unique_ptr< SafeCheckService::Stub> SafeCheckService::NewStub(const std::sh
 SafeCheckService::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
   : channel_(channel), rpcmethod_CheckSafetyPawn_(SafeCheckService_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_CheckSafetyPosition_(SafeCheckService_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_CheckSafetyPath_(SafeCheckService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_CheckSafetyDronePath_(SafeCheckService_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status SafeCheckService::Stub::CheckSafetyPawn(::grpc::ClientContext* context, const ::VCCSim::RobotName& request, ::VCCSim::Status* response) {
@@ -1287,25 +1432,25 @@ void SafeCheckService::Stub::async::CheckSafetyPosition(::grpc::ClientContext* c
   return result;
 }
 
-::grpc::Status SafeCheckService::Stub::CheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::VCCSim::Status* response) {
-  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::Pose, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_CheckSafetyPath_, context, request, response);
+::grpc::Status SafeCheckService::Stub::CheckSafetyDronePath(::grpc::ClientContext* context, const ::VCCSim::DronePath& request, ::VCCSim::Status* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::VCCSim::DronePath, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_CheckSafetyDronePath_, context, request, response);
 }
 
-void SafeCheckService::Stub::async::CheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)> f) {
-  ::grpc::internal::CallbackUnaryCall< ::VCCSim::Pose, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CheckSafetyPath_, context, request, response, std::move(f));
+void SafeCheckService::Stub::async::CheckSafetyDronePath(::grpc::ClientContext* context, const ::VCCSim::DronePath* request, ::VCCSim::Status* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::VCCSim::DronePath, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CheckSafetyDronePath_, context, request, response, std::move(f));
 }
 
-void SafeCheckService::Stub::async::CheckSafetyPath(::grpc::ClientContext* context, const ::VCCSim::Pose* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) {
-  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CheckSafetyPath_, context, request, response, reactor);
+void SafeCheckService::Stub::async::CheckSafetyDronePath(::grpc::ClientContext* context, const ::VCCSim::DronePath* request, ::VCCSim::Status* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_CheckSafetyDronePath_, context, request, response, reactor);
 }
 
-::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* SafeCheckService::Stub::PrepareAsyncCheckSafetyPathRaw(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Status, ::VCCSim::Pose, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_CheckSafetyPath_, context, request);
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* SafeCheckService::Stub::PrepareAsyncCheckSafetyDronePathRaw(::grpc::ClientContext* context, const ::VCCSim::DronePath& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::VCCSim::Status, ::VCCSim::DronePath, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_CheckSafetyDronePath_, context, request);
 }
 
-::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* SafeCheckService::Stub::AsyncCheckSafetyPathRaw(::grpc::ClientContext* context, const ::VCCSim::Pose& request, ::grpc::CompletionQueue* cq) {
+::grpc::ClientAsyncResponseReader< ::VCCSim::Status>* SafeCheckService::Stub::AsyncCheckSafetyDronePathRaw(::grpc::ClientContext* context, const ::VCCSim::DronePath& request, ::grpc::CompletionQueue* cq) {
   auto* result =
-    this->PrepareAsyncCheckSafetyPathRaw(context, request, cq);
+    this->PrepareAsyncCheckSafetyDronePathRaw(context, request, cq);
   result->StartCall();
   return result;
 }
@@ -1334,12 +1479,12 @@ SafeCheckService::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SafeCheckService_method_names[2],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< SafeCheckService::Service, ::VCCSim::Pose, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+      new ::grpc::internal::RpcMethodHandler< SafeCheckService::Service, ::VCCSim::DronePath, ::VCCSim::Status, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](SafeCheckService::Service* service,
              ::grpc::ServerContext* ctx,
-             const ::VCCSim::Pose* req,
+             const ::VCCSim::DronePath* req,
              ::VCCSim::Status* resp) {
-               return service->CheckSafetyPath(ctx, req, resp);
+               return service->CheckSafetyDronePath(ctx, req, resp);
              }, this)));
 }
 
@@ -1360,7 +1505,7 @@ SafeCheckService::Service::~Service() {
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 
-::grpc::Status SafeCheckService::Service::CheckSafetyPath(::grpc::ServerContext* context, const ::VCCSim::Pose* request, ::VCCSim::Status* response) {
+::grpc::Status SafeCheckService::Service::CheckSafetyDronePath(::grpc::ServerContext* context, const ::VCCSim::DronePath* request, ::VCCSim::Status* response) {
   (void) context;
   (void) request;
   (void) response;

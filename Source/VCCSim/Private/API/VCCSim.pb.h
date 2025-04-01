@@ -126,6 +126,9 @@ extern RGBCameraImageDataDefaultTypeInternal _RGBCameraImageData_default_instanc
 class RobotName;
 struct RobotNameDefaultTypeInternal;
 extern RobotNameDefaultTypeInternal _RobotName_default_instance_;
+class SegmentationCameraImageData;
+struct SegmentationCameraImageDataDefaultTypeInternal;
+extern SegmentationCameraImageDataDefaultTypeInternal _SegmentationCameraImageData_default_instance_;
 class Status;
 struct StatusDefaultTypeInternal;
 extern StatusDefaultTypeInternal _Status_default_instance_;
@@ -613,6 +616,227 @@ class Status final
                           ::google::protobuf::Arena* arena, const Impl_& from,
                           const Status& from_msg);
     bool status_;
+    ::google::protobuf::internal::CachedSize _cached_size_;
+    PROTOBUF_TSAN_DECLARE_MEMBER
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_VCCSim_2eproto;
+};
+// -------------------------------------------------------------------
+
+class SegmentationCameraImageData final
+    : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:VCCSim.SegmentationCameraImageData) */ {
+ public:
+  inline SegmentationCameraImageData() : SegmentationCameraImageData(nullptr) {}
+  ~SegmentationCameraImageData() PROTOBUF_FINAL;
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+  void operator delete(SegmentationCameraImageData* msg, std::destroying_delete_t) {
+    SharedDtor(*msg);
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(SegmentationCameraImageData));
+  }
+#endif
+
+  template <typename = void>
+  explicit PROTOBUF_CONSTEXPR SegmentationCameraImageData(
+      ::google::protobuf::internal::ConstantInitialized);
+
+  inline SegmentationCameraImageData(const SegmentationCameraImageData& from) : SegmentationCameraImageData(nullptr, from) {}
+  inline SegmentationCameraImageData(SegmentationCameraImageData&& from) noexcept
+      : SegmentationCameraImageData(nullptr, std::move(from)) {}
+  inline SegmentationCameraImageData& operator=(const SegmentationCameraImageData& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SegmentationCameraImageData& operator=(SegmentationCameraImageData&& from) noexcept {
+    if (this == &from) return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields()
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::google::protobuf::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::google::protobuf::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const SegmentationCameraImageData& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const SegmentationCameraImageData* internal_default_instance() {
+    return reinterpret_cast<const SegmentationCameraImageData*>(
+        &_SegmentationCameraImageData_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages = 20;
+  friend void swap(SegmentationCameraImageData& a, SegmentationCameraImageData& b) { a.Swap(&b); }
+  inline void Swap(SegmentationCameraImageData* other) {
+    if (other == this) return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+      InternalSwap(other);
+    } else {
+      ::google::protobuf::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SegmentationCameraImageData* other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  SegmentationCameraImageData* New(::google::protobuf::Arena* arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<SegmentationCameraImageData>(arena);
+  }
+  using ::google::protobuf::Message::CopyFrom;
+  void CopyFrom(const SegmentationCameraImageData& from);
+  using ::google::protobuf::Message::MergeFrom;
+  void MergeFrom(const SegmentationCameraImageData& from) { SegmentationCameraImageData::MergeImpl(*this, from); }
+
+  private:
+  static void MergeImpl(
+      ::google::protobuf::MessageLite& to_msg,
+      const ::google::protobuf::MessageLite& from_msg);
+
+  public:
+  bool IsInitialized() const {
+    return true;
+  }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+  #if defined(PROTOBUF_CUSTOM_VTABLE)
+  private:
+  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  static ::uint8_t* _InternalSerialize(
+      const MessageLite& msg, ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream);
+
+  public:
+  ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+    return _InternalSerialize(*this, target, stream);
+  }
+  #else   // PROTOBUF_CUSTOM_VTABLE
+  ::size_t ByteSizeLong() const final;
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream) const final;
+  #endif  // PROTOBUF_CUSTOM_VTABLE
+  int GetCachedSize() const { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::google::protobuf::Arena* arena);
+  static void SharedDtor(MessageLite& self);
+  void InternalSwap(SegmentationCameraImageData* other);
+ private:
+  template <typename T>
+  friend ::absl::string_view(
+      ::google::protobuf::internal::GetAnyMessageName)();
+  static ::absl::string_view FullMessageName() { return "VCCSim.SegmentationCameraImageData"; }
+
+ protected:
+  explicit SegmentationCameraImageData(::google::protobuf::Arena* arena);
+  SegmentationCameraImageData(::google::protobuf::Arena* arena, const SegmentationCameraImageData& from);
+  SegmentationCameraImageData(::google::protobuf::Arena* arena, SegmentationCameraImageData&& from) noexcept
+      : SegmentationCameraImageData(arena) {
+    *this = ::std::move(from);
+  }
+  const ::google::protobuf::internal::ClassData* GetClassData() const PROTOBUF_FINAL;
+  static void* PlacementNew_(const void*, void* mem,
+                             ::google::protobuf::Arena* arena);
+  static constexpr auto InternalNewImpl_();
+  static const ::google::protobuf::internal::ClassDataFull _class_data_;
+
+ public:
+  ::google::protobuf::Metadata GetMetadata() const;
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+  enum : int {
+    kDataFieldNumber = 3,
+    kWidthFieldNumber = 1,
+    kHeightFieldNumber = 2,
+  };
+  // bytes data = 3;
+  void clear_data() ;
+  const std::string& data() const;
+  template <typename Arg_ = const std::string&, typename... Args_>
+  void set_data(Arg_&& arg, Args_... args);
+  std::string* mutable_data();
+  PROTOBUF_NODISCARD std::string* release_data();
+  void set_allocated_data(std::string* value);
+
+  private:
+  const std::string& _internal_data() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_data(
+      const std::string& value);
+  std::string* _internal_mutable_data();
+
+  public:
+  // uint32 width = 1;
+  void clear_width() ;
+  ::uint32_t width() const;
+  void set_width(::uint32_t value);
+
+  private:
+  ::uint32_t _internal_width() const;
+  void _internal_set_width(::uint32_t value);
+
+  public:
+  // uint32 height = 2;
+  void clear_height() ;
+  ::uint32_t height() const;
+  void set_height(::uint32_t value);
+
+  private:
+  ::uint32_t _internal_height() const;
+  void _internal_set_height(::uint32_t value);
+
+  public:
+  // @@protoc_insertion_point(class_scope:VCCSim.SegmentationCameraImageData)
+ private:
+  class _Internal;
+  friend class ::google::protobuf::internal::TcParser;
+  static const ::google::protobuf::internal::TcParseTable<
+      2, 3, 0,
+      0, 2>
+      _table_;
+
+  friend class ::google::protobuf::MessageLite;
+  friend class ::google::protobuf::Arena;
+  template <typename T>
+  friend class ::google::protobuf::Arena::InternalHelper;
+  using InternalArenaConstructable_ = void;
+  using DestructorSkippable_ = void;
+  struct Impl_ {
+    inline explicit constexpr Impl_(
+        ::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                          ::google::protobuf::Arena* arena);
+    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                          ::google::protobuf::Arena* arena, const Impl_& from,
+                          const SegmentationCameraImageData& from_msg);
+    ::google::protobuf::internal::ArenaStringPtr data_;
+    ::uint32_t width_;
+    ::uint32_t height_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
@@ -3903,7 +4127,7 @@ class FlashPose final
     return reinterpret_cast<const FlashPose*>(
         &_FlashPose_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 24;
+  static constexpr int kIndexInFileMessages = 25;
   friend void swap(FlashPose& a, FlashPose& b) { a.Swap(&b); }
   inline void Swap(FlashPose* other) {
     if (other == this) return;
@@ -4118,7 +4342,7 @@ class FlashPath final
     return reinterpret_cast<const FlashPath*>(
         &_FlashPath_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 25;
+  static constexpr int kIndexInFileMessages = 26;
   friend void swap(FlashPath& a, FlashPath& b) { a.Swap(&b); }
   inline void Swap(FlashPath* other) {
     if (other == this) return;
@@ -4334,7 +4558,7 @@ class DronePose final
     return reinterpret_cast<const DronePose*>(
         &_DronePose_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 20;
+  static constexpr int kIndexInFileMessages = 21;
   friend void swap(DronePose& a, DronePose& b) { a.Swap(&b); }
   inline void Swap(DronePose* other) {
     if (other == this) return;
@@ -4549,7 +4773,7 @@ class DronePath final
     return reinterpret_cast<const DronePath*>(
         &_DronePath_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 21;
+  static constexpr int kIndexInFileMessages = 22;
   friend void swap(DronePath& a, DronePath& b) { a.Swap(&b); }
   inline void Swap(DronePath* other) {
     if (other == this) return;
@@ -4963,7 +5187,7 @@ class CarPose final
     return reinterpret_cast<const CarPose*>(
         &_CarPose_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 22;
+  static constexpr int kIndexInFileMessages = 23;
   friend void swap(CarPose& a, CarPose& b) { a.Swap(&b); }
   inline void Swap(CarPose* other) {
     if (other == this) return;
@@ -5178,7 +5402,7 @@ class CarPath final
     return reinterpret_cast<const CarPath*>(
         &_CarPath_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 23;
+  static constexpr int kIndexInFileMessages = 24;
   friend void swap(CarPath& a, CarPath& b) { a.Swap(&b); }
   inline void Swap(CarPath* other) {
     if (other == this) return;
@@ -7719,6 +7943,102 @@ inline bool RGBCameraImageData::_internal_is_compressed() const {
 inline void RGBCameraImageData::_internal_set_is_compressed(bool value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.is_compressed_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// SegmentationCameraImageData
+
+// uint32 width = 1;
+inline void SegmentationCameraImageData::clear_width() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.width_ = 0u;
+}
+inline ::uint32_t SegmentationCameraImageData::width() const {
+  // @@protoc_insertion_point(field_get:VCCSim.SegmentationCameraImageData.width)
+  return _internal_width();
+}
+inline void SegmentationCameraImageData::set_width(::uint32_t value) {
+  _internal_set_width(value);
+  // @@protoc_insertion_point(field_set:VCCSim.SegmentationCameraImageData.width)
+}
+inline ::uint32_t SegmentationCameraImageData::_internal_width() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.width_;
+}
+inline void SegmentationCameraImageData::_internal_set_width(::uint32_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.width_ = value;
+}
+
+// uint32 height = 2;
+inline void SegmentationCameraImageData::clear_height() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.height_ = 0u;
+}
+inline ::uint32_t SegmentationCameraImageData::height() const {
+  // @@protoc_insertion_point(field_get:VCCSim.SegmentationCameraImageData.height)
+  return _internal_height();
+}
+inline void SegmentationCameraImageData::set_height(::uint32_t value) {
+  _internal_set_height(value);
+  // @@protoc_insertion_point(field_set:VCCSim.SegmentationCameraImageData.height)
+}
+inline ::uint32_t SegmentationCameraImageData::_internal_height() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.height_;
+}
+inline void SegmentationCameraImageData::_internal_set_height(::uint32_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.height_ = value;
+}
+
+// bytes data = 3;
+inline void SegmentationCameraImageData::clear_data() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.data_.ClearToEmpty();
+}
+inline const std::string& SegmentationCameraImageData::data() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:VCCSim.SegmentationCameraImageData.data)
+  return _internal_data();
+}
+template <typename Arg_, typename... Args_>
+inline PROTOBUF_ALWAYS_INLINE void SegmentationCameraImageData::set_data(Arg_&& arg,
+                                                     Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.data_.SetBytes(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:VCCSim.SegmentationCameraImageData.data)
+}
+inline std::string* SegmentationCameraImageData::mutable_data() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  std::string* _s = _internal_mutable_data();
+  // @@protoc_insertion_point(field_mutable:VCCSim.SegmentationCameraImageData.data)
+  return _s;
+}
+inline const std::string& SegmentationCameraImageData::_internal_data() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.data_.Get();
+}
+inline void SegmentationCameraImageData::_internal_set_data(const std::string& value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.data_.Set(value, GetArena());
+}
+inline std::string* SegmentationCameraImageData::_internal_mutable_data() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _impl_.data_.Mutable( GetArena());
+}
+inline std::string* SegmentationCameraImageData::release_data() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:VCCSim.SegmentationCameraImageData.data)
+  return _impl_.data_.Release();
+}
+inline void SegmentationCameraImageData::set_allocated_data(std::string* value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.data_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.data_.IsDefault()) {
+    _impl_.data_.Set("", GetArena());
+  }
+  // @@protoc_insertion_point(field_set_allocated:VCCSim.SegmentationCameraImageData.data)
 }
 
 // -------------------------------------------------------------------

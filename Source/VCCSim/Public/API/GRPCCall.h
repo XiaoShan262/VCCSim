@@ -391,6 +391,26 @@ private:
     }
 };
 
+/* --------------------------Segment Camera--------------------------------- */
+
+class USegmentationCameraComponent;
+
+class SegmentCameraGetOdomCall : public AsyncCallTemplateM<
+    VCCSim::RobotName, VCCSim::Odometry,
+    VCCSim::SegmentationCameraService::AsyncService,
+    std::map<std::string, USegmentationCameraComponent*>>
+{
+public:
+    SegmentCameraGetOdomCall(
+        VCCSim::SegmentationCameraService::AsyncService* service,
+        grpc::ServerCompletionQueue* cq,
+        std::map<std::string, USegmentationCameraComponent*> rscmap);
+protected:
+    virtual void PrepareNextCall() override final;
+    virtual void InitializeRequest() override final;
+    virtual void ProcessRequest() override final;
+};   
+
 /* --------------------------Mesh Handler---------------------------------- */
 
 class SendMeshCall : public AsyncCallTemplate<VCCSim::MeshData,

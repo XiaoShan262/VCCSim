@@ -13,11 +13,11 @@ Port = 50996
 # If there is only one robot, the tag is not necessary.
 MainCharacter = "Flash"
 StaticMeshActor = ["MFMesh", "CompanionCube"]   # Name or Tag
-ManualControl = false
+ManualControl = true
 
 SubWindows = ["Lit", "Unit", "PointCloud"]
 SubWindowsOpacities = [0.95, 0.85, 0.75]
-StartWithRecording = true
+StartWithRecording = false
 UseMeshManager = true
 MeshMaterial = "/VCCSim/Materials/M_Static_mesh"
 LS_StartOffset = 0                              # Frame
@@ -51,13 +51,19 @@ Height = 720
 bOrthographic = false
 
 [Robots.ComponentConfigs.DepthCamera]
-RecordInterval = 0.033333
+RecordInterval = -0.033333
 FOV = 90
 Width = 1280
 Height = 720
 MaxRange = 3000.0
 MinRange = 0.0
 bOrthographic = false
+
+[Robots.ComponentConfigs.RGBCamera]
+RecordInterval = -0.033333
+FOV = 90
+Width = 1280
+Height = 720
 
 #[[Robots]]
 #
