@@ -18,30 +18,53 @@ public:
     
     // Update signature to match UE's selection event
     void OnSelectionChanged(UObject* Object);
-    
-    void RefreshProperties();
 
 private:
-    // UI Elements
-    TSharedPtr<class SComboBox<TWeakObjectPtr<AActor>>> FlashPawnComboBox;
-    TSharedPtr<class SComboBox<TWeakObjectPtr<AActor>>> TargetObjectComboBox;
+    // UI Elements - Removed combo boxes, added selection state toggles
+    TSharedPtr<FSlateDynamicImageBrush> VCCLogoBrush;
+    TSharedPtr<FSlateDynamicImageBrush> SZULogoBrush;
+    
+    TSharedPtr<class STextBlock> SelectedFlashPawnText;
+    TSharedPtr<class STextBlock> SelectedTargetObjectText;
     TSharedPtr<class SNumericEntryBox<int32>> NumPosesSpinBox;
     TSharedPtr<class SNumericEntryBox<float>> RadiusSpinBox;
     TSharedPtr<class SNumericEntryBox<float>> HeightOffsetSpinBox;
     
+    // Camera availability indicators
+    TSharedPtr<class STextBlock> RGBCameraAvailableText;
+    TSharedPtr<class STextBlock> DepthCameraAvailableText;
+    TSharedPtr<class STextBlock> SegmentationCameraAvailableText;
+    
+    // Camera activation checkboxes
+    TSharedPtr<class SCheckBox> RGBCameraCheckBox;
+    TSharedPtr<class SCheckBox> DepthCameraCheckBox;
+    TSharedPtr<class SCheckBox> SegmentationCameraCheckBox;
+    
+    // Selection state toggles
+    TSharedPtr<class SCheckBox> SelectFlashPawnToggle;
+    TSharedPtr<class SCheckBox> SelectTargetToggle;
+    bool bSelectingFlashPawn = false;
+    bool bSelectingTarget = false;
+    
     // Selected objects
     TWeakObjectPtr<AFlashPawn> SelectedFlashPawn;
     TWeakObjectPtr<AActor> SelectedTargetObject;
-    
-    // Data for combo boxes
-    TArray<TWeakObjectPtr<AActor>> FlashPawnOptions;
-    TArray<TWeakObjectPtr<AActor>> TargetObjectOptions;
     
     // Configuration
     int32 NumPoses = 8;
     float Radius = 500.0f;
     float HeightOffset = 0.0f;
     FString SaveDirectory;
+    
+    // Camera settings
+    bool bUseRGBCamera = true;
+    bool bUseDepthCamera = false;
+    bool bUseSegmentationCamera = false;
+    
+    // Available cameras on current FlashPawn
+    bool bHasRGBCamera = false;
+    bool bHasDepthCamera = false;
+    bool bHasSegmentationCamera = false;
     
     // Auto-capture state
     bool bAutoCaptureInProgress = false;
@@ -52,25 +75,27 @@ private:
     TSharedRef<SWidget> CreateTargetSelectPanel();
     TSharedRef<SWidget> CreatePoseConfigPanel();
     TSharedRef<SWidget> CreateCapturePanel();
+    TSharedRef<SWidget> CreateCameraSelectPanel();
     
     // UI callbacks
-    void RefreshActorLists();
-    TSharedRef<SWidget> GenerateFlashPawnComboItem(TWeakObjectPtr<AActor> InItem);
-    FText GetFlashPawnComboText() const;
-    void OnFlashPawnSelectionChanged(TWeakObjectPtr<AActor> NewSelection, ESelectInfo::Type SelectInfo);
+    void OnSelectFlashPawnToggleChanged(ECheckBoxState NewState);
+    void OnSelectTargetToggleChanged(ECheckBoxState NewState);
     
-    TSharedRef<SWidget> GenerateTargetObjectComboItem(TWeakObjectPtr<AActor> InItem);
-    FText GetTargetObjectComboText() const;
-    void OnTargetObjectSelectionChanged(TWeakObjectPtr<AActor> NewSelection, ESelectInfo::Type SelectInfo);
+    void OnRGBCameraCheckboxChanged(ECheckBoxState NewState);
+    void OnDepthCameraCheckboxChanged(ECheckBoxState NewState);
+    void OnSegmentationCameraCheckboxChanged(ECheckBoxState NewState);
     
     FReply OnGeneratePosesClicked();
     FReply OnCaptureImagesClicked();
+    void SaveRGB(int32 PoseIndex, bool& bAnyCaptured);
     void StartAutoCapture();
     
     // Helper functions
     void GeneratePosesAroundTarget();
     void CaptureImageFromCurrentPose();
-    FString GetTimestampedFilename() const;
+    void CheckCameraComponents();
+    void UpdateActiveCameras();
+    static FString GetTimestampedFilename();
 };
 
 namespace FVCCSimPanelFactory

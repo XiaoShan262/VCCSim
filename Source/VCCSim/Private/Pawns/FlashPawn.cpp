@@ -47,6 +47,62 @@ void AFlashPawn::SetPath(
 	CurrentPathIndex = 0;
 }
 
+void AFlashPawn::SetPathPanel(
+	const TArray<FVector>& Positions, const TArray<FRotator>& Rotations)
+{
+	PendingPositions = Positions;
+	PendingRotations = Rotations;
+	CurrentIndex = 0;
+	SetActorLocationAndRotation(
+		PendingPositions[CurrentIndex], PendingRotations[CurrentIndex]);
+}
+
+void AFlashPawn::MoveForward()
+{
+	MoveToNext();
+	CurrentIndex++;
+	if (CurrentIndex >= PendingPositions.Num())
+	{
+		CurrentIndex = 0;
+	}
+	SetActorLocationAndRotation(
+		PendingPositions[CurrentIndex], PendingRotations[CurrentIndex]);
+
+	bAcqReady = true;
+}
+
+void AFlashPawn::MoveBackward()
+{
+	MoveToNext();
+	CurrentIndex--;
+	if (CurrentIndex < 0)
+	{
+		CurrentIndex = PendingPositions.Num() - 1;
+	}
+	SetActorLocationAndRotation(
+		PendingPositions[CurrentIndex], PendingRotations[CurrentIndex]);
+
+	bAcqReady = true;
+}
+
+void AFlashPawn::MoveTo(const int32& Index)
+{
+	MoveToNext();
+	CurrentIndex = Index;
+	if (CurrentIndex < 0)
+	{
+		CurrentIndex = 0;
+	}
+	else if (CurrentIndex >= PendingPositions.Num())
+	{
+		CurrentIndex = PendingPositions.Num() - 1;
+	}
+	SetActorLocationAndRotation(
+		PendingPositions[CurrentIndex], PendingRotations[CurrentIndex]);
+
+	bAcqReady = true;
+}
+
 void AFlashPawn::BeginPlay()
 {
 	Super::BeginPlay();

@@ -35,7 +35,6 @@ public:
     float FOV = 90.0f;
     int32 Width = 512;
     int32 Height = 512;
-    UMaterialInterface* SegmentationMaterial = nullptr;
 };
 
 UCLASS(ClassGroup = (VCCSIM), meta = (BlueprintSpawnableComponent))
@@ -49,6 +48,7 @@ public:
     bool IsConfigured() const { return bBPConfigured; }
     UFUNCTION()
     void SetRecordState(bool RState) { RecordState = RState; }
+    int32 GetCameraIndex() const { return CameraIndex; }
     
     FString CameraName;
     
@@ -81,15 +81,14 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SegmentationCamera|Config")
     int32 Height;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SegmentationCamera|Config")
-    bool bOrthographic;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SegmentationCamera|Config", 
-        meta = (EditCondition = "bOrthographic"))
-    float OrthoWidth;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SegmentationCamera|Config")
     bool bBPConfigured = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RGBCamera|Config")
+    int32 CameraIndex = 0;
     
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SegmentationCamera|Config")
-    UMaterialInterface* SegmentationMaterial;
+    UMaterialInterface* SegmentationMaterial = Cast<UMaterialInterface>(
+        StaticLoadObject(UMaterialInterface::StaticClass(), nullptr,
+            TEXT("/VCCSim/Materials/M_Segmentation.M_Segmentation")));
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SegmentationCamera|Debug")
     bool bRecorded = false;

@@ -318,6 +318,21 @@ void AVCCHUD::SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> Fo
                                               "RGBCamera component not found!"));
             }
         }
+        if (Component.first == ESensorType::SegmentationCamera)
+        {
+            if (USegmentationCameraComponent* SegCameraComponent =
+                MainCharacter->FindComponentByClass<USegmentationCameraComponent>())
+            {
+                WidgetInstance->SetSegContext(
+                    SegCameraComponent->SegmentationRenderTarget,
+                    SegCameraComponent);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("AVCCHUD: "
+                                              "RGBCamera component not found!"));
+            }
+        }
     }
 }
 

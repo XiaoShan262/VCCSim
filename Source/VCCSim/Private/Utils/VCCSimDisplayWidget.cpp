@@ -24,6 +24,7 @@
 #include "Components/SceneCaptureComponent2D.h"
 #include "Sensors/CameraSensor.h"
 #include "Sensors/DepthCamera.h"
+#include "Sensors/SegmentCamera.h"
 #include "EngineUtils.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -39,8 +40,8 @@ void UVCCSIMDisplayWidget::NativeConstruct()
     
     if (DepthVisualizationMaterial && DepthImageDisplay)
     {
-        DepthMaterial =
-            UMaterialInstanceDynamic::Create(DepthVisualizationMaterial, this);
+        DepthMaterial = UMaterialInstanceDynamic::Create(
+            DepthVisualizationMaterial, this);
         DepthImageDisplay->SetBrushFromMaterial(DepthMaterial);
 
         DepthMaterial->SetScalarParameterValue("MinDepth", MinDepth);
@@ -50,8 +51,15 @@ void UVCCSIMDisplayWidget::NativeConstruct()
     }
     if (RGBVisualizationMaterial && RGBImageDisplay)
     {
-        RGBMaterial = UMaterialInstanceDynamic::Create(RGBVisualizationMaterial, this);
+        RGBMaterial = UMaterialInstanceDynamic::Create(
+            RGBVisualizationMaterial, this);
         RGBImageDisplay->SetBrushFromMaterial(RGBMaterial);
+    }
+    if (SegVisualizationMaterial && SegImageDisplay)
+    {
+        SegMaterial = UMaterialInstanceDynamic::Create(
+            SegVisualizationMaterial, this);
+        SegImageDisplay->SetBrushFromMaterial(SegMaterial);
     }
 }
 
@@ -74,8 +82,7 @@ void UVCCSIMDisplayWidget::NativeTick(const FGeometry& MyGeometry, float InDelta
         UpdateMeshImage(InDeltaTime);
     }
 
-    // Process 3 capture request per tick if available.
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < 6; ++i)
     {
         int32 ID;
         if (CaptureQueue.Dequeue(ID))
@@ -83,6 +90,9 @@ void UVCCSIMDisplayWidget::NativeTick(const FGeometry& MyGeometry, float InDelta
             CurrentQueueSize--;
             switch (ID)
             {
+            case 5:
+                ProcessCapture(5);
+                break;
             case 6:
                 ProcessCapture(6);
                 break;
@@ -220,6 +230,24 @@ void UVCCSIMDisplayWidget::SetRGBContext(
             TEXT("SetRGBTexture failed - Material: %s, Texture: %s"),
             RGBMaterial ? TEXT("valid") : TEXT("null"),
             RGBTexture ? TEXT("valid") : TEXT("null"));
+    }
+}
+
+void UVCCSIMDisplayWidget::SetSegContext(
+    UTextureRenderTarget2D* SegTexture, USegmentationCameraComponent* InCamera)
+{
+    if (SegMaterial && SegTexture)
+    {
+        SegRenderTarget = SegTexture;
+        SegMaterial->SetTextureParameterValue(TEXT("SegTexture"), SegRenderTarget);
+        SegCameraComponent = InCamera;
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, 
+            TEXT("SetSegTexture failed - Material: %s, Texture: %s"),
+            SegMaterial ? TEXT("valid") : TEXT("null"),
+            SegTexture ? TEXT("valid") : TEXT("null"));
     }
 }
 
@@ -576,6 +604,18 @@ void UVCCSIMDisplayWidget::ProcessCapture(const int32 ID)
     // Update and capture the image
     switch (ID)
     {
+    case 5:
+        if (SegRenderTarget)
+        {
+            SegCameraComponent->CaptureSegmentationScene();
+            SaveRenderTargetToDisk(SegRenderTarget, "SegmentationCapture");
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("UVCCSIMDisplayWidget::ProcessCapture: "
+                                          "SegRenderTarget not set"));
+        }
+        break;
     case 6:
         if (RGBRenderTarget)
         {
@@ -665,6 +705,14 @@ void UVCCSIMDisplayWidget::SaveRenderTargetToDisk(
     {
         UE_LOG(LogTemp, Error, TEXT("Failed to read pixels from RenderTarget."));
         return;
+    }
+
+    if (FileName == TEXT("SegmentationCapture"))
+    {
+        for (FColor& Pixel : Pixels)
+        {
+            Pixel.A = 255; // Set alpha to 255 for segmentation
+        }
     }
 
     auto CurTime = FDateTime::Now();

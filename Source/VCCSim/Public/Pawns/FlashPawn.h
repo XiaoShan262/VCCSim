@@ -41,6 +41,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "API")
 	void MoveToNext() { bMoveReady = true; bAcqReady = false; }
 
+	UFUNCTION(BlueprintCallable, Category = "Panel")
+	void SetPathPanel(const TArray<FVector>& Positions, const TArray<FRotator>& Rotations);
+	UFUNCTION(BlueprintCallable, Category = "Panel")
+	void MoveForward();
+	UFUNCTION(BlueprintCallable, Category = "Panel")
+	void MoveBackward();
+	UFUNCTION(BlueprintCallable, Category = "Panel")
+	void MoveTo(const int32& Index);
+	UFUNCTION(BlueprintCallable, Category = "Panel")
+	int32 GetCurrentIndex() const { return CurrentIndex; }
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VCCSim|Target")
 	bool bMoveReady = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VCCSim|Target")
@@ -67,4 +78,10 @@ protected:
 private:
 	UPROPERTY()
 	class USceneComponent* FlashRoot;
+	UPROPERTY()
+	TArray<FVector> PendingPositions;
+	UPROPERTY()
+	TArray<FRotator> PendingRotations;
+	UPROPERTY()
+	int32 CurrentIndex = 0;
 };

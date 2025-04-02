@@ -25,6 +25,7 @@
 class UMeshHandlerComponent;
 class UDepthCameraComponent;
 class URGBCameraComponent;
+class USegmentationCameraComponent;
 
 UCLASS()
 class VCCSIM_API UVCCSIMDisplayWidget : public UUserWidget
@@ -43,6 +44,7 @@ public:
     
     void SetDepthContext(UTextureRenderTarget2D* DepthTexture, UDepthCameraComponent* InCamera);
     void SetRGBContext(UTextureRenderTarget2D* RGBTexture, URGBCameraComponent* InCamera);
+    void SetSegContext(UTextureRenderTarget2D* SegTexture, USegmentationCameraComponent* InCamera);
     
     UFUNCTION(BlueprintCallable, Category = "LitView")
     void SetLitMeshComponent(TArray<UStaticMeshComponent*> MeshComponent,
@@ -101,6 +103,18 @@ protected:
     TObjectPtr<UTextureRenderTarget2D> RGBRenderTarget;
     UPROPERTY()
     URGBCameraComponent* RGBCameraComponent = nullptr;
+
+    // Segmentation camera visualization properties
+    UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+    TObjectPtr<UImage> SegImageDisplay;
+    UPROPERTY(EditDefaultsOnly, Category = "SegCamera")
+    TObjectPtr<UMaterialInterface> SegVisualizationMaterial;
+    UPROPERTY()
+    TObjectPtr<UMaterialInstanceDynamic> SegMaterial;
+    UPROPERTY()
+    TObjectPtr<UTextureRenderTarget2D> SegRenderTarget;
+    UPROPERTY()
+    USegmentationCameraComponent* SegCameraComponent = nullptr;
         
     // Lit image visualization properties
     UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
