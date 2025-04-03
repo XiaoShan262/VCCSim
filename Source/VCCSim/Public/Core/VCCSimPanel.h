@@ -29,6 +29,7 @@ private:
     TSharedPtr<class SNumericEntryBox<int32>> NumPosesSpinBox;
     TSharedPtr<class SNumericEntryBox<float>> RadiusSpinBox;
     TSharedPtr<class SNumericEntryBox<float>> HeightOffsetSpinBox;
+    TSharedPtr<class SNumericEntryBox<float>> VerticalGapSpinBox;
     
     // Camera availability indicators
     TSharedPtr<class STextBlock> RGBCameraAvailableText;
@@ -54,7 +55,14 @@ private:
     int32 NumPoses = 8;
     float Radius = 500.0f;
     float HeightOffset = 0.0f;
+    float VerticalGap = 50.0f;
     FString SaveDirectory;
+    
+    // TOptional attributes for SpinBox values
+    TOptional<int32> NumPosesValue;
+    TOptional<float> RadiusValue;
+    TOptional<float> HeightOffsetValue;
+    TOptional<float> VerticalGapValue;
     
     // Camera settings
     bool bUseRGBCamera = true;
@@ -96,6 +104,17 @@ private:
     void CheckCameraComponents();
     void UpdateActiveCameras();
     static FString GetTimestampedFilename();
+    
+    // New pose file functions
+    void LoadPredefinedPose();
+    void SaveGeneratedPose();
+    FReply OnLoadPoseClicked();
+    FReply OnSavePoseClicked();
+    // Add these to your SVCCSimPanel.h file under the private section
+
+    TSharedRef<SWidget> CreateSectionHeader(const FString& Title);
+    TSharedRef<SWidget> CreateSectionContent(TSharedRef<SWidget> Content);
+    TSharedRef<SWidget> CreatePropertyRow(const FString& Label, TSharedRef<SWidget> Content);
 };
 
 namespace FVCCSimPanelFactory

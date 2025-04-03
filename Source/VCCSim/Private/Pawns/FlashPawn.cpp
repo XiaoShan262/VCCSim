@@ -103,6 +103,13 @@ void AFlashPawn::MoveTo(const int32& Index)
 	bAcqReady = true;
 }
 
+void AFlashPawn::GetCurrentPath(
+	TArray<FVector>& Positions, TArray<FRotator>& Rotations) const
+{
+	Positions = PendingPositions;
+	Rotations = PendingRotations;
+}
+
 void AFlashPawn::BeginPlay()
 {
 	Super::BeginPlay();

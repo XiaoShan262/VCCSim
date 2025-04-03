@@ -155,7 +155,7 @@ void USegmentationCameraComponent::SetCaptureComponent() const
             CaptureComponent->PostProcessSettings.WeightedBlendables.Array.Empty();
             FWeightedBlendable WeightedBlendable;
             WeightedBlendable.Object = SegmentationMaterial;
-            WeightedBlendable.Weight = 1.0f;
+            WeightedBlendable.Weight = 1.f;
             CaptureComponent->PostProcessSettings.WeightedBlendables.Array.Add(WeightedBlendable);
         }
         else

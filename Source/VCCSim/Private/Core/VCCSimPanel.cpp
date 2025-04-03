@@ -1,3 +1,20 @@
+/*
+* Copyright (C) 2025 Visual Computing Research Center, Shenzhen University
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "Core/VCCSimPanel.h"
 #include "PropertyEditorModule.h"
 #include "Engine/Selection.h"
@@ -7,7 +24,6 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Pawns/FlashPawn.h"
-#include "ImageUtils.h"
 #include "Misc/DateTime.h"
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
@@ -15,6 +31,9 @@
 #include "Sensors/DepthCamera.h"
 #include "Sensors/SegmentCamera.h"
 #include "Utils/ImageProcesser.h"
+#include "DesktopPlatformModule.h"
+#include "IDesktopPlatform.h"
+#include "Misc/FileHelper.h"
 
 // Destructor
 SVCCSimPanel::~SVCCSimPanel()
@@ -36,6 +55,11 @@ SVCCSimPanel::~SVCCSimPanel()
 // Construct method
 void SVCCSimPanel::Construct(const FArguments& InArgs)
 {
+    NumPosesValue = NumPoses;
+    RadiusValue = Radius;
+    HeightOffsetValue = HeightOffset;
+    VerticalGapValue = VerticalGap;
+    
     // Register for selection change events
     USelection* Selection = GEditor->GetSelectedActors();
     if (Selection)
@@ -57,7 +81,7 @@ void SVCCSimPanel::Construct(const FArguments& InArgs)
         VCCLogoBrush = MakeShareable(new FSlateDynamicImageBrush(
             FName(*VCCLogoPath), 
             FVector2D(65, 65),  // Maintain square ratio but smaller for UI
-            FLinearColor(1, 1, 1, 1)));
+            FColor(255, 255, 255, 255)));
     }
     else
     {
@@ -71,7 +95,7 @@ void SVCCSimPanel::Construct(const FArguments& InArgs)
         SZULogoBrush = MakeShareable(new FSlateDynamicImageBrush(
             FName(*SZULogoPath), 
             FVector2D(SZUWidth, 80),  // Same height as VCC logo, width preserves ratio
-            FLinearColor(1, 1, 1, 1)));
+            FColor(255, 255, 255, 255)));
     }
     else
     {
@@ -79,138 +103,90 @@ void SVCCSimPanel::Construct(const FArguments& InArgs)
     }
     
     // Create the widget layout
-    ChildSlot
+     ChildSlot
     [
-        SNew(SVerticalBox)
-        
-        // Logo panel at the top
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(8)
+        SNew(SBorder)
+        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryTop"))
+        .Padding(0)
         [
-            SNew(SHorizontalBox)
+            SNew(SVerticalBox)
             
-            // VCC Logo (left)
-            +SHorizontalBox::Slot()
-            .AutoWidth()
-            .Padding(8, 0, 0, 0)
-            .HAlign(HAlign_Left)
-            .VAlign(VAlign_Center)
+            // Logo panel with consistent styling
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(0)
             [
-                SNew(SImage)
-                .Image_Lambda([this]() {
-                    return VCCLogoBrush.IsValid() ? VCCLogoBrush.Get() : FCoreStyle::Get().GetBrush("NoBrush");
-                })
+                CreateSectionContent(
+                    SNew(SHorizontalBox)
+                    
+                    // VCC Logo (left)
+                    +SHorizontalBox::Slot()
+                    .AutoWidth()
+                    .Padding(8, 0, 0, 0)
+                    .HAlign(HAlign_Left)
+                    .VAlign(VAlign_Center)
+                    [
+                        SNew(SImage)
+                        .Image_Lambda([this]() {
+                            return VCCLogoBrush.IsValid() ? VCCLogoBrush.Get() : FAppStyle::GetBrush("NoBrush");
+                        })
+                    ]
+                    
+                    // Spacer to push logos to the edges
+                    +SHorizontalBox::Slot()
+                    .FillWidth(1.0f)
+                    [
+                        SNew(SSpacer)
+                    ]
+                    
+                    // SZU Logo (right)
+                    +SHorizontalBox::Slot()
+                    .AutoWidth()
+                    .HAlign(HAlign_Right)
+                    .VAlign(VAlign_Center)
+                    [
+                        SNew(SImage)
+                        .Image_Lambda([this]() {
+                            return SZULogoBrush.IsValid() ? SZULogoBrush.Get() : FAppStyle::GetBrush("NoBrush");
+                        })
+                    ]
+                )
             ]
             
-            // Spacer to push logos to the edges
-            +SHorizontalBox::Slot()
-            .FillWidth(1.0f)
+            // Flash Pawn section
+            +SVerticalBox::Slot()
+            .AutoHeight()
             [
-                SNew(SSpacer)
+                CreatePawnSelectPanel()
             ]
             
-            // SZU Logo (right)
-            +SHorizontalBox::Slot()
-            .AutoWidth()
-            .HAlign(HAlign_Right)
-            .VAlign(VAlign_Center)
+            // Camera section
+            +SVerticalBox::Slot()
+            .AutoHeight()
             [
-                SNew(SImage)
-                .Image_Lambda([this]() {
-                    return SZULogoBrush.IsValid() ? SZULogoBrush.Get() : FCoreStyle::Get().GetBrush("NoBrush");
-                })
+                CreateCameraSelectPanel()
             ]
-        ]
-        
-        // Section separator after logos
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(5, 0)
-        [
-            SNew(SSeparator)
-            .Thickness(2.0f)
-            .ColorAndOpacity(FLinearColor(0.3f, 0.3f, 0.3f, 1.0f))
-        ]
-        
-        // FlashPawn selection
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(10)
-        [
-            CreatePawnSelectPanel()
-        ]
-        
-        // Section separator
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(5, 0)
-        [
-            SNew(SSeparator)
-            .Thickness(2.0f)
-            .ColorAndOpacity(FLinearColor(0.3f, 0.3f, 0.3f, 1.0f))
-        ]
-
-        // Camera selection
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(10)
-        [
-            CreateCameraSelectPanel()
-        ]
-        
-        // Section separator
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(5, 0)
-        [
-            SNew(SSeparator)
-            .Thickness(2.0f)
-            .ColorAndOpacity(FLinearColor(0.3f, 0.3f, 0.3f, 1.0f))
-        ]
-                
-        // Target object selection
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(10)
-        [
-            CreateTargetSelectPanel()
-        ]
-        
-        // Section separator
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(5, 0)
-        [
-            SNew(SSeparator)
-            .Thickness(2.0f)
-            .ColorAndOpacity(FLinearColor(0.3f, 0.3f, 0.3f, 1.0f))
-        ]
-        
-        // Pose configuration
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(10)
-        [
-            CreatePoseConfigPanel()
-        ]
-        
-        // Section separator
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(5, 0)
-        [
-            SNew(SSeparator)
-            .Thickness(2.0f)
-            .ColorAndOpacity(FLinearColor(0.3f, 0.3f, 0.3f, 1.0f))
-        ]
-        
-        // Capture panel
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(10)
-        [
-            CreateCapturePanel()
+            
+            // Target section
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            [
+                CreateTargetSelectPanel()
+            ]
+            
+            // Pose configuration
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            [
+                CreatePoseConfigPanel()
+            ]
+            
+            // Capture panel
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            [
+                CreateCapturePanel()
+            ]
         ]
     ];
 }
@@ -219,76 +195,52 @@ void SVCCSimPanel::Construct(const FArguments& InArgs)
 TSharedRef<SWidget> SVCCSimPanel::CreatePawnSelectPanel()
 {
     return SNew(SVerticalBox)
-    
-    // Title for the section
     +SVerticalBox::Slot()
     .AutoHeight()
-    .Padding(0, 0, 0, 5)
     [
-        SNew(STextBlock)
-        .Text(FText::FromString("Select Flash Pawn"))
-        .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
+        CreateSectionHeader("Flash Pawn")
     ]
-    
-    // Selected FlashPawn display
     +SVerticalBox::Slot()
     .AutoHeight()
-    .Padding(0, 0, 0, 5)
     [
-        SNew(SHorizontalBox)
-        +SHorizontalBox::Slot()
-        .AutoWidth()
-        .Padding(0, 0, 5, 0)
-        .VAlign(VAlign_Center)
-        [
-            SNew(STextBlock)
-            .Text(FText::FromString("Current:"))
-            .MinDesiredWidth(40)
-        ]
-        +SHorizontalBox::Slot()
-        .FillWidth(1.0f)
-        [
-            SNew(SBorder)
-            .BorderImage(FCoreStyle::Get().GetBrush("ToolPanel.GroupBorder"))
-            .Padding(3)
+        CreateSectionContent(
+            SNew(SVerticalBox)
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(FMargin(0, 4, 0, 4))
             [
-                SAssignNew(SelectedFlashPawnText, STextBlock)
-                .Text(FText::FromString("None selected"))
+                CreatePropertyRow(
+                    "Current",
+                    SNew(SHorizontalBox)
+                    +SHorizontalBox::Slot()
+                    .FillWidth(1.0f)
+                    [
+                        SNew(SBorder)
+                        .Padding(4)
+                        [
+                            SAssignNew(SelectedFlashPawnText, STextBlock)
+                            .Text(FText::FromString("None selected"))
+                        ]
+                    ]
+                    +SHorizontalBox::Slot()
+                    .AutoWidth()
+                    .VAlign(VAlign_Center)
+                    .Padding(FMargin(8, 0, 4, 0))
+                    [
+                        SAssignNew(SelectFlashPawnToggle, SCheckBox)
+                        .IsChecked(bSelectingFlashPawn ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
+                        .OnCheckStateChanged(this, &SVCCSimPanel::OnSelectFlashPawnToggleChanged)
+                    ]
+                    +SHorizontalBox::Slot()
+                    .AutoWidth()
+                    .VAlign(VAlign_Center)
+                    [
+                        SNew(STextBlock)
+                        .Text(FText::FromString("Click to select"))
+                    ]
+                )
             ]
-        ]
-    ]
-    
-    // Row separator
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .Padding(0, 3)
-    [
-        SNew(SSeparator)
-        .Thickness(1.0f)
-        .ColorAndOpacity(FLinearColor(0.5f, 0.5f, 0.5f, 0.5f))
-    ]
-    
-    // Toggle selection mode
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    [
-        SNew(SHorizontalBox)
-        +SHorizontalBox::Slot()
-        .AutoWidth()
-        .Padding(0, 0, 5, 0)
-        .VAlign(VAlign_Center)
-        [
-            SAssignNew(SelectFlashPawnToggle, SCheckBox)
-            .IsChecked(bSelectingFlashPawn ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
-            .OnCheckStateChanged(this, &SVCCSimPanel::OnSelectFlashPawnToggleChanged)
-        ]
-        +SHorizontalBox::Slot()
-        .FillWidth(1.0f)
-        .VAlign(VAlign_Center)
-        [
-            SNew(STextBlock)
-            .Text(FText::FromString("Click to select FlashPawn"))
-        ]
+        )
     ];
 }
 
@@ -296,76 +248,52 @@ TSharedRef<SWidget> SVCCSimPanel::CreatePawnSelectPanel()
 TSharedRef<SWidget> SVCCSimPanel::CreateTargetSelectPanel()
 {
     return SNew(SVerticalBox)
-    
-    // Title for the section
     +SVerticalBox::Slot()
     .AutoHeight()
-    .Padding(0, 0, 0, 5)
     [
-        SNew(STextBlock)
-        .Text(FText::FromString("Select Target Object"))
-        .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
+        CreateSectionHeader("Select Target Object")
     ]
-    
-    // Selected Target display
     +SVerticalBox::Slot()
     .AutoHeight()
-    .Padding(0, 0, 0, 5)
     [
-        SNew(SHorizontalBox)
-        +SHorizontalBox::Slot()
-        .AutoWidth()
-        .Padding(0, 0, 5, 0)
-        .VAlign(VAlign_Center)
-        [
-            SNew(STextBlock)
-            .Text(FText::FromString("Current:"))
-            .MinDesiredWidth(40)
-        ]
-        +SHorizontalBox::Slot()
-        .FillWidth(1.0f)
-        [
-            SNew(SBorder)
-            .BorderImage(FCoreStyle::Get().GetBrush("ToolPanel.GroupBorder"))
-            .Padding(3)
+        CreateSectionContent(
+            SNew(SVerticalBox)
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(FMargin(0, 4, 0, 4))
             [
-                SAssignNew(SelectedTargetObjectText, STextBlock)
-                .Text(FText::FromString("None selected"))
+                CreatePropertyRow(
+                    "Current",
+                    SNew(SHorizontalBox)
+                    +SHorizontalBox::Slot()
+                    .FillWidth(1.0f)
+                    [
+                        SNew(SBorder)
+                        .Padding(4)
+                        [
+                            SAssignNew(SelectedTargetObjectText, STextBlock)
+                            .Text(FText::FromString("None selected"))
+                        ]
+                    ]
+                    +SHorizontalBox::Slot()
+                    .AutoWidth()
+                    .VAlign(VAlign_Center)
+                    .Padding(FMargin(8, 0, 4, 0))
+                    [
+                        SAssignNew(SelectTargetToggle, SCheckBox)
+                        .IsChecked(bSelectingTarget ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
+                        .OnCheckStateChanged(this, &SVCCSimPanel::OnSelectTargetToggleChanged)
+                    ]
+                    +SHorizontalBox::Slot()
+                    .AutoWidth()
+                    .VAlign(VAlign_Center)
+                    [
+                        SNew(STextBlock)
+                        .Text(FText::FromString("Click to select"))
+                    ]
+                )
             ]
-        ]
-    ]
-    
-    // Row separator
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .Padding(0, 3)
-    [
-        SNew(SSeparator)
-        .Thickness(1.0f)
-        .ColorAndOpacity(FLinearColor(0.5f, 0.5f, 0.5f, 0.5f))
-    ]
-    
-    // Toggle selection mode
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    [
-        SNew(SHorizontalBox)
-        +SHorizontalBox::Slot()
-        .AutoWidth()
-        .Padding(0, 0, 5, 0)
-        .VAlign(VAlign_Center)
-        [
-            SAssignNew(SelectTargetToggle, SCheckBox)
-            .IsChecked(bSelectingTarget ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
-            .OnCheckStateChanged(this, &SVCCSimPanel::OnSelectTargetToggleChanged)
-        ]
-        +SHorizontalBox::Slot()
-        .FillWidth(1.0f)
-        .VAlign(VAlign_Center)
-        [
-            SNew(STextBlock)
-            .Text(FText::FromString("Click to select Target"))
-        ]
+        )
     ];
 }
 
@@ -373,305 +301,320 @@ TSharedRef<SWidget> SVCCSimPanel::CreateTargetSelectPanel()
 TSharedRef<SWidget> SVCCSimPanel::CreateCameraSelectPanel()
 {
     return SNew(SVerticalBox)
-    
-    // Title for the section
     +SVerticalBox::Slot()
     .AutoHeight()
-    .Padding(0, 0, 0, 5)
     [
-        SNew(STextBlock)
-        .Text(FText::FromString("Camera Selection"))
-        .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
+        CreateSectionHeader("Camera Selection")
     ]
-    
-    // Camera Availability Row (displays what cameras are available)
     +SVerticalBox::Slot()
     .AutoHeight()
-    .Padding(0, 0, 0, 5)
     [
-        SNew(SVerticalBox)
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(0, 0, 0, 2)
-        [
-            SNew(STextBlock)
-            .Text(FText::FromString("Available Cameras:"))
-            .Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
-        ]
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        [
-            SNew(SHorizontalBox)
-            
-            // RGB Camera availability
-            +SHorizontalBox::Slot()
-            .FillWidth(1.0f)
-            .Padding(5, 0)
+        CreateSectionContent(
+            SNew(SVerticalBox)
+            // Camera Availability Row
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(FMargin(0, 0, 0, 8))
             [
-                SNew(SBorder)
-                .BorderImage(FCoreStyle::Get().GetBrush("ToolPanel.GroupBorder"))
-                .Padding(3)
-                .HAlign(HAlign_Center)
+                SNew(SVerticalBox)
+                +SVerticalBox::Slot()
+                .AutoHeight()
+                .Padding(FMargin(0, 4, 0, 4))
+                [
+                    SNew(STextBlock)
+                    .Text(FText::FromString("Available Cameras:"))
+                    .Font(FAppStyle::GetFontStyle("PropertyWindow.BoldFont"))
+                ]
+                +SVerticalBox::Slot()
+                .AutoHeight()
                 [
                     SNew(SHorizontalBox)
+                    
+                    // RGB Camera availability
                     +SHorizontalBox::Slot()
-                    .AutoWidth()
-                    .VAlign(VAlign_Center)
-                    .Padding(0, 0, 5, 0)
+                    .FillWidth(1.0f)
+                    .Padding(FMargin(0, 4, 2, 0))
                     [
-                        SNew(SImage)
-                        .Image_Lambda([this]() {
-                            return bHasRGBCamera ? 
-                                FCoreStyle::Get().GetBrush("Icons.Checkmark") : 
-                                FCoreStyle::Get().GetBrush("Icons.X");
-                        })
-                        .ColorAndOpacity_Lambda([this]() {
-                            return bHasRGBCamera ? 
-                                FLinearColor(0.0f, 0.8f, 0.0f, 1.0f) : 
-                                FLinearColor(0.8f, 0.0f, 0.0f, 1.0f);
-                        })
+                        SNew(SBorder)
+                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                        .BorderBackgroundColor(FColor(5,5, 5, 255))
+                        .Padding(4)
+                        .HAlign(HAlign_Center)
+                        [
+                            SNew(SHorizontalBox)
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .VAlign(VAlign_Center)
+                            .Padding(FMargin(0, 0, 4, 0))
+                            [
+                                SNew(SImage)
+                                .Image_Lambda([this]() {
+                                    return bHasRGBCamera ? 
+                                        FAppStyle::GetBrush("Icons.Checkmark") : 
+                                        FAppStyle::GetBrush("Icons.X");
+                                })
+                                .ColorAndOpacity_Lambda([this]() {
+                                    return bHasRGBCamera ? 
+                                        FColor(10, 200, 10) : 
+                                        FColor(200, 10, 10);
+                                })
+                            ]
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .VAlign(VAlign_Center)
+                            [
+                                SNew(STextBlock)
+                                .Text(FText::FromString("RGB"))
+                            ]
+                        ]
                     ]
+                    
+                    // Depth Camera availability
                     +SHorizontalBox::Slot()
-                    .AutoWidth()
-                    .VAlign(VAlign_Center)
+                    .FillWidth(1.0f)
+                    .Padding(FMargin(2, 4, 2, 0))
                     [
-                        SNew(STextBlock)
-                        .Text(FText::FromString("RGB"))
+                        SNew(SBorder)
+                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                        .BorderBackgroundColor(FColor(5,5, 5, 255))
+                        .Padding(4)
+                        .HAlign(HAlign_Center)
+                        [
+                            SNew(SHorizontalBox)
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .VAlign(VAlign_Center)
+                            .Padding(FMargin(0, 0, 4, 0))
+                            [
+                                SNew(SImage)
+                                .Image_Lambda([this]() {
+                                    return bHasDepthCamera ? 
+                                        FAppStyle::GetBrush("Icons.Checkmark") : 
+                                        FAppStyle::GetBrush("Icons.X");
+                                })
+                                .ColorAndOpacity_Lambda([this]() {
+                                    return bHasDepthCamera ? 
+                                        FColor(20, 200, 20) : 
+                                        FColor(200, 20, 20);
+                                })
+                            ]
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .VAlign(VAlign_Center)
+                            [
+                                SNew(STextBlock)
+                                .Text(FText::FromString("Depth"))
+                            ]
+                        ]
+                    ]
+                    
+                    // Segmentation Camera availability
+                    +SHorizontalBox::Slot()
+                    .FillWidth(1.0f)
+                    .Padding(FMargin(2, 4, 0, 0))
+                    [
+                        SNew(SBorder)
+                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                        .BorderBackgroundColor(FColor(5,5, 5, 255))
+                        .Padding(4)
+                        .HAlign(HAlign_Center)
+                        [
+                            SNew(SHorizontalBox)
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .VAlign(VAlign_Center)
+                            .Padding(FMargin(0, 0, 4, 0))
+                            [
+                                SNew(SImage)
+                                .Image_Lambda([this]() {
+                                    return bHasSegmentationCamera ? 
+                                        FAppStyle::GetBrush("Icons.Checkmark") : 
+                                        FAppStyle::GetBrush("Icons.X");
+                                })
+                                .ColorAndOpacity_Lambda([this]() {
+                                    return bHasSegmentationCamera ? 
+                                        FColor(20, 200, 20) : 
+                                        FColor(200, 20, 20);
+                                })
+                            ]
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .VAlign(VAlign_Center)
+                            [
+                                SNew(STextBlock)
+                                .Text(FText::FromString("Segmentation"))
+                            ]
+                        ]
                     ]
                 ]
             ]
             
-            // Depth Camera availability
-            +SHorizontalBox::Slot()
-            .FillWidth(1.0f)
-            .Padding(5, 0)
+            // Separator
+            +SVerticalBox::Slot()
+            .MaxHeight(1)
+            .Padding(FMargin(0, 0, 0, 0))
             [
                 SNew(SBorder)
-                .BorderImage(FCoreStyle::Get().GetBrush("ToolPanel.GroupBorder"))
-                .Padding(3)
-                .HAlign(HAlign_Center)
+                .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                .BorderBackgroundColor(FColor(2, 2, 2))
+                .Padding(0)
+                .Content()
+                [
+                    SNew(SBox)
+                    .HeightOverride(1.0f)
+                ]
+            ]
+            
+            // Active Camera Selection Row
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(FMargin(0, 0, 0, 8))
+            [
+                SNew(SVerticalBox)
+                +SVerticalBox::Slot()
+                .AutoHeight()
+                .Padding(FMargin(0, 4, 0, 4))
+                [
+                    SNew(STextBlock)
+                    .Text(FText::FromString("Active Cameras:"))
+                    .Font(FAppStyle::GetFontStyle("PropertyWindow.BoldFont"))
+                ]
+                +SVerticalBox::Slot()
+                .AutoHeight()
                 [
                     SNew(SHorizontalBox)
+                    
+                    // RGB Camera activation
                     +SHorizontalBox::Slot()
-                    .AutoWidth()
-                    .VAlign(VAlign_Center)
-                    .Padding(0, 0, 5, 0)
+                    .FillWidth(1.0f)
+                    .Padding(FMargin(0, 4, 2, 0))
                     [
-                        SNew(SImage)
-                        .Image_Lambda([this]() {
-                            return bHasDepthCamera ? 
-                                FCoreStyle::Get().GetBrush("Icons.Checkmark") : 
-                                FCoreStyle::Get().GetBrush("Icons.X");
-                        })
-                        .ColorAndOpacity_Lambda([this]() {
-                            return bHasDepthCamera ? 
-                                FLinearColor(0.0f, 0.8f, 0.0f, 1.0f) : 
-                                FLinearColor(0.8f, 0.0f, 0.0f, 1.0f);
-                        })
+                        SNew(SBorder)
+                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                        .BorderBackgroundColor(FColor(5,5, 5, 255))
+                        .Padding(4)
+                        .HAlign(HAlign_Center)
+                        [
+                            SNew(SHorizontalBox)
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .VAlign(VAlign_Center)
+                            .Padding(FMargin(0, 0, 4, 0))
+                            [
+                                SAssignNew(RGBCameraCheckBox, SCheckBox)
+                                .IsChecked(bUseRGBCamera ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
+                                .OnCheckStateChanged(this, &SVCCSimPanel::OnRGBCameraCheckboxChanged)
+                                .IsEnabled_Lambda([this]() {
+                                    return bHasRGBCamera;
+                                })
+                            ]
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .VAlign(VAlign_Center)
+                            [
+                                SNew(STextBlock)
+                                .Text(FText::FromString("RGB"))
+                                .ColorAndOpacity_Lambda([this]() {
+                                    return bHasRGBCamera ? FColor(233, 233, 233) : FColor(172, 172, 172);
+                                })
+                            ]
+                        ]
                     ]
+                    
+                    // Depth Camera activation
                     +SHorizontalBox::Slot()
-                    .AutoWidth()
-                    .VAlign(VAlign_Center)
+                    .FillWidth(1.0f)
+                    .Padding(FMargin(2, 4, 2, 0))
                     [
-                        SNew(STextBlock)
-                        .Text(FText::FromString("Depth"))
+                        SNew(SBorder)
+                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                        .BorderBackgroundColor(FColor(5,5, 5, 255))
+                        .Padding(4)
+                        .HAlign(HAlign_Center)
+                        [
+                            SNew(SHorizontalBox)
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .VAlign(VAlign_Center)
+                            .Padding(FMargin(0, 0, 4, 0))
+                            [
+                                SAssignNew(DepthCameraCheckBox, SCheckBox)
+                                .IsChecked(bUseDepthCamera ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
+                                .OnCheckStateChanged(this, &SVCCSimPanel::OnDepthCameraCheckboxChanged)
+                                .IsEnabled_Lambda([this]() {
+                                    return bHasDepthCamera;
+                                })
+                            ]
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .VAlign(VAlign_Center)
+                            [
+                                SNew(STextBlock)
+                                .Text(FText::FromString("Depth"))
+                                .ColorAndOpacity_Lambda([this]() {
+                                    return bHasDepthCamera ? FColor(233, 233, 233) : FColor(172, 172, 172);
+                                })
+                            ]
+                        ]
+                    ]
+                    
+                    // Segmentation Camera activation
+                    +SHorizontalBox::Slot()
+                    .FillWidth(1.0f)
+                    .Padding(FMargin(2, 4, 0, 0))
+                    [
+                        SNew(SBorder)
+                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                        .BorderBackgroundColor(FColor(5,5, 5, 255))
+                        .Padding(4)
+                        .HAlign(HAlign_Center)
+                        [
+                            SNew(SHorizontalBox)
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .VAlign(VAlign_Center)
+                            .Padding(FMargin(0, 0, 4, 0))
+                            [
+                                SAssignNew(SegmentationCameraCheckBox, SCheckBox)
+                                .IsChecked(bUseSegmentationCamera ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
+                                .OnCheckStateChanged(this, &SVCCSimPanel::OnSegmentationCameraCheckboxChanged)
+                                .IsEnabled_Lambda([this]() {
+                                    return bHasSegmentationCamera;
+                                })
+                            ]
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .VAlign(VAlign_Center)
+                            [
+                                SNew(STextBlock)
+                                .Text(FText::FromString("Segmentation"))
+                                .ColorAndOpacity_Lambda([this]() {
+                                    return bHasSegmentationCamera ? FColor(233, 233, 233) : FColor(172, 172, 172);
+                                })
+                            ]
+                        ]
                     ]
                 ]
             ]
             
-            // Segmentation Camera availability
-            +SHorizontalBox::Slot()
-            .FillWidth(1.0f)
-            .Padding(5, 0)
+            // Update button
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            .HAlign(HAlign_Right)
             [
-                SNew(SBorder)
-                .BorderImage(FCoreStyle::Get().GetBrush("ToolPanel.GroupBorder"))
-                .Padding(3)
-                .HAlign(HAlign_Center)
-                [
-                    SNew(SHorizontalBox)
-                    +SHorizontalBox::Slot()
-                    .AutoWidth()
-                    .VAlign(VAlign_Center)
-                    .Padding(0, 0, 5, 0)
-                    [
-                        SNew(SImage)
-                        .Image_Lambda([this]() {
-                            return bHasSegmentationCamera ? 
-                                FCoreStyle::Get().GetBrush("Icons.Checkmark") : 
-                                FCoreStyle::Get().GetBrush("Icons.X");
-                        })
-                        .ColorAndOpacity_Lambda([this]() {
-                            return bHasSegmentationCamera ? 
-                                FLinearColor(0.0f, 0.8f, 0.0f, 1.0f) : 
-                                FLinearColor(0.8f, 0.0f, 0.0f, 1.0f);
-                        })
-                    ]
-                    +SHorizontalBox::Slot()
-                    .AutoWidth()
-                    .VAlign(VAlign_Center)
-                    [
-                        SNew(STextBlock)
-                        .Text(FText::FromString("Segmentation"))
-                    ]
-                ]
+                SNew(SButton)
+                .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+                .Text(FText::FromString("Update Cameras"))
+                .ContentPadding(FMargin(6, 2))
+                .OnClicked_Lambda([this]() {
+                    UpdateActiveCameras();
+                    return FReply::Handled();
+                })
+                .IsEnabled_Lambda([this]() {
+                    return SelectedFlashPawn.IsValid() && (bHasRGBCamera || bHasDepthCamera || bHasSegmentationCamera);
+                })
             ]
-        ]
-    ]
-    
-    // Row separator
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .Padding(0, 5)
-    [
-        SNew(SSeparator)
-        .Thickness(1.0f)
-        .ColorAndOpacity(FLinearColor(0.5f, 0.5f, 0.5f, 0.5f))
-    ]
-    
-    // Active Camera Selection Row (controls which cameras to use)
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .Padding(0, 0, 0, 5)
-    [
-        SNew(SVerticalBox)
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        .Padding(0, 0, 0, 2)
-        [
-            SNew(STextBlock)
-            .Text(FText::FromString("Active Cameras:"))
-            .Font(FCoreStyle::GetDefaultFontStyle("Regular", 10))
-        ]
-        +SVerticalBox::Slot()
-        .AutoHeight()
-        [
-            SNew(SHorizontalBox)
-            
-            // RGB Camera activation
-            +SHorizontalBox::Slot()
-            .FillWidth(1.0f)
-            .Padding(5, 0)
-            [
-                SNew(SBorder)
-                .BorderImage(FCoreStyle::Get().GetBrush("ToolPanel.GroupBorder"))
-                .Padding(3)
-                .HAlign(HAlign_Center)
-                [
-                    SNew(SHorizontalBox)
-                    +SHorizontalBox::Slot()
-                    .AutoWidth()
-                    .VAlign(VAlign_Center)
-                    .Padding(0, 0, 5, 0)
-                    [
-                        SAssignNew(RGBCameraCheckBox, SCheckBox)
-                        .IsChecked(bUseRGBCamera ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
-                        .OnCheckStateChanged(this, &SVCCSimPanel::OnRGBCameraCheckboxChanged)
-                        .IsEnabled_Lambda([this]() {
-                            return bHasRGBCamera;
-                        })
-                    ]
-                    +SHorizontalBox::Slot()
-                    .AutoWidth()
-                    .VAlign(VAlign_Center)
-                    [
-                        SNew(STextBlock)
-                        .Text(FText::FromString("RGB"))
-                        .ColorAndOpacity_Lambda([this]() {
-                            return bHasRGBCamera ? FLinearColor::White : FLinearColor::Gray;
-                        })
-                    ]
-                ]
-            ]
-            
-            // Depth Camera activation
-            +SHorizontalBox::Slot()
-            .FillWidth(1.0f)
-            .Padding(5, 0)
-            [
-                SNew(SBorder)
-                .BorderImage(FCoreStyle::Get().GetBrush("ToolPanel.GroupBorder"))
-                .Padding(3)
-                .HAlign(HAlign_Center)
-                [
-                    SNew(SHorizontalBox)
-                    +SHorizontalBox::Slot()
-                    .AutoWidth()
-                    .VAlign(VAlign_Center)
-                    .Padding(0, 0, 5, 0)
-                    [
-                        SAssignNew(DepthCameraCheckBox, SCheckBox)
-                        .IsChecked(bUseDepthCamera ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
-                        .OnCheckStateChanged(this, &SVCCSimPanel::OnDepthCameraCheckboxChanged)
-                        .IsEnabled_Lambda([this]() {
-                            return bHasDepthCamera;
-                        })
-                    ]
-                    +SHorizontalBox::Slot()
-                    .AutoWidth()
-                    .VAlign(VAlign_Center)
-                    [
-                        SNew(STextBlock)
-                        .Text(FText::FromString("Depth"))
-                        .ColorAndOpacity_Lambda([this]() {
-                            return bHasDepthCamera ? FLinearColor::White : FLinearColor::Gray;
-                        })
-                    ]
-                ]
-            ]
-            
-            // Segmentation Camera activation
-            +SHorizontalBox::Slot()
-            .FillWidth(1.0f)
-            .Padding(5, 0)
-            [
-                SNew(SBorder)
-                .BorderImage(FCoreStyle::Get().GetBrush("ToolPanel.GroupBorder"))
-                .Padding(3)
-                .HAlign(HAlign_Center)
-                [
-                    SNew(SHorizontalBox)
-                    +SHorizontalBox::Slot()
-                    .AutoWidth()
-                    .VAlign(VAlign_Center)
-                    .Padding(0, 0, 5, 0)
-                    [
-                        SAssignNew(SegmentationCameraCheckBox, SCheckBox)
-                        .IsChecked(bUseSegmentationCamera ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
-                        .OnCheckStateChanged(this, &SVCCSimPanel::OnSegmentationCameraCheckboxChanged)
-                        .IsEnabled_Lambda([this]() {
-                            return bHasSegmentationCamera;
-                        })
-                    ]
-                    +SHorizontalBox::Slot()
-                    .AutoWidth()
-                    .VAlign(VAlign_Center)
-                    [
-                        SNew(STextBlock)
-                        .Text(FText::FromString("Segmentation"))
-                        .ColorAndOpacity_Lambda([this]() {
-                            return bHasSegmentationCamera ? FLinearColor::White : FLinearColor::Gray;
-                        })
-                    ]
-                ]
-            ]
-        ]
-    ]
-    
-    // Update button
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .Padding(0, 5, 0, 0)
-    [
-        SNew(SButton)
-        .Text(FText::FromString("Update Cameras"))
-        .OnClicked_Lambda([this]() {
-            UpdateActiveCameras();
-            return FReply::Handled();
-        })
-        .IsEnabled_Lambda([this]() {
-            return SelectedFlashPawn.IsValid() && (bHasRGBCamera || bHasDepthCamera || bHasSegmentationCamera);
-        })
+        )
     ];
 }
 
@@ -679,272 +622,344 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCameraSelectPanel()
 TSharedRef<SWidget> SVCCSimPanel::CreatePoseConfigPanel()
 {
     return SNew(SVerticalBox)
-    
-    // Title for the section
     +SVerticalBox::Slot()
     .AutoHeight()
-    .Padding(0, 0, 0, 5)
     [
-        SNew(STextBlock)
-        .Text(FText::FromString("Pose Configuration"))
-        .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
+        CreateSectionHeader("Pose Configuration")
     ]
-    
-    // Number of poses
     +SVerticalBox::Slot()
     .AutoHeight()
-    .Padding(0, 0, 0, 2)
     [
-        SNew(SHorizontalBox)
-        +SHorizontalBox::Slot()
-        .AutoWidth()
-        .Padding(0, 0, 5, 0)
-        .VAlign(VAlign_Center)
-        [
-            SNew(STextBlock)
-            .Text(FText::FromString("Number of Poses:"))
-            .MinDesiredWidth(120)
-        ]
-        +SHorizontalBox::Slot()
-        .FillWidth(1.0f)
-        [
-            SNew(SBorder)
-            .BorderImage(FCoreStyle::Get().GetBrush("ToolPanel.GroupBorder"))
-            .Padding(3)
+        CreateSectionContent(
+            SNew(SVerticalBox)
+            
+            // Number of poses and Vertical Gap row
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(FMargin(0, 0, 0, 8))
             [
-                SAssignNew(NumPosesSpinBox, SNumericEntryBox<int32>)
-                .Value(NumPoses)
-                .MinValue(1)
-                .MaxValue(36)
-                .Delta(1)
-                .AllowSpin(true)
-                .OnValueChanged(SNumericEntryBox<int32>::FOnValueChanged::CreateLambda([this](int32 NewValue) {
-                    NumPoses = NewValue;
-                }))
+                SNew(SHorizontalBox)
+                // Pose Count
+                +SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .Padding(FMargin(0, 0, 8, 0))
+                [
+                    CreatePropertyRow(
+                        "Pose Count",
+                        SNew(SBorder)
+                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                        .BorderBackgroundColor(FColor(5,5, 5, 255))
+                        .Padding(4)
+                        [
+                            SAssignNew(NumPosesSpinBox, SNumericEntryBox<int32>)
+                            .Value_Lambda([this]() { return NumPosesValue; })
+                            .MinValue(1)
+                            .Delta(1)
+                            .AllowSpin(true)
+                            .OnValueChanged(SNumericEntryBox<int32>::FOnValueChanged::CreateLambda([this](int32 NewValue) {
+                                NumPoses = NewValue;
+                                NumPosesValue = NewValue;
+                            }))
+                        ]
+                    )
+                ]
+                
+                // Vertical Gap
+                +SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .Padding(FMargin(0, 0, 0, 0))
+                [
+                    CreatePropertyRow(
+                        "Vertical Gap",
+                        SNew(SBorder)
+                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                        .BorderBackgroundColor(FColor(5,5, 5, 255))
+                        .Padding(4)
+                        [
+                            SAssignNew(VerticalGapSpinBox, SNumericEntryBox<float>)
+                            .Value_Lambda([this]() { return VerticalGapValue; })
+                            .MinValue(0.0f)
+                            .Delta(5.0f)
+                            .AllowSpin(true)
+                            .OnValueChanged(SNumericEntryBox<float>::FOnValueChanged::CreateLambda([this](float NewValue) {
+                                VerticalGap = NewValue;
+                                VerticalGapValue = NewValue;
+                            }))
+                        ]
+                    )
+                ]
             ]
-        ]
-    ]
-    
-    // Row separator
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .Padding(0, 3)
-    [
-        SNew(SSeparator)
-        .Thickness(1.0f)
-        .ColorAndOpacity(FLinearColor(0.5f, 0.5f, 0.5f, 0.5f))
-    ]
-    
-    // Radius
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .Padding(0, 0, 0, 2)
-    [
-        SNew(SHorizontalBox)
-        +SHorizontalBox::Slot()
-        .AutoWidth()
-        .Padding(0, 0, 5, 0)
-        .VAlign(VAlign_Center)
-        [
-            SNew(STextBlock)
-            .Text(FText::FromString("Radius (cm):"))
-            .MinDesiredWidth(120)
-        ]
-        +SHorizontalBox::Slot()
-        .FillWidth(1.0f)
-        [
-            SNew(SBorder)
-            .BorderImage(FCoreStyle::Get().GetBrush("ToolPanel.GroupBorder"))
-            .Padding(3)
+            
+            // Separator
+            +SVerticalBox::Slot()
+            .MaxHeight(1)
+            .Padding(FMargin(0, 0, 0, 0))
             [
-                SAssignNew(RadiusSpinBox, SNumericEntryBox<float>)
-                .Value(Radius)
-                .MinValue(50.0f)
-                .MaxValue(1000.0f)
-                .Delta(10.0f)
-                .AllowSpin(true)
-                .OnValueChanged(SNumericEntryBox<float>::FOnValueChanged::CreateLambda([this](float NewValue) {
-                    Radius = NewValue;
-                }))
+                SNew(SBorder)
+                .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                .BorderBackgroundColor(FColor(2, 2, 2))
+                .Padding(0)
+                .Content()
+                [
+                    SNew(SBox)
+                    .HeightOverride(1.0f)
+                ]
             ]
-        ]
-    ]
-    
-    // Row separator
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .Padding(0, 3)
-    [
-        SNew(SSeparator)
-        .Thickness(1.0f)
-        .ColorAndOpacity(FLinearColor(0.5f, 0.5f, 0.5f, 0.5f))
-    ]
-    
-    // Height Offset
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .Padding(0, 0, 0, 2)
-    [
-        SNew(SHorizontalBox)
-        +SHorizontalBox::Slot()
-        .AutoWidth()
-        .Padding(0, 0, 5, 0)
-        .VAlign(VAlign_Center)
-        [
-            SNew(STextBlock)
-            .Text(FText::FromString("Height Offset (cm):"))
-            .MinDesiredWidth(120)
-        ]
-        +SHorizontalBox::Slot()
-        .FillWidth(1.0f)
-        [
-            SNew(SBorder)
-            .BorderImage(FCoreStyle::Get().GetBrush("ToolPanel.GroupBorder"))
-            .Padding(3)
+            
+            // Radius and Height Offset row
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(FMargin(0, 8, 0, 8))
             [
-                SAssignNew(HeightOffsetSpinBox, SNumericEntryBox<float>)
-                .Value(HeightOffset)
-                .MinValue(-500.0f)
-                .MaxValue(500.0f)
-                .Delta(10.0f)
-                .AllowSpin(true)
-                .OnValueChanged(SNumericEntryBox<float>::FOnValueChanged::CreateLambda([this](float NewValue) {
-                    HeightOffset = NewValue;
-                }))
+                SNew(SHorizontalBox)
+                // Radius
+                +SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .Padding(FMargin(0, 0, 8, 0))
+                [
+                    CreatePropertyRow(
+                        "Radius",
+                        SNew(SBorder)
+                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                        .BorderBackgroundColor(FColor(5,5, 5, 255))
+                        .Padding(4)
+                        [
+                            SAssignNew(RadiusSpinBox, SNumericEntryBox<float>)
+                            .Value_Lambda([this]() { return RadiusValue; })
+                            .MinValue(100.0f)
+                            .MaxValue(3000.0f)
+                            .Delta(10.0f)
+                            .AllowSpin(true)
+                            .OnValueChanged(SNumericEntryBox<float>::FOnValueChanged::CreateLambda([this](float NewValue) {
+                                Radius = NewValue;
+                                RadiusValue = NewValue;
+                            }))
+                        ]
+                    )
+                ]
+                
+                // Height Offset
+                +SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .Padding(FMargin(0, 0, 0, 0))
+                [
+                    CreatePropertyRow(
+                        "Height Offset",
+                        SNew(SBorder)
+                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                        .BorderBackgroundColor(FColor(5,5, 5, 255))
+                        .Padding(4)
+                        [
+                            SAssignNew(HeightOffsetSpinBox, SNumericEntryBox<float>)
+                            .Value_Lambda([this]() { return HeightOffsetValue; })
+                            .MinValue(-500.0f)
+                            .MaxValue(500.0f)
+                            .Delta(10.0f)
+                            .AllowSpin(true)
+                            .OnValueChanged(SNumericEntryBox<float>::FOnValueChanged::CreateLambda([this](float NewValue) {
+                                HeightOffset = NewValue;
+                                HeightOffsetValue = NewValue;
+                            }))
+                        ]
+                    )
+                ]
             ]
-        ]
-    ]
-    
-    // Row separator
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .Padding(0, 3)
-    [
-        SNew(SSeparator)
-        .Thickness(1.0f)
-        .ColorAndOpacity(FLinearColor(0.5f, 0.5f, 0.5f, 0.5f))
-    ]
-    
-    // Action buttons
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .Padding(0, 2, 0, 0)
-    [
-        SNew(SHorizontalBox)
-        +SHorizontalBox::Slot()
-        .AutoWidth()
-        .Padding(5, 0)
-        .HAlign(HAlign_Center)
-        [
-            SNew(SButton)
-            .Text(FText::FromString("Move Back"))
-            .OnClicked_Lambda([this]() {
-                if (SelectedFlashPawn.IsValid())
-                {
-                    SelectedFlashPawn->MoveBackward();
-                }
-                return FReply::Handled();
-            })
-            .IsEnabled_Lambda([this]() {
-                return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
-            })
-        ]
-        +SHorizontalBox::Slot()
-        .AutoWidth()
-        .Padding(5, 0)
-        .HAlign(HAlign_Center)
-        [
-            SNew(SButton)
-            .Text(FText::FromString("Generate Poses"))
-            .OnClicked(this, &SVCCSimPanel::OnGeneratePosesClicked)
-            .IsEnabled_Lambda([this]() {
-                return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
-            })
-        ]
-        +SHorizontalBox::Slot()
-        .AutoWidth()
-        .Padding(5, 0)
-        .HAlign(HAlign_Center)
-        [
-            SNew(SButton)
-            .Text(FText::FromString("Move Next"))
-            .OnClicked_Lambda([this]() {
-                if (SelectedFlashPawn.IsValid())
-                {
-                    SelectedFlashPawn->MoveForward();
-                }
-                return FReply::Handled();
-            })
-            .IsEnabled_Lambda([this]() {
-                return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
-            })
-        ]
+            
+            // Separator
+            +SVerticalBox::Slot()
+            .MaxHeight(1)
+            .Padding(FMargin(0, 0, 0, 0))
+            [
+                SNew(SBorder)
+                .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                .BorderBackgroundColor(FColor(2, 2, 2))
+                .Padding(0)
+                .Content()
+                [
+                    SNew(SBox)
+                    .HeightOverride(1.0f)
+                ]
+            ]
+            
+            // Load/Save Pose buttons
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(FMargin(0, 8, 0, 8))
+            [
+                SNew(SHorizontalBox)
+                +SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .Padding(FMargin(0, 0, 4, 0))
+                .HAlign(HAlign_Fill)
+                [
+                    SNew(SButton)
+                    .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+                    .ContentPadding(FMargin(6, 2))
+                    .HAlign(HAlign_Center)
+                    .Text(FText::FromString("Load Predefined Pose"))
+                    .OnClicked(this, &SVCCSimPanel::OnLoadPoseClicked)
+                    .IsEnabled_Lambda([this]() {
+                        return SelectedFlashPawn.IsValid();
+                    })
+                ]
+                +SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .Padding(FMargin(4, 0, 0, 0))
+                .HAlign(HAlign_Fill)
+                [
+                    SNew(SButton)
+                    .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+                    .ContentPadding(FMargin(6, 2))
+                    .HAlign(HAlign_Center)
+                    .Text(FText::FromString("Save Generated Pose"))
+                    .OnClicked(this, &SVCCSimPanel::OnSavePoseClicked)
+                    .IsEnabled_Lambda([this]() {
+                        return SelectedFlashPawn.IsValid() && SelectedFlashPawn->GetPoseCount() > 0;
+                    })
+                ]
+            ]
+            
+            // Separator
+            +SVerticalBox::Slot()
+            .MaxHeight(1)
+            .Padding(FMargin(0, 0, 0, 0))
+            [
+                SNew(SBorder)
+                .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                .BorderBackgroundColor(FColor(2, 2, 2))
+                .Padding(0)
+                .Content()
+                [
+                    SNew(SBox)
+                    .HeightOverride(1.0f)
+                ]
+            ]
+            
+            // Action buttons
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(FMargin(0, 8, 0, 2))
+            [
+                SNew(SHorizontalBox)
+                +SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .Padding(FMargin(0, 0, 2, 0))
+                .HAlign(HAlign_Center)
+                [
+                    SNew(SButton)
+                    .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+                    .ContentPadding(FMargin(5, 2))
+                    .Text(FText::FromString("Move Back"))
+                    .OnClicked_Lambda([this]() {
+                        if (SelectedFlashPawn.IsValid())
+                        {
+                            SelectedFlashPawn->MoveBackward();
+                        }
+                        return FReply::Handled();
+                    })
+                    .IsEnabled_Lambda([this]() {
+                        return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
+                    })
+                ]
+                +SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .Padding(FMargin(2, 0))
+                .HAlign(HAlign_Center)
+                [
+                    SNew(SButton)
+                    .ButtonStyle(FAppStyle::Get(), "FlatButton.Success")
+                    .ContentPadding(FMargin(5, 2))
+                    .Text(FText::FromString("Generate Poses"))
+                    .OnClicked(this, &SVCCSimPanel::OnGeneratePosesClicked)
+                    .IsEnabled_Lambda([this]() {
+                        return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
+                    })
+                ]
+                +SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .Padding(FMargin(2, 0, 0, 0))
+                .HAlign(HAlign_Center)
+                [
+                    SNew(SButton)
+                    .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+                    .ContentPadding(FMargin(5, 2))
+                    .Text(FText::FromString("Move Next"))
+                    .OnClicked_Lambda([this]() {
+                        if (SelectedFlashPawn.IsValid())
+                        {
+                            SelectedFlashPawn->MoveForward();
+                        }
+                        return FReply::Handled();
+                    })
+                    .IsEnabled_Lambda([this]() {
+                        return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
+                    })
+                ]
+            ]
+        )
     ];
 }
 
-// Capture panel
 TSharedRef<SWidget> SVCCSimPanel::CreateCapturePanel()
 {
     return SNew(SVerticalBox)
-    
-    // Title for the section
     +SVerticalBox::Slot()
     .AutoHeight()
-    .Padding(0, 0, 0, 5)
     [
-        SNew(STextBlock)
-        .Text(FText::FromString("Image Capture"))
-        .Font(FCoreStyle::GetDefaultFontStyle("Bold", 12))
+        CreateSectionHeader("Image Capture")
     ]
-    
-    // Single Capture button
     +SVerticalBox::Slot()
     .AutoHeight()
-    .HAlign(HAlign_Center)
     [
-        SNew(SButton)
-        .ContentPadding(FMargin(10, 5))
-        .ButtonColorAndOpacity(FLinearColor(0.2f, 0.4f, 0.6f, 1.0f))
-        .Text(FText::FromString("Capture Current View"))
-        .OnClicked(this, &SVCCSimPanel::OnCaptureImagesClicked)
-        .IsEnabled_Lambda([this]() {
-            return SelectedFlashPawn.IsValid() && 
-                   (bUseRGBCamera && bHasRGBCamera) || 
-                   (bUseDepthCamera && bHasDepthCamera) || 
-                   (bUseSegmentationCamera && bHasSegmentationCamera);
-        })
-    ]
-    
-    // Row separator
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .Padding(0, 5)
-    [
-        SNew(SSeparator)
-        .Thickness(1.0f)
-        .ColorAndOpacity(FLinearColor(0.5f, 0.5f, 0.5f, 0.5f))
-    ]
-    
-    // Auto Capture button
-    +SVerticalBox::Slot()
-    .AutoHeight()
-    .HAlign(HAlign_Center)
-    .Padding(0, 5, 0, 0)
-    [
-        SNew(SButton)
-        .ContentPadding(FMargin(10, 5))
-        .ButtonColorAndOpacity(FLinearColor(0.6f, 0.3f, 0.2f, 1.0f))
-        .Text(FText::FromString("Auto-Capture All Poses"))
-        .OnClicked_Lambda([this]() {
-            StartAutoCapture();
-            return FReply::Handled();
-        })
-        .IsEnabled_Lambda([this]() {
-            return SelectedFlashPawn.IsValid() && 
-                   ((bUseRGBCamera && bHasRGBCamera) || 
-                    (bUseDepthCamera && bHasDepthCamera) || 
-                    (bUseSegmentationCamera && bHasSegmentationCamera));
-        })
+        CreateSectionContent(
+            SNew(SVerticalBox)
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            [
+                SNew(SHorizontalBox)
+                
+                // Single Capture button
+                +SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .Padding(FMargin(0, 0, 4, 0))
+                .HAlign(HAlign_Center)
+                [
+                    SNew(SButton)
+                    .ButtonStyle(FAppStyle::Get(), "FlatButton.Success")
+                    .ContentPadding(FMargin(6, 2))
+                    .Text(FText::FromString("Capture Current View"))
+                    .OnClicked(this, &SVCCSimPanel::OnCaptureImagesClicked)
+                    .IsEnabled_Lambda([this]() {
+                        return SelectedFlashPawn.IsValid() && 
+                               (bUseRGBCamera && bHasRGBCamera) || 
+                               (bUseDepthCamera && bHasDepthCamera) || 
+                               (bUseSegmentationCamera && bHasSegmentationCamera);
+                    })
+                ]
+                
+                // Auto Capture button
+                +SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .Padding(FMargin(4, 0, 0, 0))
+                .HAlign(HAlign_Center)
+                [
+                    SNew(SButton)
+                    .ButtonStyle(FAppStyle::Get(), "FlatButton.Primary")
+                    .ContentPadding(FMargin(6, 2))
+                    .Text(FText::FromString("Auto-Capture All Poses"))
+                    .OnClicked_Lambda([this]() {
+                        StartAutoCapture();
+                        return FReply::Handled();
+                    })
+                    .IsEnabled_Lambda([this]() {
+                        return SelectedFlashPawn.IsValid() && 
+                               ((bUseRGBCamera && bHasRGBCamera) || 
+                                (bUseDepthCamera && bHasDepthCamera) || 
+                                (bUseSegmentationCamera && bHasSegmentationCamera));
+                    })
+                ]
+            ]
+        )
     ];
 }
 
@@ -1172,40 +1187,73 @@ void SVCCSimPanel::GeneratePosesAroundTarget()
     // Get the target object's location
     FVector TargetLocation = SelectedTargetObject->GetActorLocation();
     
+    // Get target bounds to determine height
+    FVector Origin;
+    FVector BoxExtent;
+    SelectedTargetObject->GetActorBounds(true, Origin, BoxExtent);
+    float TargetHeight = BoxExtent.Z * 2.0f; // Full height of the object
+    
     // Create arrays to store the poses
     TArray<FVector> Positions;
     TArray<FRotator> Rotations;
     
-    // Generate poses around the target
-    for (int32 i = 0; i < NumPoses; ++i)
+    // Calculate number of vertical layers based on object height and vertical gap
+    int32 VerticalLayers = 1; // At least one layer
+    if (VerticalGap > 0.0f && TargetHeight > VerticalGap)
     {
-        // Calculate angle in radians
-        float Angle = 2.0f * PI * static_cast<float>(i) / static_cast<float>(NumPoses);
+        VerticalLayers = FMath::Max(1, FMath::CeilToInt(TargetHeight / VerticalGap));
+    }
+    
+    // Calculate poses evenly distributed in horizontal plane
+    int32 PosesPerLayer = FMath::Max(1, NumPoses / VerticalLayers);
+    
+    // Generate poses around and above the target
+    for (int32 LayerIndex = 0; LayerIndex < VerticalLayers; ++LayerIndex)
+    {
+        // Calculate vertical offset for this layer
+        float LayerHeightOffset = HeightOffset;
+        if (VerticalLayers > 1)
+        {
+            // Distribute vertical positions evenly from bottom to top of the object
+            float LayerFraction = static_cast<float>(LayerIndex) / static_cast<float>(VerticalLayers - 1);
+            LayerHeightOffset += (LayerFraction * TargetHeight) - (TargetHeight / 2.0f);
+        }
         
-        // Calculate position on circle
-        FVector Position = TargetLocation + FVector(
-            Radius * FMath::Cos(Angle),
-            Radius * FMath::Sin(Angle),
-            HeightOffset  // Apply height offset
-        );
-        
-        // Calculate rotation to look at target
-        FVector Direction = TargetLocation - Position;
-        FRotator Rotation = Direction.Rotation();
-        
-        // Add to arrays
-        Positions.Add(Position);
-        Rotations.Add(Rotation);
+        for (int32 PoseIndex = 0; PoseIndex < PosesPerLayer; ++PoseIndex)
+        {
+            // Calculate angle in radians (evenly distributed around the circle)
+            float Angle = 2.0f * PI * static_cast<float>(PoseIndex) / static_cast<float>(PosesPerLayer);
+            
+            // Calculate position on circle
+            FVector Position = TargetLocation + FVector(
+                Radius * FMath::Cos(Angle),
+                Radius * FMath::Sin(Angle),
+                LayerHeightOffset
+            );
+            
+            // Calculate rotation to look at target
+            FVector Direction = TargetLocation - Position;
+            FRotator Rotation = Direction.Rotation();
+            
+            // Add to arrays
+            Positions.Add(Position);
+            Rotations.Add(Rotation);
+        }
     }
     
     // Set the path on the FlashPawn
     SelectedFlashPawn->SetPathPanel(Positions, Rotations);
     
+    // Update NumPoses to match actual number of generated poses
+    NumPoses = Positions.Num();
+    NumPosesValue = NumPoses;
+    
     // Reset any ongoing auto-capture
     bAutoCaptureInProgress = false;
     GEditor->GetTimerManager()->ClearTimer(AutoCaptureTimerHandle);
     
-    UE_LOG(LogTemp, Warning, TEXT("Generated %d poses around target"), NumPoses);
+    UE_LOG(LogTemp, Display, TEXT("Generated %d poses around target (%d layers with %d poses per layer)"), 
+           Positions.Num(), VerticalLayers, PosesPerLayer);
 }
 
 // Capture image from current pose
@@ -1383,6 +1431,230 @@ FString SVCCSimPanel::GetTimestampedFilename()
     return FString::Printf(TEXT("%04d-%02d-%02d_%02d-%02d-%02d"),
         Now.GetYear(), Now.GetMonth(), Now.GetDay(),
         Now.GetHour(), Now.GetMinute(), Now.GetSecond());
+}
+
+// Load predefined pose from file
+void SVCCSimPanel::LoadPredefinedPose()
+{
+    if (!SelectedFlashPawn.IsValid())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No FlashPawn selected"));
+        return;
+    }
+    
+    // Open file dialog to select pose file
+    IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
+    if (DesktopPlatform)
+    {
+        TArray<FString> OpenFilenames;
+        FString ExtensionStr = TEXT("Pose Files (*.txt)|*.txt");
+        
+        bool bOpened = DesktopPlatform->OpenFileDialog(
+            FSlateApplication::Get().FindBestParentWindowHandleForDialogs(nullptr),
+            TEXT("Load Pose File"),
+            FPaths::ProjectSavedDir(),
+            TEXT(""),
+            *ExtensionStr,
+            EFileDialogFlags::None,
+            OpenFilenames
+        );
+        
+        if (bOpened && OpenFilenames.Num() > 0)
+        {
+            FString SelectedFile = OpenFilenames[0];
+            UE_LOG(LogTemp, Display, TEXT("Loading pose file: %s"), *SelectedFile);
+            
+            // Read file content
+            TArray<FString> FileLines;
+            if (FFileHelper::LoadFileToStringArray(FileLines, *SelectedFile))
+            {
+                TArray<FVector> Positions;
+                TArray<FRotator> Rotations;
+                
+                for (const FString& Line : FileLines)
+                {
+                    // Parse line
+                    // Expected format: X Y Z Pitch Yaw Roll
+                    TArray<FString> Values;
+                    Line.ParseIntoArray(Values, TEXT(" "), true);
+                    
+                    if (Values.Num() >= 6)
+                    {
+                        float X = FCString::Atof(*Values[0]);
+                        float Y = FCString::Atof(*Values[1]);
+                        float Z = FCString::Atof(*Values[2]);
+                        float Pitch = FCString::Atof(*Values[3]);
+                        float Yaw = FCString::Atof(*Values[4]);
+                        float Roll = FCString::Atof(*Values[5]);
+                        
+                        Positions.Add(FVector(X, Y, Z));
+                        Rotations.Add(FRotator(Pitch, Yaw, Roll));
+                    }
+                }
+                
+                if (Positions.Num() > 0 && Positions.Num() == Rotations.Num())
+                {
+                    // Set the path on the FlashPawn
+                    SelectedFlashPawn->SetPathPanel(Positions, Rotations);
+                    
+                    // Update NumPoses
+                    NumPoses = Positions.Num();
+                    NumPosesValue = NumPoses;
+                    
+                    UE_LOG(LogTemp, Display, TEXT("Loaded %d poses from file"), Positions.Num());
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Warning, TEXT("Failed to parse pose file: Invalid format or empty file"));
+                }
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Failed to load file"));
+            }
+        }
+    }
+}
+
+// Save generated pose to file
+void SVCCSimPanel::SaveGeneratedPose()
+{
+    if (!SelectedFlashPawn.IsValid())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No FlashPawn selected"));
+        return;
+    }
+    
+    // Check if there are poses to save
+    int32 PoseCount = SelectedFlashPawn->GetPoseCount();
+    if (PoseCount <= 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No poses to save"));
+        return;
+    }
+    
+    // Open file dialog to select save location
+    IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
+    if (DesktopPlatform)
+    {
+        TArray<FString> SaveFilenames;
+        FString ExtensionStr = TEXT("Pose Files (*.txt)|*.txt");
+        
+        bool bSaved = DesktopPlatform->SaveFileDialog(
+            FSlateApplication::Get().FindBestParentWindowHandleForDialogs(nullptr),
+            TEXT("Save Pose File"),
+            FPaths::ProjectSavedDir(),
+            TEXT("poses.txt"),
+            *ExtensionStr,
+            EFileDialogFlags::None,
+            SaveFilenames
+        );
+        
+        if (bSaved && SaveFilenames.Num() > 0)
+        {
+            FString SelectedFile = SaveFilenames[0];
+            
+            // Ensure the file has .txt extension
+            if (!SelectedFile.EndsWith(TEXT(".txt")))
+            {
+                SelectedFile += TEXT(".txt");
+            }
+            
+            UE_LOG(LogTemp, Display, TEXT("Saving pose file: %s"), *SelectedFile);
+            
+            // Get positions and rotations from FlashPawn
+            TArray<FVector> Positions;
+            TArray<FRotator> Rotations;
+            SelectedFlashPawn->GetCurrentPath(Positions, Rotations);
+            
+            // Build file content
+            FString FileContent;
+            for (int32 i = 0; i < Positions.Num(); ++i)
+            {
+                const FVector& Pos = Positions[i];
+                const FRotator& Rot = Rotations[i];
+                
+                // Format: X Y Z Pitch Yaw Roll
+                FileContent += FString::Printf(
+                    TEXT("%.6f %.6f %.6f %.6f %.6f %.6f\n"),
+                    Pos.X, Pos.Y, Pos.Z,
+                    Rot.Pitch, Rot.Yaw, Rot.Roll
+                );
+            }
+            
+            // Save to file
+            if (FFileHelper::SaveStringToFile(FileContent, *SelectedFile))
+            {
+                UE_LOG(LogTemp, Display, TEXT("Successfully saved %d poses to file"), Positions.Num());
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Failed to save file"));
+            }
+        }
+    }
+}
+
+// Button callbacks for pose file functions
+FReply SVCCSimPanel::OnLoadPoseClicked()
+{
+    LoadPredefinedPose();
+    return FReply::Handled();
+}
+
+FReply SVCCSimPanel::OnSavePoseClicked()
+{
+    SaveGeneratedPose();
+    return FReply::Handled();
+}
+
+// Create a standardized section header with proper styling
+TSharedRef<SWidget> SVCCSimPanel::CreateSectionHeader(const FString& Title)
+{
+    return SNew(SBorder)
+        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryTop"))
+        .Padding(FMargin(10, 7))
+        [
+            SNew(STextBlock)
+            .Text(FText::FromString(Title))
+            .Font(FAppStyle::GetFontStyle("PropertyWindow.BoldFont"))
+            .ColorAndOpacity(FColor(233, 233, 233)) // Light text for dark background
+            .TransformPolicy(ETextTransformPolicy::ToUpper)
+        ];
+}
+
+// Create a standardized content container with proper styling
+TSharedRef<SWidget> SVCCSimPanel::CreateSectionContent(TSharedRef<SWidget> Content)
+{
+    return SNew(SBorder)
+        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+        .BorderBackgroundColor(FColor(5,5, 5, 255))
+        .Padding(FMargin(15, 6))
+        [
+            Content
+        ];
+}
+
+// Create a standardized property row with label and content
+TSharedRef<SWidget> SVCCSimPanel::CreatePropertyRow(const FString& Label, TSharedRef<SWidget> Content)
+{
+    return SNew(SHorizontalBox)
+    +SHorizontalBox::Slot()
+    .AutoWidth()
+    .VAlign(VAlign_Center)
+    .Padding(FMargin(0, 0, 8, 0))
+    [
+        SNew(STextBlock)
+        .Text(FText::FromString(Label))
+        .MinDesiredWidth(80)
+        .Font(FAppStyle::GetFontStyle("PropertyWindow.NormalFont"))
+        .ColorAndOpacity(FColor(233, 233, 233)) 
+    ]
+    +SHorizontalBox::Slot()
+    .FillWidth(1.0f)
+    [
+        Content
+    ];
 }
 
 namespace FVCCSimPanelFactory
