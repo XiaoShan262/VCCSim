@@ -193,8 +193,8 @@ service RGBCameraService {
 
 service SegmentationCameraService {
   rpc GetSegmentationCameraOdom (RobotName) returns (Odometry);
-  rpc GetSegmentationCameraImageData (RobotName) returns (SegmentationCameraImageData);
-  rpc GetSegmentationCameraImageSize (RobotName) returns (ImageSize);
+  rpc GetSegmentationCameraImageData (IndexedCamera) returns (SegmentationCameraImageData);
+  rpc GetSegmentationCameraImageSize (IndexedCamera) returns (ImageSize);
 }
 
 service DroneService {

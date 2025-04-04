@@ -23,8 +23,9 @@
 class FAsyncImageSaveTask : public FNonAbandonableTask
 {
 public:
-	FAsyncImageSaveTask(const TArray<FColor>& InPixels, FIntPoint InSize, 
-		const FString& InFilePath)
+	FAsyncImageSaveTask(
+		const TArray<FColor>& InPixels,
+		FIntPoint InSize, const FString& InFilePath)
 		: Pixels(InPixels)
 		, Size(InSize)
 		, FilePath(InFilePath)

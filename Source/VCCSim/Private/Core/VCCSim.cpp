@@ -16,21 +16,57 @@
 */
 
 #include "Core/VCCSim.h"
+#include "Core/VCCSimPanel.h"
+#include "LevelEditor.h"
 
 #define LOCTEXT_NAMESPACE "FVCCSimModule"
 
 void FVCCSimModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory;
-	// the exact timing is specified in the .uplugin file per-module
+	// This code will execute after your module is loaded into memory
+	FLevelEditorModule& LevelEditorModule =
+	   FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
+       
+	// Register the tab spawner
+	TSharedPtr<FTabManager> TabManager = LevelEditorModule.GetLevelEditorTabManager();
+	if (TabManager.IsValid())
+	{
+		FVCCSimPanelFactory::RegisterTabSpawner(*TabManager);
+	}
+    
+	// Register for tab manager changes
+	LevelEditorTabManagerChangedHandle =
+		LevelEditorModule.OnTabManagerChanged().AddLambda([this, &LevelEditorModule]()
+	{
+	   // Get the tab manager directly when the lambda is called
+	   TSharedPtr<FTabManager> TabManager = LevelEditorModule.GetLevelEditorTabManager();
+	   if (TabManager.IsValid())
+	   {
+		  FVCCSimPanelFactory::RegisterTabSpawner(*TabManager);
+	   }
+	});
+    
 	UE_LOG(LogTemp, Warning, TEXT("VCCSim module has started!"));
 }
 
 void FVCCSimModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.
-	// For modules that support dynamic reloading,
-	// we call this function before unloading the module.
+	if (FModuleManager::Get().IsModuleLoaded("LevelEditor"))
+	{
+		FLevelEditorModule& LevelEditorModule =
+			FModuleManager::GetModuleChecked<FLevelEditorModule>("LevelEditor");
+        
+		// Unregister delegates
+		LevelEditorModule.OnTabManagerChanged().Remove(LevelEditorTabManagerChangedHandle);
+        
+		// Unregister the tab spawner
+		TSharedPtr<FTabManager> TabManager = LevelEditorModule.GetLevelEditorTabManager();
+		if (TabManager.IsValid())
+		{
+			TabManager->UnregisterTabSpawner(FVCCSimPanelFactory::TabId);
+		}
+	}
+    
 	UE_LOG(LogTemp, Warning, TEXT("VCCSim module has shut down!"));
 }
 

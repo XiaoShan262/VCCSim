@@ -25,8 +25,6 @@ USegmentationCameraComponent::USegmentationCameraComponent()
     : FOV(90.0f)
     , Width(512)
     , Height(512)
-    , bOrthographic(false)
-    , OrthoWidth(512.0f)
     , TimeSinceLastCapture(0.0f)
 {
     PrimaryComponentTick.bCanEverTick = true;
@@ -97,7 +95,6 @@ void USegmentationCameraComponent::RConfigure(
     FOV = Config.FOV;
     Width = Config.Width;
     Height = Config.Height;
-    SegmentationMaterial = Config.SegmentationMaterial;
     
     float HorizontalFOVRad = FMath::DegreesToRadians(FOV);
     float fx = (Width / 2.0f) / FMath::Tan(HorizontalFOVRad / 2.0f);
@@ -143,37 +140,28 @@ void USegmentationCameraComponent::SetCaptureComponent() const
     if (CaptureComponent)
     {
         // Basic camera settings
-        CaptureComponent->ProjectionType = bOrthographic ?
-            ECameraProjectionMode::Orthographic : ECameraProjectionMode::Perspective;
+        CaptureComponent->ProjectionType = ECameraProjectionMode::Perspective;
         CaptureComponent->FOVAngle = FOV;
-        CaptureComponent->OrthoWidth = OrthoWidth;
 
         // For segmentation, we want to capture the base color/diffuse
-        CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_SceneColorHDR;
+        CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
         CaptureComponent->bCaptureEveryFrame = false;
-        CaptureComponent->bCaptureOnMovement = false;
+        CaptureComponent->bCaptureOnMovement = true;
         CaptureComponent->bAlwaysPersistRenderingState = true;
         
         // Apply the segmentation post-process material if available
         if (SegmentationMaterial)
         {
-            // CaptureComponent->PostProcessSettings.bOverride_ColorGrading = true;
             CaptureComponent->PostProcessSettings.WeightedBlendables.Array.Empty();
             FWeightedBlendable WeightedBlendable;
             WeightedBlendable.Object = SegmentationMaterial;
-            WeightedBlendable.Weight = 1.0f;
+            WeightedBlendable.Weight = 1.f;
             CaptureComponent->PostProcessSettings.WeightedBlendables.Array.Add(WeightedBlendable);
         }
-        
-        // Set up the show flags for segmentation
-        FEngineShowFlags& ShowFlags = CaptureComponent->ShowFlags;
-        ShowFlags.SetPostProcessing(true);
-        ShowFlags.SetTonemapper(false);  // Disable tonemapper for consistent colors
-        ShowFlags.SetAntiAliasing(false);  // Disable AA for crisp edges
-        ShowFlags.SetBloom(false);
-        ShowFlags.SetLighting(false);
-        ShowFlags.SetFog(false);
-        ShowFlags.SetMaterials(true);
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Segmentation material not set!"));
+        }
     }
     else 
     {
@@ -184,9 +172,11 @@ void USegmentationCameraComponent::SetCaptureComponent() const
 void USegmentationCameraComponent::InitializeRenderTargets()
 {
     SegmentationRenderTarget = NewObject<UTextureRenderTarget2D>(this);
+    SegmentationRenderTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
     SegmentationRenderTarget->InitCustomFormat(Width, Height,
-        PF_FloatRGBA, true);  
-    
+        PF_R8G8B8A8, true);
+    SegmentationRenderTarget->TargetGamma = GEngine->GetDisplayGamma();
+    SegmentationRenderTarget->bGPUSharedFlag = true;
     SegmentationRenderTarget->bAutoGenerateMips = false;
     
     SegmentationRenderTarget->UpdateResource();

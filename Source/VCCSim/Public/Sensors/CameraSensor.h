@@ -62,14 +62,14 @@ public:
     void InitializeRenderTargets();
     
     void ProcessRGBTextureAsyncRaw(TFunction<void()> OnComplete);
-    void ProcessRGBTextureAsync(TFunction<void(const TArray<FLinearColor>&)> OnComplete);
+    void ProcessRGBTextureAsync(TFunction<void(const TArray<FColor>&)> OnComplete);
 
     UFUNCTION(BlueprintCallable, Category = "RGBCamera")
     void CaptureRGBScene();
 
     FMatrix44f GetCameraIntrinsics() const { return CameraIntrinsics; }
     // For GRPC call
-    void AsyncGetRGBImageData(TFunction<void(const TArray<FLinearColor>&)> Callback);
+    void AsyncGetRGBImageData(TFunction<void(const TArray<FColor>&)> Callback);
     std::pair<int32, int32> GetImageSize() const { return {Width, Height}; }
         
 protected:
@@ -111,7 +111,7 @@ private:
 
     struct FReadSurfaceContext
     {
-        TArray<FLinearColor>* OutData;
+        TArray<FColor>* OutData;
         FTextureRenderTargetResource* RenderTarget;
         FIntRect Rect;
         FReadSurfaceDataFlags Flags;
@@ -121,8 +121,7 @@ private:
     
     UPROPERTY()
     USceneCaptureComponent2D* CaptureComponent = nullptr;
-    TArray<FLinearColor> RGBData;
-    FCriticalSection DataLock;
+    TArray<FColor> RGBData;
 
     UPROPERTY()
     AActor* ParentActor = nullptr;

@@ -310,42 +310,35 @@ private:
     
     // Convert LinearColor array to raw BGRA
     TArray<uint8> ConvertToBGRA(
-        const TArray<FLinearColor>& ImageData, int32 Width, int32 Height)
+        const TArray<FColor>& ImageData, int32 Width, int32 Height)
     {
         TArray<uint8> RawBGRA;
         RawBGRA.SetNum(ImageData.Num() * 4);
         
         for (int32 i = 0; i < ImageData.Num(); i++) 
-        {
-            // Convert from LinearColor (which can have values outside 0-1) 
-            // to standard 8-bit per channel color
-            FColor SDRColor = ImageData[i].ToFColor(true); // Apply sRGB conversion
-            
+        {           
             // Store in BGRA order
-            RawBGRA[4*i] = SDRColor.B;
-            RawBGRA[4*i + 1] = SDRColor.G;
-            RawBGRA[4*i + 2] = SDRColor.R;
-            RawBGRA[4*i + 3] = SDRColor.A;
+            RawBGRA[4*i] = ImageData[i].B;
+            RawBGRA[4*i + 1] = ImageData[i].G;
+            RawBGRA[4*i + 2] = ImageData[i].R;
+            RawBGRA[4*i + 3] = ImageData[i].A;
         }
         
         return RawBGRA;
     }
     
     // Convert to RGB raw format (uncompressed)
-    TArray<uint8> ConvertToRGB(const TArray<FLinearColor>& ImageData)
+    TArray<uint8> ConvertToRGB(const TArray<FColor>& ImageData)
     {
         TArray<uint8> RawRGB;
         RawRGB.SetNum(ImageData.Num() * 3);
         
         for (int32 i = 0; i < ImageData.Num(); i++) 
         {
-            // Convert from LinearColor to standard 8-bit per channel color
-            FColor SDRColor = ImageData[i].ToFColor(true);
-            
             // Store in RGB order
-            RawRGB[3*i] = SDRColor.R;
-            RawRGB[3*i + 1] = SDRColor.G;
-            RawRGB[3*i + 2] = SDRColor.B;
+            RawRGB[3 * i] = ImageData[i].R;
+            RawRGB[3 * i + 1] = ImageData[i].G;
+            RawRGB[3 * i + 2] = ImageData[i].B;
         }
         
         return RawRGB;
@@ -353,7 +346,7 @@ private:
     
     // Convert to compressed format (PNG or JPEG)
     TArray<uint8> ConvertToCompressedFormat(
-        const TArray<FLinearColor>& ImageData, 
+        const TArray<FColor>& ImageData, 
         int32 Width, 
         int32 Height,
         EImageFormat Format)

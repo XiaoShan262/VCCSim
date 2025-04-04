@@ -523,7 +523,7 @@ void RGBIndexedCameraImageDataCall::ProcessRequest()
     
     // Use the callback version to get image data
     RGBCamera->AsyncGetRGBImageData(
-        [this, RGBCamera, requestedFormat](const TArray<FLinearColor>& ImageData)
+        [this, RGBCamera, requestedFormat](const TArray<FColor>& ImageData)
     {
         // Process the image in a background thread
         AsyncTask(ENamedThreads::AnyBackgroundHiPriTask,
