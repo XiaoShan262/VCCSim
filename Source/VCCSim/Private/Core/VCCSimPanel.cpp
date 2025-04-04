@@ -16,6 +16,7 @@
 */
 
 #include "Core/VCCSimPanel.h"
+#include "Components/SplineMeshComponent.h"
 #include "PropertyEditorModule.h"
 #include "Engine/Selection.h"
 #include "Widgets/Input/SButton.h"
@@ -28,12 +29,15 @@
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "DataType/DataMesh.h"
+#include "Pawns/FlashPawn.h"
+#include "Pawns/SimPath.h"
 #include "Sensors/CameraSensor.h"
 #include "Sensors/DepthCamera.h"
 #include "Sensors/SegmentCamera.h"
 #include "Simulation/PathPlanner.h"
 #include "Simulation/SceneAnalysisManager.h"
 #include "Utils/ImageProcesser.h"
+#include "Utils/TrajectoryViewer.h"
 #include "DesktopPlatformModule.h"
 #include "IDesktopPlatform.h"
 #include "Misc/FileHelper.h"
@@ -52,6 +56,15 @@ SVCCSimPanel::~SVCCSimPanel()
     {
         GEditor->GetTimerManager()->ClearTimer(AutoCaptureTimerHandle);
         bAutoCaptureInProgress = false;
+    }
+
+    if (PathVisualizationActor.IsValid() && GEditor)
+    {
+        if (UWorld* World = GEditor->GetEditorWorldContext().World())
+        {
+            World->DestroyActor(PathVisualizationActor.Get());
+        }
+        PathVisualizationActor.Reset();
     }
 }
 
@@ -642,7 +655,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreatePoseConfigPanel()
             // Number of poses and Vertical Gap row
             +SVerticalBox::Slot()
             .AutoHeight()
-            .Padding(FMargin(0, 0, 0, 8))
+            .Padding(FMargin(0, 0, 0, 4))
             [
                 SNew(SHorizontalBox)
                 // Pose Count
@@ -655,7 +668,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreatePoseConfigPanel()
                         SNew(SBorder)
                         .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
                         .BorderBackgroundColor(FColor(5,5, 5, 255))
-                        .Padding(4)
+                        .Padding(4, 0)
                         [
                             SAssignNew(NumPosesSpinBox, SNumericEntryBox<int32>)
                             .Value_Lambda([this]() { return NumPosesValue; })
@@ -680,7 +693,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreatePoseConfigPanel()
                         SNew(SBorder)
                         .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
                         .BorderBackgroundColor(FColor(5,5, 5, 255))
-                        .Padding(4)
+                        .Padding(4, 0)
                         [
                             SAssignNew(VerticalGapSpinBox, SNumericEntryBox<float>)
                             .Value_Lambda([this]() { return VerticalGapValue; })
@@ -715,7 +728,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreatePoseConfigPanel()
             // Radius and Height Offset row
             +SVerticalBox::Slot()
             .AutoHeight()
-            .Padding(FMargin(0, 8, 0, 8))
+            .Padding(FMargin(0, 4, 0, 4))
             [
                 SNew(SHorizontalBox)
                 // Radius
@@ -728,7 +741,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreatePoseConfigPanel()
                         SNew(SBorder)
                         .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
                         .BorderBackgroundColor(FColor(5,5, 5, 255))
-                        .Padding(4)
+                        .Padding(4, 0)
                         [
                             SAssignNew(RadiusSpinBox, SNumericEntryBox<float>)
                             .Value_Lambda([this]() { return RadiusValue; })
@@ -753,7 +766,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreatePoseConfigPanel()
                         SNew(SBorder)
                         .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
                         .BorderBackgroundColor(FColor(5,5, 5, 255))
-                        .Padding(4)
+                        .Padding(4, 0)
                         [
                             SAssignNew(HeightOffsetSpinBox, SNumericEntryBox<float>)
                             .Value_Lambda([this]() { return HeightOffsetValue; })
@@ -789,32 +802,32 @@ TSharedRef<SWidget> SVCCSimPanel::CreatePoseConfigPanel()
             // Load/Save Pose buttons
             +SVerticalBox::Slot()
             .AutoHeight()
-            .Padding(FMargin(0, 8, 0, 8))
+            .Padding(FMargin(0, 4, 0, 4))
             [
                 SNew(SHorizontalBox)
                 +SHorizontalBox::Slot()
-                .FillWidth(1.0f)
+                .MaxWidth(180)
                 .Padding(FMargin(0, 0, 4, 0))
                 .HAlign(HAlign_Fill)
                 [
                     SNew(SButton)
                     .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
-                    .ContentPadding(FMargin(6, 2))
-                    .HAlign(HAlign_Center)
+                    .ContentPadding(FMargin(4, 2))
                     .Text(FText::FromString("Load Predefined Pose"))
+                    .HAlign(HAlign_Center)
                     .OnClicked(this, &SVCCSimPanel::OnLoadPoseClicked)
                     .IsEnabled_Lambda([this]() {
                         return SelectedFlashPawn.IsValid();
                     })
                 ]
                 +SHorizontalBox::Slot()
-                .FillWidth(1.0f)
-                .Padding(FMargin(4, 0, 0, 0))
+                .MaxWidth(180)
+                .Padding(FMargin(4, 0, 4, 0))
                 .HAlign(HAlign_Fill)
                 [
                     SNew(SButton)
                     .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
-                    .ContentPadding(FMargin(6, 2))
+                    .ContentPadding(FMargin(4, 2))
                     .HAlign(HAlign_Center)
                     .Text(FText::FromString("Save Generated Pose"))
                     .OnClicked(this, &SVCCSimPanel::OnSavePoseClicked)
@@ -843,61 +856,41 @@ TSharedRef<SWidget> SVCCSimPanel::CreatePoseConfigPanel()
             // Action buttons
             +SVerticalBox::Slot()
             .AutoHeight()
-            .Padding(FMargin(0, 8, 0, 2))
+            .Padding(FMargin(0, 4, 0, 2))
             [
                 SNew(SHorizontalBox)
                 +SHorizontalBox::Slot()
-                .FillWidth(1.0f)
-                .Padding(FMargin(0, 0, 2, 0))
-                .HAlign(HAlign_Center)
-                [
-                    SNew(SButton)
-                    .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
-                    .ContentPadding(FMargin(5, 2))
-                    .Text(FText::FromString("Move Back"))
-                    .OnClicked_Lambda([this]() {
-                        if (SelectedFlashPawn.IsValid())
-                        {
-                            SelectedFlashPawn->MoveBackward();
-                        }
-                        return FReply::Handled();
-                    })
-                    .IsEnabled_Lambda([this]() {
-                        return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
-                    })
-                ]
-                +SHorizontalBox::Slot()
-                .FillWidth(1.0f)
-                .Padding(FMargin(2, 0))
-                .HAlign(HAlign_Center)
+                .MaxWidth(120)
+                .Padding(FMargin(0, 0, 4, 0))
+                .HAlign(HAlign_Fill)
                 [
                     SNew(SButton)
                     .ButtonStyle(FAppStyle::Get(), "FlatButton.Success")
                     .ContentPadding(FMargin(5, 2))
                     .Text(FText::FromString("Generate Poses"))
+                    .HAlign(HAlign_Center)
                     .OnClicked(this, &SVCCSimPanel::OnGeneratePosesClicked)
                     .IsEnabled_Lambda([this]() {
                         return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
                     })
                 ]
                 +SHorizontalBox::Slot()
-                .FillWidth(1.0f)
-                .Padding(FMargin(2, 0, 0, 0))
-                .HAlign(HAlign_Center)
+                .MaxWidth(120)
+                .Padding(FMargin(4, 0, 4, 0))
+                .HAlign(HAlign_Fill)
                 [
-                    SNew(SButton)
-                    .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+                    SAssignNew(VisualizePathButton, SButton)
+                    .ButtonStyle(bPathVisualized ? 
+                       &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Danger") : 
+                       &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Primary"))
                     .ContentPadding(FMargin(5, 2))
-                    .Text(FText::FromString("Move Next"))
-                    .OnClicked_Lambda([this]() {
-                        if (SelectedFlashPawn.IsValid())
-                        {
-                            SelectedFlashPawn->MoveForward();
-                        }
-                        return FReply::Handled();
+                    .HAlign(HAlign_Center)
+                    .Text_Lambda([this]() {
+                        return FText::FromString(bPathVisualized ? "Hide Path" : "Show Path");
                     })
+                    .OnClicked(this, &SVCCSimPanel::OnTogglePathVisualizationClicked)
                     .IsEnabled_Lambda([this]() {
-                        return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
+                        return SelectedFlashPawn.IsValid() && !bPathNeedsUpdate;
                     })
                 ]
             ]
@@ -913,6 +906,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCapturePanel()
     [
         CreateSectionHeader("Image Capture")
     ]
+        
     +SVerticalBox::Slot()
     .AutoHeight()
     [
@@ -920,19 +914,84 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCapturePanel()
             SNew(SVerticalBox)
             +SVerticalBox::Slot()
             .AutoHeight()
+            .Padding(0, 0, 0, 4)
+            [
+                SNew(SHorizontalBox)
+                +SHorizontalBox::Slot()
+                .MaxWidth(100)
+                .Padding(FMargin(0, 0, 4, 0))
+                .HAlign(HAlign_Fill)
+                [
+                    SNew(SButton)
+                    .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+                    .ContentPadding(FMargin(5, 2))
+                    .Text(FText::FromString("Move Back"))
+                    .HAlign(HAlign_Center)
+                    .OnClicked_Lambda([this]() {
+                        if (SelectedFlashPawn.IsValid())
+                        {
+                            SelectedFlashPawn->MoveBackward();
+                        }
+                        return FReply::Handled();
+                    })
+                    .IsEnabled_Lambda([this]() {
+                        return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
+                    })
+                ]
+                +SHorizontalBox::Slot()
+                .MaxWidth(100)
+                .Padding(FMargin(4, 0, 4, 0))
+                .HAlign(HAlign_Fill)
+                [
+                    SNew(SButton)
+                    .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+                    .ContentPadding(FMargin(5, 2))
+                    .Text(FText::FromString("Move Next"))
+                    .HAlign(HAlign_Center)
+                    .OnClicked_Lambda([this]() {
+                        if (SelectedFlashPawn.IsValid())
+                        {
+                            SelectedFlashPawn->MoveForward();
+                        }
+                        return FReply::Handled();
+                    })
+                    .IsEnabled_Lambda([this]() {
+                        return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
+                    })
+                ]
+            ]
+            // Separator
+           +SVerticalBox::Slot()
+           .MaxHeight(1)
+           .Padding(FMargin(0, 0, 0, 0))
+           [
+               SNew(SBorder)
+               .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+               .BorderBackgroundColor(FColor(2, 2, 2))
+               .Padding(0)
+               .Content()
+               [
+                   SNew(SBox)
+                   .HeightOverride(1.0f)
+               ]
+           ]
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(0, 4, 0, 0)
             [
                 SNew(SHorizontalBox)
                 
                 // Single Capture button
                 +SHorizontalBox::Slot()
-                .FillWidth(1.0f)
+                .MaxWidth(180)
                 .Padding(FMargin(0, 0, 4, 0))
-                .HAlign(HAlign_Center)
+                .HAlign(HAlign_Fill)
                 [
                     SNew(SButton)
                     .ButtonStyle(FAppStyle::Get(), "FlatButton.Success")
-                    .ContentPadding(FMargin(6, 2))
+                    .ContentPadding(FMargin(5, 2))
                     .Text(FText::FromString("Capture Current View"))
+                    .HAlign(HAlign_Center)
                     .OnClicked(this, &SVCCSimPanel::OnCaptureImagesClicked)
                     .IsEnabled_Lambda([this]() {
                         return SelectedFlashPawn.IsValid() && 
@@ -944,14 +1003,15 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCapturePanel()
                 
                 // Auto Capture button
                 +SHorizontalBox::Slot()
-                .FillWidth(1.0f)
-                .Padding(FMargin(4, 0, 0, 0))
-                .HAlign(HAlign_Center)
+                .MaxWidth(180)
+                .Padding(FMargin(4, 0, 4, 0))
+                .HAlign(HAlign_Fill)
                 [
                     SNew(SButton)
                     .ButtonStyle(FAppStyle::Get(), "FlatButton.Primary")
-                    .ContentPadding(FMargin(6, 2))
+                    .ContentPadding(FMargin(5, 2))
                     .Text(FText::FromString("Auto-Capture All Poses"))
+                    .HAlign(HAlign_Center)
                     .OnClicked_Lambda([this]() {
                         StartAutoCapture();
                         return FReply::Handled();
@@ -1226,6 +1286,19 @@ void SVCCSimPanel::UpdateActiveCameras()
 FReply SVCCSimPanel::OnGeneratePosesClicked()
 {
     GeneratePosesAroundTarget();
+    bPathVisualized = false;
+    bPathNeedsUpdate = true;
+
+    if (PathVisualizationActor.IsValid() && GEditor)
+    {
+        if (UWorld* World = GEditor->GetEditorWorldContext().World())
+        {
+            World->DestroyActor(PathVisualizationActor.Get());
+        }
+        PathVisualizationActor.Reset();
+    }
+    
+    UpdatePathVisualization();
     return FReply::Handled();
 }
 
@@ -1604,7 +1677,21 @@ void SVCCSimPanel::LoadPredefinedPose()
                     NumPoses = Positions.Num();
                     NumPosesValue = NumPoses;
                     
-                    UE_LOG(LogTemp, Display, TEXT("Loaded %d poses from file"), Positions.Num());
+                    UE_LOG(LogTemp, Display, TEXT("Loaded %d poses from file"),
+                        Positions.Num());
+                    bPathVisualized = false;
+                    bPathNeedsUpdate = true;
+                    
+                    if (PathVisualizationActor.IsValid() && GEditor)
+                    {
+                        if (UWorld* World = GEditor->GetEditorWorldContext().World())
+                        {
+                            World->DestroyActor(PathVisualizationActor.Get());
+                        }
+                        PathVisualizationActor.Reset();
+                    }
+                    
+                    UpdatePathVisualization();
                 }
                 else
                 {
@@ -1761,6 +1848,132 @@ TSharedRef<SWidget> SVCCSimPanel::CreatePropertyRow(
     [
         Content
     ];
+}
+
+FReply SVCCSimPanel::OnTogglePathVisualizationClicked()
+{
+    if (!SelectedFlashPawn.IsValid())
+    {
+        return FReply::Handled();
+    }
+    
+    // Toggle the visualization state
+    bPathVisualized = !bPathVisualized;
+
+    if (bPathVisualized)
+    {
+        // Show the path visualization
+        ShowPathVisualization();
+    }
+    else
+    {
+        // Hide the path visualization
+        HidePathVisualization();
+    }
+
+    VisualizePathButton->SetButtonStyle(bPathVisualized ? 
+        &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Danger") : 
+        &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Primary"));
+    
+    return FReply::Handled();
+}
+
+void SVCCSimPanel::UpdatePathVisualization()
+{
+    TArray<FVector> Positions = SelectedFlashPawn->PendingPositions;
+    TArray<FRotator> Rotations = SelectedFlashPawn->PendingRotations;
+
+    if (Positions.Num() == 0 || Positions.Num() != Rotations.Num())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No valid path available for visualization"));
+        bPathVisualized = false;
+    }
+
+    UMaterialInterface* PathMaterial = LoadObject<UMaterialInterface>(nullptr, 
+       TEXT("/VCCSim/Materials/M_Rat_Path_ice.M_Rat_Path_ice"));
+    UMaterialInterface* CameraMaterial = LoadObject<UMaterialInterface>(nullptr, 
+        TEXT("/VCCSim/Materials/M_Rat_Path_Blue.M_Rat_Path_Blue"));
+        
+    if (!PathMaterial || !CameraMaterial)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to load path visualization materials"));
+        bPathVisualized = false;
+    }
+        
+    // Generate new visualization actor
+    PathVisualizationActor = UTrajectoryViewer::GenerateVisibleElements(
+        GEditor->GetEditorWorldContext().World(),
+        Positions,
+        Rotations,
+        PathMaterial,
+        CameraMaterial,
+        2.0f,     // Path width
+        30.0f,    // Cone size
+        45.0f     // Cone length
+    );
+        
+    if (!PathVisualizationActor.IsValid())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to create path visualization"));
+        bPathVisualized = false;
+    }
+
+    HidePathVisualization();
+    bPathNeedsUpdate = false;
+    VisualizePathButton->SetButtonStyle(bPathVisualized ? 
+    &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Danger") : 
+    &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Primary"));
+}
+
+void SVCCSimPanel::ShowPathVisualization()
+{
+    if (PathVisualizationActor.IsValid())
+    {
+        // Show the actor in game
+        PathVisualizationActor->SetActorHiddenInGame(false);
+        
+        // Show the actor in editor
+        PathVisualizationActor->SetIsTemporarilyHiddenInEditor(false);
+        
+        // Show all components
+        TArray<UActorComponent*> Components;
+        PathVisualizationActor->GetComponents(UStaticMeshComponent::StaticClass(), Components);
+        for (UActorComponent* Component : Components)
+        {
+            UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Component);
+            if (MeshComp)
+            {
+                MeshComp->SetVisibility(true);
+                MeshComp->SetHiddenInGame(false);
+            }
+        }
+    }
+}
+
+void SVCCSimPanel::HidePathVisualization()
+{
+    // First check if the weak pointer is valid
+    if (PathVisualizationActor.IsValid())
+    {
+        // Hide the actor in game
+        PathVisualizationActor->SetActorHiddenInGame(true);
+        
+        // Hide the actor in editor
+        PathVisualizationActor->SetIsTemporarilyHiddenInEditor(true);
+        
+        // Hide all components (for thoroughness)
+        TArray<UActorComponent*> Components;
+        PathVisualizationActor->GetComponents(UStaticMeshComponent::StaticClass(), Components);
+        for (UActorComponent* Component : Components)
+        {
+            UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(Component);
+            if (MeshComp)
+            {
+                MeshComp->SetVisibility(false);
+                MeshComp->SetHiddenInGame(true);
+            }
+        }
+    }
 }
 
 namespace FVCCSimPanelFactory

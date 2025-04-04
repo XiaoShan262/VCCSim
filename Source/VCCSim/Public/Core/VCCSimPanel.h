@@ -4,7 +4,10 @@
 #include "Widgets/Docking/SDockTab.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Editor/PropertyEditor/Public/IDetailsView.h"
-#include "Pawns/FlashPawn.h"
+
+class AFlashPawn;
+class AVCCSimPath;
+class USplineMeshComponent;
 
 class VCCSIM_API SVCCSimPanel final : public SCompoundWidget
 {
@@ -80,10 +83,10 @@ private:
     
     // UI creation helpers
     TSharedRef<SWidget> CreatePawnSelectPanel();
+    TSharedRef<SWidget> CreateCameraSelectPanel();
     TSharedRef<SWidget> CreateTargetSelectPanel();
     TSharedRef<SWidget> CreatePoseConfigPanel();
     TSharedRef<SWidget> CreateCapturePanel();
-    TSharedRef<SWidget> CreateCameraSelectPanel();
     
     // UI callbacks
     void OnSelectFlashPawnToggleChanged(ECheckBoxState NewState);
@@ -118,6 +121,15 @@ private:
     TSharedRef<SWidget> CreateSectionHeader(const FString& Title);
     TSharedRef<SWidget> CreateSectionContent(TSharedRef<SWidget> Content);
     TSharedRef<SWidget> CreatePropertyRow(const FString& Label, TSharedRef<SWidget> Content);
+
+    bool bPathVisualized = false;
+    bool bPathNeedsUpdate = true;
+    TWeakObjectPtr<AActor> PathVisualizationActor;
+    TSharedPtr<class SButton> VisualizePathButton;
+    FReply OnTogglePathVisualizationClicked();
+    void UpdatePathVisualization();
+    void ShowPathVisualization();
+    void HidePathVisualization();
 };
 
 namespace FVCCSimPanelFactory

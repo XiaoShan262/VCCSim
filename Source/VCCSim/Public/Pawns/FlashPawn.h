@@ -55,6 +55,10 @@ public:
 	void GetCurrentPath(TArray<FVector>& Positions, TArray<FRotator>& Rotations) const;
 	UFUNCTION(BlueprintCallable, Category = "Panel")
 	int32 GetPoseCount() const { return PendingPositions.Num(); }
+	UPROPERTY()
+	TArray<FVector> PendingPositions;
+	UPROPERTY()
+	TArray<FRotator> PendingRotations;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VCCSim|Target")
 	bool bMoveReady = true;
@@ -82,10 +86,6 @@ protected:
 private:
 	UPROPERTY()
 	class USceneComponent* FlashRoot;
-	UPROPERTY()
-	TArray<FVector> PendingPositions;
-	UPROPERTY()
-	TArray<FRotator> PendingRotations;
 	UPROPERTY()
 	int32 CurrentIndex = 0;
 };
