@@ -33,7 +33,6 @@
 #include "LevelSequenceActor.h"
 #include "Kismet/GameplayStatics.h"
 
-
 void AVCCHUD::BeginPlay()
 {
     Super::BeginPlay();
