@@ -55,6 +55,7 @@ public:
     void SetRecordState(bool RState) { RecordState = RState; }
     
     int32 GetCameraIndex() const { return CameraIndex; }
+    int32 SetCameraIndex(int32 index){ CameraIndex = index; }
     FString CameraName;
     
     void SetCaptureComponent() const;

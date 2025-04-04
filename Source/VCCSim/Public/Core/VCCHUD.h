@@ -69,6 +69,7 @@ protected:
 	void SetupWidgetsAndLS(const FVCCSimConfig& Config);
 	void SetupMainCharacter(const FVCCSimConfig& Config, TArray<AActor*> FoundPawns);
 	FRobotGrpcMaps SetupActors(const FVCCSimConfig& Config);
+	FRobotGrpcMaps TestSetupComponent(const FVCCSimConfig& Config);
 	APawn* CreatePawn(const FVCCSimConfig& Config, const FRobot& Robot);
 
 private:

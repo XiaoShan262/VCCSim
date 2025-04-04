@@ -42,8 +42,8 @@ void AVCCHUD::BeginPlay()
     
     SetupRecorder(Config);
     SetupWidgetsAndLS(Config);
-    auto RCMaps = SetupActors(Config);
-    
+    // auto RCMaps = SetupActors(Config);
+    auto RCMaps = TestSetupComponent(Config);
     if (Config.VCCSim.UseMeshManager)
     {
         MeshManager = NewObject<UFMeshManager>(Holder);
@@ -471,6 +471,198 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
     return RGrpcMaps;
 }
 
+FRobotGrpcMaps AVCCHUD::TestSetupComponent(const FVCCSimConfig& Config)
+{
+    TArray<AActor*> FoundPawns;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), APawn::StaticClass(), FoundPawns);
+
+    FRobotGrpcMaps RGrpcMaps;
+
+    for (const FRobot& Robot : Config.Robots)
+    {
+        APawn* RobotPawn = Cast<APawn>(FindPawnInTagAndName(Robot.UETag, FoundPawns));
+
+        if (!RobotPawn)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Robot %s not found! Creating a new one"),
+                *FString(UTF8_TO_TCHAR(Robot.UETag.c_str())));
+            RobotPawn = CreatePawn(Config, Robot);
+            if (!RobotPawn)
+            {
+                UE_LOG(LogTemp, Error, TEXT("Failed to create Robot %s"),
+                    *FString(UTF8_TO_TCHAR(Robot.UETag.c_str())));
+                continue;
+            }
+        }
+
+        if (Robot.Type == EPawnType::Drone)
+        {
+            RGrpcMaps.RMaps.DroneMap[Robot.UETag] = RobotPawn;
+        }
+        else if (Robot.Type == EPawnType::Car)
+        {
+            RGrpcMaps.RMaps.CarMap[Robot.UETag] = RobotPawn;
+        }
+        else if (Robot.Type == EPawnType::Flash)
+        {
+            RGrpcMaps.RMaps.FlashMap[Robot.UETag] = RobotPawn;
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("AVCCHUD::SetupActors:"
+                "Unknown pawn type!"));
+        }
+
+        if (Robot.RecordInterval > 0)
+        {
+            if (auto Func = RobotPawn->FindFunction(FName(TEXT("SetRecorder"))))
+            {
+                RobotPawn->ProcessEvent(Func, &Recorder);
+            }
+            if (auto Func = RobotPawn->FindFunction(FName(TEXT("SetRecordInterval"))))
+            {
+                auto RecordInterval = Robot.RecordInterval;
+                RobotPawn->ProcessEvent(Func, &RecordInterval);
+            }
+        }
+
+        bool bHasLidar = false;
+        bool bHasDepth = false;
+        bool bHasRGB = false;
+        int rgb_nums = 1;
+        int depth_nums = 1;
+        int lidar_num = 1;
+        for (const auto& Component : Robot.ComponentConfigs)
+        {
+            if (Component.first == ESensorType::Lidar)
+            {
+                TArray<ULidarComponent*> LidarComponents;
+                for (int i = 0; i < lidar_num; ++i)
+                {
+                    ULidarComponent* LidarComponent = NewObject<ULidarComponent>(RobotPawn);
+                    if (LidarComponent)
+                    {
+                        LidarComponent->SetupAttachment(RobotPawn->GetRootComponent());
+                        LidarComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 10.0f + i * 3));
+                        LidarComponent->SetRelativeRotation(FRotator(0.0f, 10.0f + i * 3, 0.0f));
+                        LidarComponent->SetRelativeScale3D(FVector(0.f, 0.f, 0.1f));
+                        LidarComponent->RegisterComponent();
+                    }
+                }
+                RobotPawn->GetComponents<ULidarComponent>(LidarComponents);
+
+                for (auto* LidarComponent : LidarComponents)
+                {
+                    LidarComponent->RConfigure(
+                        *static_cast<FLiDarConfig*>(Component.second.get()),
+                        Recorder);
+                    LidarComponent->FirstCall();
+                    LidarComponent->MeshHolder = Holder->FindComponentByClass<UInsMeshHolder>();
+                    RGrpcMaps.RCMaps.RLMap[Robot.UETag] = LidarComponent;
+                    if (LidarComponent->bRecorded)
+                    {
+                        bHasLidar = true;
+                    }
+                }
+                UE_LOG(LogTemp, Warning, TEXT("Lidar has been registered, number is %d"), lidar_num);
+            }
+            else if (Component.first == ESensorType::DepthCamera)
+            {
+                TArray<UDepthCameraComponent*> DepthCameras;
+                for (int i = 0; i < depth_nums; ++i)
+                {
+                    UDepthCameraComponent* DepthCameraComponent = NewObject<UDepthCameraComponent>(RobotPawn);
+                    if (DepthCameraComponent)
+                    {
+                        DepthCameraComponent->SetupAttachment(RobotPawn->GetRootComponent());
+                        DepthCameraComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 10.0f + i * 3));
+                        DepthCameraComponent->SetRelativeRotation(FRotator(0.0f, 10.0f + i * 3, 0.0f));
+                        DepthCameraComponent->SetRelativeScale3D(FVector(0.f, 0.f, 0.1f));
+                        DepthCameraComponent->RegisterComponent();
+                    }
+                }
+                RobotPawn->GetComponents<UDepthCameraComponent>(DepthCameras);
+
+                for (auto* DepthCam : DepthCameras)
+                {
+                    if (!DepthCam->IsConfigured())
+                    {
+                        DepthCam->RConfigure(
+                            *static_cast<FDepthCameraConfig*>(Component.second.get()),
+                            Recorder);
+                        // Use both robot tag and camera ID/index for unique identification
+                        // FString cameraKey = FString::Printf(TEXT("%s^%d"), 
+                        //     *FString(Robot.UETag.c_str()), DepthCam->GetCameraIndex());
+                        FString cameraKey = FString::Printf(TEXT("%s"),
+                            *FString(Robot.UETag.c_str()));
+                        RGrpcMaps.RCMaps.RDCMap[TCHAR_TO_UTF8(*cameraKey)] = DepthCam;
+                    }
+                    if (DepthCam->bRecorded)
+                    {
+                        bHasDepth = true;
+                    }
+                }
+                UE_LOG(LogTemp, Warning, TEXT("Depth_Camera has been registed, number is %d"), depth_nums);
+            }
+            else if (Component.first == ESensorType::RGBCamera)
+            {
+                TArray<URGBCameraComponent*> RGBCameras;
+
+                for (int i = 0; i < rgb_nums; ++i)
+                {
+                    URGBCameraComponent* RGBCameraComponent = NewObject<URGBCameraComponent>(RobotPawn);
+                    if (RGBCameraComponent)
+                    {
+                        RGBCameraComponent->SetupAttachment(RobotPawn->GetRootComponent());
+                        RGBCameraComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 10.0f+i*3));
+                        RGBCameraComponent->SetRelativeRotation(FRotator(0.0f, 10.0f+i*3, 0.0f));
+                        RGBCameraComponent->SetRelativeScale3D(FVector(0.f, 0.f, 0.1f));
+                        RGBCameraComponent->RegisterComponent();
+                    }
+                }
+
+                RobotPawn->GetComponents<URGBCameraComponent>(RGBCameras);
+                for (auto* RGBCam : RGBCameras)
+                {
+                    if (!RGBCam->IsConfigured())
+                    {
+                        RGBCam->RConfigure(
+                            *static_cast<FRGBCameraConfig*>(Component.second.get()), Recorder);
+                        // Use both robot tag and camera ID/index for unique identification
+                        FString cameraKey = FString::Printf(TEXT("%s^%d"),
+                            *FString(Robot.UETag.c_str()), RGBCam->GetCameraIndex());
+                        RGrpcMaps.RCMaps.RRGBCMap[TCHAR_TO_UTF8(*cameraKey)] = RGBCam;
+                    }
+                    if (RGBCam->bRecorded)
+                    {
+                        bHasRGB = true;
+                    }
+                }
+                UE_LOG(LogTemp, Warning, TEXT("RGB_Camera has been registed, number is %d"),rgb_nums);
+            }
+            else if (Component.first == ESensorType::SegmentationCamera)
+            {
+                USegmentationCameraComponent* SegmentationCamera =
+                    RobotPawn->FindComponentByClass<USegmentationCameraComponent>();
+                SegmentationCamera->RConfigure(
+                    *static_cast<FSegmentationCameraConfig*>(Component.second.get()),
+                    Recorder);
+                RGrpcMaps.RCMaps.RSegMap[Robot.UETag] = SegmentationCamera;
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT(
+                    "AVCCHUD::SetupActors: Unknown component, %d"), Component.first);
+            }
+        }
+
+        Recorder->RegisterPawn(RobotPawn, bHasLidar, bHasDepth, bHasRGB);
+    }
+
+    SetupMainCharacter(Config, FoundPawns);
+
+    return RGrpcMaps;
+}
 APawn* AVCCHUD::CreatePawn(const FVCCSimConfig& Config, const FRobot& Robot)
 {
     UWorld* World = GetWorld();
