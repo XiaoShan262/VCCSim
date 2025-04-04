@@ -52,7 +52,7 @@ private:
     TWeakObjectPtr<AActor> SelectedTargetObject;
     
     // Configuration
-    int32 NumPoses = 8;
+    int32 NumPoses = 50;
     float Radius = 500.0f;
     float HeightOffset = 0.0f;
     float VerticalGap = 50.0f;
@@ -96,7 +96,10 @@ private:
     FReply OnGeneratePosesClicked();
     FReply OnCaptureImagesClicked();
     void SaveRGB(int32 PoseIndex, bool& bAnyCaptured);
+    void SaveDepth(int32 PoseIndex, bool& bAnyCaptured);
+    void SaveSeg(int32 PoseIndex, bool& bAnyCaptured);
     void StartAutoCapture();
+    TSharedPtr<std::atomic<int32>> JobNum;
     
     // Helper functions
     void GeneratePosesAroundTarget();

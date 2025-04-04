@@ -27,9 +27,12 @@
 #include "Misc/DateTime.h"
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
+#include "DataType/DataMesh.h"
 #include "Sensors/CameraSensor.h"
 #include "Sensors/DepthCamera.h"
 #include "Sensors/SegmentCamera.h"
+#include "Simulation/PathPlanner.h"
+#include "Simulation/SceneAnalysisManager.h"
 #include "Utils/ImageProcesser.h"
 #include "DesktopPlatformModule.h"
 #include "IDesktopPlatform.h"
@@ -59,6 +62,7 @@ void SVCCSimPanel::Construct(const FArguments& InArgs)
     RadiusValue = Radius;
     HeightOffsetValue = HeightOffset;
     VerticalGapValue = VerticalGap;
+    JobNum = MakeShared<std::atomic<int32>>(0);
     
     // Register for selection change events
     USelection* Selection = GEditor->GetSelectedActors();
@@ -128,7 +132,8 @@ void SVCCSimPanel::Construct(const FArguments& InArgs)
                     [
                         SNew(SImage)
                         .Image_Lambda([this]() {
-                            return VCCLogoBrush.IsValid() ? VCCLogoBrush.Get() : FAppStyle::GetBrush("NoBrush");
+                            return VCCLogoBrush.IsValid() ? VCCLogoBrush.Get() :
+                            FAppStyle::GetBrush("NoBrush");
                         })
                     ]
                     
@@ -147,7 +152,8 @@ void SVCCSimPanel::Construct(const FArguments& InArgs)
                     [
                         SNew(SImage)
                         .Image_Lambda([this]() {
-                            return SZULogoBrush.IsValid() ? SZULogoBrush.Get() : FAppStyle::GetBrush("NoBrush");
+                            return SZULogoBrush.IsValid() ? SZULogoBrush.Get() :
+                            FAppStyle::GetBrush("NoBrush");
                         })
                     ]
                 )
@@ -727,7 +733,6 @@ TSharedRef<SWidget> SVCCSimPanel::CreatePoseConfigPanel()
                             SAssignNew(RadiusSpinBox, SNumericEntryBox<float>)
                             .Value_Lambda([this]() { return RadiusValue; })
                             .MinValue(100.0f)
-                            .MaxValue(3000.0f)
                             .Delta(10.0f)
                             .AllowSpin(true)
                             .OnValueChanged(SNumericEntryBox<float>::FOnValueChanged::CreateLambda([this](float NewValue) {
@@ -752,8 +757,8 @@ TSharedRef<SWidget> SVCCSimPanel::CreatePoseConfigPanel()
                         [
                             SAssignNew(HeightOffsetSpinBox, SNumericEntryBox<float>)
                             .Value_Lambda([this]() { return HeightOffsetValue; })
-                            .MinValue(-500.0f)
-                            .MaxValue(500.0f)
+                            .MinValue(0.0f)
+                            .MaxValue(3000.0f)
                             .Delta(10.0f)
                             .AllowSpin(true)
                             .OnValueChanged(SNumericEntryBox<float>::FOnValueChanged::CreateLambda([this](float NewValue) {
@@ -992,16 +997,58 @@ void SVCCSimPanel::OnSelectTargetToggleChanged(ECheckBoxState NewState)
 void SVCCSimPanel::OnRGBCameraCheckboxChanged(ECheckBoxState NewState)
 {
     bUseRGBCamera = (NewState == ECheckBoxState::Checked);
+    if (bUseRGBCamera)
+    {
+        TArray<URGBCameraComponent*> RGBCameras;
+        SelectedFlashPawn->GetComponents<URGBCameraComponent>(RGBCameras);
+        for (URGBCameraComponent* Camera : RGBCameras)
+        {
+            if (Camera)
+            {
+                Camera->SetActive(bUseRGBCamera);
+                Camera->InitializeRenderTargets();
+                Camera->SetCaptureComponent();
+            }
+        }
+    }
 }
 
 void SVCCSimPanel::OnDepthCameraCheckboxChanged(ECheckBoxState NewState)
 {
     bUseDepthCamera = (NewState == ECheckBoxState::Checked);
+    if (bUseDepthCamera)
+    {
+        TArray<UDepthCameraComponent*> DepthCameras;
+        SelectedFlashPawn->GetComponents<UDepthCameraComponent>(DepthCameras);
+        for (UDepthCameraComponent* Camera : DepthCameras)
+        {
+            if (Camera)
+            {
+                Camera->SetActive(bUseDepthCamera);
+                Camera->InitializeRenderTargets();
+                Camera->SetCaptureComponent();
+            }
+        }
+    }
 }
 
 void SVCCSimPanel::OnSegmentationCameraCheckboxChanged(ECheckBoxState NewState)
 {
     bUseSegmentationCamera = (NewState == ECheckBoxState::Checked);
+    if (bUseSegmentationCamera)
+    {
+        TArray<USegmentationCameraComponent*> SegmentationCameras;
+        SelectedFlashPawn->GetComponents<USegmentationCameraComponent>(SegmentationCameras);
+        for (USegmentationCameraComponent* Camera : SegmentationCameras)
+        {
+            if (Camera)
+            {
+                Camera->SetActive(bUseSegmentationCamera);
+                Camera->InitializeRenderTargets();
+                Camera->SetCaptureComponent();
+            }
+        }
+    }
 }
 
 // Selection changed callback
@@ -1042,7 +1089,8 @@ void SVCCSimPanel::OnSelectionChanged(UObject* Object)
             // Check what camera components are available
             CheckCameraComponents();
             
-            UE_LOG(LogTemp, Display, TEXT("Selected FlashPawn: %s"), *FlashPawn->GetActorLabel());
+            UE_LOG(LogTemp, Display, TEXT("Selected FlashPawn: %s"),
+                *FlashPawn->GetActorLabel());
         }
     }
     // If we're selecting a target
@@ -1094,7 +1142,8 @@ void SVCCSimPanel::CheckCameraComponents()
     SelectedFlashPawn->GetComponents<USegmentationCameraComponent>(SegmentationCameras);
     bHasSegmentationCamera = (SegmentationCameras.Num() > 0);
     
-    UE_LOG(LogTemp, Display, TEXT("FlashPawn camera components: RGB=%d, Depth=%d, Segmentation=%d"),
+    UE_LOG(LogTemp, Display, TEXT("FlashPawn camera components: "
+                                  "RGB=%d, Depth=%d, Segmentation=%d"),
         bHasRGBCamera ? 1 : 0, bHasDepthCamera ? 1 : 0, bHasSegmentationCamera ? 1 : 0);
     
     // Reset checkboxes if corresponding cameras aren't available
@@ -1148,6 +1197,8 @@ void SVCCSimPanel::UpdateActiveCameras()
         if (Camera)
         {
             Camera->SetActive(bUseDepthCamera);
+            Camera->InitializeRenderTargets();
+            Camera->SetCaptureComponent();
         }
     }
     
@@ -1159,10 +1210,13 @@ void SVCCSimPanel::UpdateActiveCameras()
         if (Camera)
         {
             Camera->SetActive(bUseSegmentationCamera);
+            Camera->InitializeRenderTargets();
+            Camera->SetCaptureComponent();
         }
     }
     
-    UE_LOG(LogTemp, Display, TEXT("Camera activation updated: RGB=%s, Depth=%s, Segmentation=%s"),
+    UE_LOG(LogTemp, Display, TEXT("Camera activation updated: "
+                                  "RGB=%s, Depth=%s, Segmentation=%s"),
         bUseRGBCamera ? TEXT("On") : TEXT("Off"),
         bUseDepthCamera ? TEXT("On") : TEXT("Off"),
         bUseSegmentationCamera ? TEXT("On") : TEXT("Off"));
@@ -1179,70 +1233,38 @@ void SVCCSimPanel::GeneratePosesAroundTarget()
 {
     if (!SelectedFlashPawn.IsValid() || !SelectedTargetObject.IsValid())
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Warning, 
             TEXT("Must select both a FlashPawn and a target object"));
         return;
     }
 
-    // Get the target object's location
-    FVector TargetLocation = SelectedTargetObject->GetActorLocation();
-    
-    // Get target bounds to determine height
-    FVector Origin;
-    FVector BoxExtent;
-    SelectedTargetObject->GetActorBounds(true, Origin, BoxExtent);
-    float TargetHeight = BoxExtent.Z * 2.0f; // Full height of the object
-    
-    // Create arrays to store the poses
     TArray<FVector> Positions;
     TArray<FRotator> Rotations;
-    
-    // Calculate number of vertical layers based on object height and vertical gap
-    int32 VerticalLayers = 1; // At least one layer
-    if (VerticalGap > 0.0f && TargetHeight > VerticalGap)
+
+    TArray<FMeshInfo> MeshInfos;
+
+    TArray<UStaticMeshComponent*> MeshComponents;
+    SelectedTargetObject->GetComponents<UStaticMeshComponent>(MeshComponents);
+    for (UStaticMeshComponent* MeshComponent : MeshComponents)
     {
-        VerticalLayers = FMath::Max(1, FMath::CeilToInt(TargetHeight / VerticalGap));
-    }
-    
-    // Calculate poses evenly distributed in horizontal plane
-    int32 PosesPerLayer = FMath::Max(1, NumPoses / VerticalLayers);
-    
-    // Generate poses around and above the target
-    for (int32 LayerIndex = 0; LayerIndex < VerticalLayers; ++LayerIndex)
-    {
-        // Calculate vertical offset for this layer
-        float LayerHeightOffset = HeightOffset;
-        if (VerticalLayers > 1)
+        if (MeshComponent)
         {
-            // Distribute vertical positions evenly from bottom to top of the object
-            float LayerFraction = static_cast<float>(LayerIndex) / static_cast<float>(VerticalLayers - 1);
-            LayerHeightOffset += (LayerFraction * TargetHeight) - (TargetHeight / 2.0f);
-        }
-        
-        for (int32 PoseIndex = 0; PoseIndex < PosesPerLayer; ++PoseIndex)
-        {
-            // Calculate angle in radians (evenly distributed around the circle)
-            float Angle = 2.0f * PI * static_cast<float>(PoseIndex) / static_cast<float>(PosesPerLayer);
-            
-            // Calculate position on circle
-            FVector Position = TargetLocation + FVector(
-                Radius * FMath::Cos(Angle),
-                Radius * FMath::Sin(Angle),
-                LayerHeightOffset
+            FMeshInfo MeshInfo;
+            USceneAnalysisManager::ExtractMeshData(
+                MeshComponent, 
+                MeshInfo
             );
-            
-            // Calculate rotation to look at target
-            FVector Direction = TargetLocation - Position;
-            FRotator Rotation = Direction.Rotation();
-            
-            // Add to arrays
-            Positions.Add(Position);
-            Rotations.Add(Rotation);
+            MeshInfos.Add(MeshInfo);
         }
     }
+
+    UPathPlanner::SemiSphericalPath(
+        MeshInfos, Radius, NumPoses,
+        VerticalGap, Positions, Rotations);
     
     // Set the path on the FlashPawn
     SelectedFlashPawn->SetPathPanel(Positions, Rotations);
+    SelectedFlashPawn->MoveTo(0);
     
     // Update NumPoses to match actual number of generated poses
     NumPoses = Positions.Num();
@@ -1251,9 +1273,6 @@ void SVCCSimPanel::GeneratePosesAroundTarget()
     // Reset any ongoing auto-capture
     bAutoCaptureInProgress = false;
     GEditor->GetTimerManager()->ClearTimer(AutoCaptureTimerHandle);
-    
-    UE_LOG(LogTemp, Display, TEXT("Generated %d poses around target (%d layers with %d poses per layer)"), 
-           Positions.Num(), VerticalLayers, PosesPerLayer);
 }
 
 // Capture image from current pose
@@ -1267,6 +1286,7 @@ void SVCCSimPanel::SaveRGB(int32 PoseIndex, bool& bAnyCaptured)
 {
     TArray<URGBCameraComponent*> RGBCameras;
     SelectedFlashPawn->GetComponents<URGBCameraComponent>(RGBCameras);
+    *JobNum += RGBCameras.Num();
             
     for (int32 i = 0; i < RGBCameras.Num(); ++i)
     {
@@ -1285,15 +1305,106 @@ void SVCCSimPanel::SaveRGB(int32 PoseIndex, bool& bAnyCaptured)
             );
                     
             // Capture the image
-            Camera->CaptureRGBScene();
             FIntPoint Size = {Camera->GetImageSize().first, Camera->GetImageSize().second};
-                    
+
             // Get image data and save asynchronously
             Camera->AsyncGetRGBImageData(
-                [Filename, Size](const TArray<FColor>& ImageData)
+                [Filename, Size, JobNum = this->JobNum](const TArray<FColor>& ImageData)
                 {
                     (new FAutoDeleteAsyncTask<FAsyncImageSaveTask>(ImageData, Size, Filename))
                     ->StartBackgroundTask();
+                    *JobNum -= 1;
+                });
+                    
+            bAnyCaptured = true;
+        }
+    }
+}
+
+void SVCCSimPanel::SaveDepth(int32 PoseIndex, bool& bAnyCaptured)
+{
+    TArray<UDepthCameraComponent*> DepthCameras;
+    SelectedFlashPawn->GetComponents<UDepthCameraComponent>(DepthCameras);
+    *JobNum += DepthCameras.Num();
+
+    for (int32 i = 0; i < DepthCameras.Num(); ++i)
+    {
+        UDepthCameraComponent* Camera = DepthCameras[i];
+        if (Camera && Camera->IsActive())
+        {
+            // Get camera index or use iterator index
+            int32 CameraIndex = Camera->GetCameraIndex();
+            if (CameraIndex < 0) CameraIndex = i;
+                    
+            // Filename for this camera
+            FString Filename = SaveDirectory / FString::Printf(
+                TEXT("Depth_Cam%02d_Pose%03d.png"), 
+                CameraIndex, 
+                PoseIndex
+            );
+                    
+            // Capture the image
+            FIntPoint Size = {Camera->GetImageSize().first, Camera->GetImageSize().second};
+                    
+            // Get image data and save asynchronously
+            Camera->AsyncGetDepthImageData(
+                [Filename, Size, JobNum = this->JobNum](const TArray<FFloat16Color>& ImageData)
+                {
+                    TArray<FColor> ConvertedImageData;
+                    ConvertedImageData.Reserve(ImageData.Num());
+                    for (const FFloat16Color& Color : ImageData)
+                    {
+                        uint8 DepthValue = FMath::Clamp(
+                            FMath::RoundToInt(Color.R / 100.f), 0, 255);
+                        ConvertedImageData.Add(FColor(DepthValue,
+                            DepthValue, DepthValue, 255));
+                    }
+                    (new FAutoDeleteAsyncTask<FAsyncImageSaveTask>(ConvertedImageData, Size, Filename))
+                    ->StartBackgroundTask();
+                    *JobNum -= 1;
+                });
+                    
+            bAnyCaptured = true;
+        }
+    }
+}
+
+void SVCCSimPanel::SaveSeg(int32 PoseIndex, bool& bAnyCaptured)
+{
+    TArray<USegmentationCameraComponent*> SegmentationCameras;
+    SelectedFlashPawn->GetComponents<USegmentationCameraComponent>(SegmentationCameras);
+    *JobNum += SegmentationCameras.Num();
+
+    for (int32 i = 0; i < SegmentationCameras.Num(); ++i)
+    {
+        USegmentationCameraComponent* Camera = SegmentationCameras[i];
+        if (Camera && Camera->IsActive())
+        {
+            // Get camera index or use iterator index
+            int32 CameraIndex = Camera->GetCameraIndex();
+            if (CameraIndex < 0) CameraIndex = i;
+                    
+            // Filename for this camera
+            FString Filename = SaveDirectory / FString::Printf(
+                TEXT("Seg_Cam%02d_Pose%03d.png"), 
+                CameraIndex, 
+                PoseIndex
+            );
+                    
+            // Capture the image
+            FIntPoint Size = {Camera->GetImageSize().first, Camera->GetImageSize().second};
+                    
+            // Get image data and save asynchronously
+            Camera->AsyncGetSegmentationImageData(
+                [Filename, Size, JobNum = this->JobNum](TArray<FColor> ImageData)
+                {
+                    for (FColor& Color : ImageData)
+                    {
+                        Color.A = 255; // Ensure alpha is set to 255
+                    }
+                    (new FAutoDeleteAsyncTask<FAsyncImageSaveTask>(ImageData, Size, Filename))
+                    ->StartBackgroundTask();
+                    *JobNum -= 1;
                 });
                     
             bAnyCaptured = true;
@@ -1335,17 +1446,13 @@ void SVCCSimPanel::CaptureImageFromCurrentPose()
         // Capture with Depth cameras if enabled
         if (bUseDepthCamera && bHasDepthCamera)
         {
-            // Implementation for depth cameras
-            // Similar to RGB but with depth-specific methods
-            bAnyCaptured = true;
+            SaveDepth(PoseIndex, bAnyCaptured);
         }
         
         // Capture with Segmentation cameras if enabled
         if (bUseSegmentationCamera && bHasSegmentationCamera)
         {
-            // Implementation for segmentation cameras
-            // Similar to RGB but with segmentation-specific methods
-            bAnyCaptured = true;
+            SaveSeg(PoseIndex, bAnyCaptured);
         }
         
         // Log if no images were captured
@@ -1354,11 +1461,6 @@ void SVCCSimPanel::CaptureImageFromCurrentPose()
             UE_LOG(LogTemp, Warning, TEXT("No images captured. "
                                           "Ensure cameras are enabled."));
         }
-        
-        // Move to next position
-        SelectedFlashPawn->MoveToNext();
-
-        SaveDirectory.Empty();
     }
     else
     {
@@ -1383,6 +1485,7 @@ void SVCCSimPanel::StartAutoCapture()
     
     // Start the capture process
     bAutoCaptureInProgress = true;
+    *JobNum = 0;
 
     SelectedFlashPawn->MoveTo(0);
     
@@ -1403,6 +1506,7 @@ void SVCCSimPanel::StartAutoCapture()
             if (SelectedFlashPawn->IsReady())
             {
                 CaptureImageFromCurrentPose();
+                SelectedFlashPawn->MoveToNext();
                 
                 // If we've finished capturing all poses, stop the auto-capture
                 if (SelectedFlashPawn->GetCurrentIndex() == NumPoses - 1)
@@ -1412,15 +1516,14 @@ void SVCCSimPanel::StartAutoCapture()
                     bAutoCaptureInProgress = false;
                     GEditor->GetTimerManager()->ClearTimer(AutoCaptureTimerHandle);
                 }
-                else
-                {
-                    // Move to the next pose
-                    SelectedFlashPawn->MoveForward();
-                }
+            }
+            else if (*JobNum == 0)
+            {
+                SelectedFlashPawn->MoveForward();
             }
         },
-        0.01f, // Check every 0.5 seconds
-        true  // Looping
+        0.01f,
+        true
     );
 }
 
@@ -1505,7 +1608,8 @@ void SVCCSimPanel::LoadPredefinedPose()
                 }
                 else
                 {
-                    UE_LOG(LogTemp, Warning, TEXT("Failed to parse pose file: Invalid format or empty file"));
+                    UE_LOG(LogTemp, Warning, TEXT("Failed to parse pose file: "
+                                                  "Invalid format or empty file"));
                 }
             }
             else
@@ -1585,7 +1689,8 @@ void SVCCSimPanel::SaveGeneratedPose()
             // Save to file
             if (FFileHelper::SaveStringToFile(FileContent, *SelectedFile))
             {
-                UE_LOG(LogTemp, Display, TEXT("Successfully saved %d poses to file"), Positions.Num());
+                UE_LOG(LogTemp, Display, TEXT("Successfully saved %d poses to file"),
+                    Positions.Num());
             }
             else
             {
@@ -1636,7 +1741,8 @@ TSharedRef<SWidget> SVCCSimPanel::CreateSectionContent(TSharedRef<SWidget> Conte
 }
 
 // Create a standardized property row with label and content
-TSharedRef<SWidget> SVCCSimPanel::CreatePropertyRow(const FString& Label, TSharedRef<SWidget> Content)
+TSharedRef<SWidget> SVCCSimPanel::CreatePropertyRow(
+    const FString& Label, TSharedRef<SWidget> Content)
 {
     return SNew(SHorizontalBox)
     +SHorizontalBox::Slot()

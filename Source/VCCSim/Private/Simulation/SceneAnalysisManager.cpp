@@ -84,7 +84,8 @@ TArray<FMeshInfo> USceneAnalysisManager::GetAllMeshInfo() const
     return SceneMeshes;
 }
 
-void USceneAnalysisManager::UpdateAccumulatedCoverage(const FTransform& Transform, const FString& Name)
+void USceneAnalysisManager::UpdateAccumulatedCoverage(
+    const FTransform& Transform, const FString& Name)
 {
     if (!World || SceneMeshes.Num() == 0)
         return;
@@ -163,7 +164,8 @@ void USceneAnalysisManager::ResetCoverage()
     }
 }
 
-void USceneAnalysisManager::VisualizeCoverage(bool bShowVisiblePoints, bool bHighlightCoveredMeshes, float Duration)
+void USceneAnalysisManager::VisualizeCoverage(
+    bool bShowVisiblePoints, bool bHighlightCoveredMeshes, float Duration)
 {
     if (!World)
         return;
@@ -175,7 +177,8 @@ void USceneAnalysisManager::VisualizeCoverage(bool bShowVisiblePoints, bool bHig
         {
             if (PointPair.Value) // If point is visible
             {
-                DrawDebugPoint(World, PointPair.Key, 5.0f, FColor::Green, false, Duration);
+                DrawDebugPoint(World, PointPair.Key, 5.0f, FColor::Green,
+                    false, Duration);
             }
         }
     }
@@ -185,13 +188,16 @@ void USceneAnalysisManager::VisualizeCoverage(bool bShowVisiblePoints, bool bHig
     {
         for (const FMeshInfo& MeshInfo : SceneMeshes)
         {
-            FColor Color = CurrentlyVisibleMeshIDs.Contains(MeshInfo.MeshID) ? FColor::Green : FColor::Red;
-            DrawDebugBox(World, MeshInfo.Bounds.Origin, MeshInfo.Bounds.BoxExtent, Color, false, Duration);
+            FColor Color = CurrentlyVisibleMeshIDs.Contains(MeshInfo.MeshID) ?
+                FColor::Green : FColor::Red;
+            DrawDebugBox(World, MeshInfo.Bounds.Origin,
+                MeshInfo.Bounds.BoxExtent, Color, false, Duration);
         }
     }
 }
 
-void USceneAnalysisManager::ConstructFrustum(FConvexVolume& OutFrustum, const FTransform& CameraPose, const FMatrix44f& CameraIntrinsic)
+void USceneAnalysisManager::ConstructFrustum(
+    FConvexVolume& OutFrustum, const FTransform& CameraPose, const FMatrix44f& CameraIntrinsic)
 {
     // Get camera parameters
     float FOV = 2.0f * FMath::Atan(1.0f / CameraIntrinsic.M[0][0]); // FOV from focal length
@@ -241,13 +247,18 @@ void USceneAnalysisManager::ConstructFrustum(FConvexVolume& OutFrustum, const FT
     OutFrustum.Planes.Add(FPlane(FarCenter, ForwardVector));
     
     // Side planes
-    OutFrustum.Planes.Add(FPlane(Position, FVector::CrossProduct(FarBottomLeft - Position, FarTopLeft - Position).GetSafeNormal()));
-    OutFrustum.Planes.Add(FPlane(Position, FVector::CrossProduct(FarTopRight - Position, FarBottomRight - Position).GetSafeNormal()));
-    OutFrustum.Planes.Add(FPlane(Position, FVector::CrossProduct(FarTopLeft - Position, FarTopRight - Position).GetSafeNormal()));
-    OutFrustum.Planes.Add(FPlane(Position, FVector::CrossProduct(FarBottomRight - Position, FarBottomLeft - Position).GetSafeNormal()));
+    OutFrustum.Planes.Add(FPlane(Position, FVector::CrossProduct(
+        FarBottomLeft - Position, FarTopLeft - Position).GetSafeNormal()));
+    OutFrustum.Planes.Add(FPlane(Position, FVector::CrossProduct(
+        FarTopRight - Position, FarBottomRight - Position).GetSafeNormal()));
+    OutFrustum.Planes.Add(FPlane(Position, FVector::CrossProduct(
+        FarTopLeft - Position, FarTopRight - Position).GetSafeNormal()));
+    OutFrustum.Planes.Add(FPlane(Position, FVector::CrossProduct(
+        FarBottomRight - Position, FarBottomLeft - Position).GetSafeNormal()));
 }
 
-void USceneAnalysisManager::ExtractMeshData(UStaticMeshComponent* MeshComponent, FMeshInfo& OutMeshInfo)
+void USceneAnalysisManager::ExtractMeshData(
+    UStaticMeshComponent* MeshComponent, FMeshInfo& OutMeshInfo)
 {
     if (!MeshComponent || !MeshComponent->GetStaticMesh())
         return;
@@ -276,7 +287,8 @@ void USceneAnalysisManager::ExtractMeshData(UStaticMeshComponent* MeshComponent,
         for (int32 VertIdx = 0; VertIdx < OutMeshInfo.NumVertices; ++VertIdx)
         {
             // Get the FVector3f from the vertex buffer
-            FVector3f VertexPos3f = LODModel.VertexBuffers.PositionVertexBuffer.VertexPosition(VertIdx);
+            FVector3f VertexPos3f = LODModel.VertexBuffers.
+            PositionVertexBuffer.VertexPosition(VertIdx);
             
             // Convert to FVector (explicit conversion)
             FVector VertexPos(VertexPos3f.X, VertexPos3f.Y, VertexPos3f.Z);
@@ -295,7 +307,8 @@ void USceneAnalysisManager::ExtractMeshData(UStaticMeshComponent* MeshComponent,
     }
 }
 
-bool USceneAnalysisManager::IsPointVisibleFromCamera(const FVector& Point, const FTransform& CameraPose) const
+bool USceneAnalysisManager::IsPointVisibleFromCamera(
+    const FVector& Point, const FTransform& CameraPose) const
 {
     if (!World)
         return false;
@@ -330,7 +343,8 @@ bool USceneAnalysisManager::IsPointVisibleFromCamera(const FVector& Point, const
     return true;
 }
 
-TArray<FVector> USceneAnalysisManager::SamplePointsOnMesh(const FMeshInfo& MeshInfo, int32 SamplesPerTriangle)
+TArray<FVector> USceneAnalysisManager::SamplePointsOnMesh(
+    const FMeshInfo& MeshInfo, int32 SamplesPerTriangle)
 {
     TArray<FVector> SampledPoints;
     
@@ -474,7 +488,8 @@ void USceneAnalysisManager::VisualizeSceneMeshes(
         const FColor& Color = MeshColors[MeshIdx];
         
         // Draw mesh bounds
-        DrawDebugBox(World, MeshInfo.Bounds.Origin, MeshInfo.Bounds.BoxExtent, Color, false, Duration, 0, 2.0f);
+        DrawDebugBox(World, MeshInfo.Bounds.Origin, MeshInfo.Bounds.BoxExtent,
+            Color, false, Duration, 0, 2.0f);
         
         // Draw mesh ID text
         FString MeshText = FString::Printf(TEXT("Mesh ID: %d\nName: %s\nTriangles: %d"), 
@@ -492,9 +507,12 @@ void USceneAnalysisManager::VisualizeSceneMeshes(
                     const FVector& V1 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 1]];
                     const FVector& V2 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 2]];
                     
-                    DrawDebugLine(World, V0, V1, Color, false, Duration, 0, 1.0f);
-                    DrawDebugLine(World, V1, V2, Color, false, Duration, 0, 1.0f);
-                    DrawDebugLine(World, V2, V0, Color, false, Duration, 0, 1.0f);
+                    DrawDebugLine(World, V0, V1, Color, false,
+                        Duration, 0, 1.0f);
+                    DrawDebugLine(World, V1, V2, Color, false,
+                        Duration, 0, 1.0f);
+                    DrawDebugLine(World, V2, V0, Color, false,
+                        Duration, 0, 1.0f);
                 }
             }
         }
@@ -504,12 +522,14 @@ void USceneAnalysisManager::VisualizeSceneMeshes(
         {
             for (const FVector& Vertex : MeshInfo.VertexPositions)
             {
-                DrawDebugPoint(World, Vertex, VertexSize, Color, false, Duration);
+                DrawDebugPoint(World, Vertex, VertexSize, Color,
+                    false, Duration);
             }
         }
     }
     
     // Log some statistics
-    UE_LOG(LogTemp, Display, TEXT("Visualized %d meshes with %d total triangles and %d total vertices"), 
+    UE_LOG(LogTemp, Display, TEXT("Visualized %d meshes with %d total "
+                                  "triangles and %d total vertices"), 
         SceneMeshes.Num(), TotalTrianglesInScene, TotalPointsInScene);
 }

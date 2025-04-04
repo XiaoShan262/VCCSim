@@ -148,13 +148,10 @@ void UDepthCameraComponent::InitializeRenderTargets()
     
     DepthRenderTarget->UpdateResource();
     CaptureComponent->TextureTarget = DepthRenderTarget;
+    
     if (CaptureComponent==nullptr)
     {
         UE_LOG(LogTemp, Error, TEXT("Capture component not initialized!"));
-    }
-    else
-    {
-        UE_LOG(LogTemp, Log, TEXT("Capture component initialized success!"));
     }
 }
 

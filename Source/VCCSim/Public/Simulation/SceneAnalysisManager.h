@@ -1,23 +1,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DataType/DataMesh.h"
 #include "SceneAnalysisManager.generated.h"
 
 class URGBCameraComponent;
-
-struct FMeshInfo
-{
-    int32 MeshID;
-    FString MeshName;
-    UStaticMesh* Mesh;
-    FTransform Transform;
-    FBoxSphereBounds Bounds;
-    int32 NumTriangles;
-    int32 NumVertices;
-    TArray<FVector> VertexPositions;
-    TArray<int32> Indices;
-    bool bIsVisible;
-};
 
 struct FCoverageData
 {
@@ -50,12 +37,12 @@ public:
     void VisualizeCoverage(bool bShowVisiblePoints,
         bool bHighlightCoveredMeshes, float Duration = 5.0f);
 
+    static void ExtractMeshData(UStaticMeshComponent* MeshComponent, FMeshInfo& OutMeshInfo);
+
 private:
 
     void ConstructFrustum(FConvexVolume& OutFrustum,
         const FTransform& CameraPose, const FMatrix44f& CameraIntrinsic);
-
-    void ExtractMeshData(UStaticMeshComponent* MeshComponent, FMeshInfo& OutMeshInfo);
 
     bool IsPointVisibleFromCamera(const FVector& Point, const FTransform& CameraPose) const;
     
