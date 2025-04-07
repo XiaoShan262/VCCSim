@@ -43,6 +43,21 @@ public:
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "SceneAnalysis")
     float GridResolution = 50.f;
+
+    UPROPERTY()
+    UInstancedStaticMeshComponent* SafeZoneInstancedMesh;
+    
+    // Add to the public properties
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "SceneAnalysis")
+    UMaterialInterface* SafeZoneMaterial;
+
+    // Add to the public functions
+    UFUNCTION(BlueprintCallable, Category = "SceneAnalysis")
+    void VisualizeSafeZone(bool bPersistent = false);
+
+    UFUNCTION(BlueprintCallable, Category = "SceneAnalysis")
+    void ClearSafeZoneVisualization();
+    
     /* ----------------------------- Test ----------------------------- */
     FString LogPath;
     void ExportMeshesToPly();

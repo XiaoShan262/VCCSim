@@ -2151,6 +2151,7 @@ FReply SVCCSimPanel::OnToggleSafeZoneVisualizationClicked()
     if (bSafeZoneVisualized)
     {
         SceneAnalysisManager->GenerateSafeZone(SafeDistance, SafeHeight);
+        SceneAnalysisManager->VisualizeSafeZone();
     }
     else
     {
