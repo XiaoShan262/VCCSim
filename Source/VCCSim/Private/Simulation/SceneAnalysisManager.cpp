@@ -453,9 +453,77 @@ void ASceneAnalysisManager::GenerateSafeZone(
             }
         }
     }
+
+    Dirty = true;
 }
 
-void ASceneAnalysisManager::VisualizeSafeZone(bool bPersistent)
+void ASceneAnalysisManager::InitializeSafeZoneVisualization()
+{
+    if (!World)
+        return;
+    
+    // Only create the component if it doesn't exist yet
+    if (!SafeZoneInstancedMesh)
+    {
+        // Create a new instanced mesh component
+        SafeZoneInstancedMesh = NewObject<UInstancedStaticMeshComponent>(this);
+        SafeZoneInstancedMesh->RegisterComponent();
+        SafeZoneInstancedMesh->SetMobility(EComponentMobility::Movable);
+        SafeZoneInstancedMesh->AttachToComponent(GetRootComponent(),
+            FAttachmentTransformRules::KeepWorldTransform);
+        SafeZoneInstancedMesh->SetWorldTransform(FTransform::Identity);
+        
+        // Load the custom cube mesh with Nanite already disabled
+        UStaticMesh* CubeMesh = LoadObject<UStaticMesh>(nullptr,
+            TEXT("/Script/Engine.StaticMesh'/VCCSim/Simulation/Cube_NoNanite.Cube_NoNanite'"));
+        
+        if (CubeMesh)
+        {
+            SafeZoneInstancedMesh->SetStaticMesh(CubeMesh);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("InitializeSafeZoneVisualization: "
+                                        "Failed to load custom cube mesh"));
+            return;
+        }
+        
+        // Set material if provided, otherwise use default
+        if (SafeZoneMaterial)
+        {
+            SafeZoneInstancedMesh->SetMaterial(0, SafeZoneMaterial);
+        }
+        else
+        {
+            // Load the specified default material
+            UMaterialInterface* DefaultMaterial = LoadObject<UMaterialInterface>(nullptr, 
+                TEXT("/Script/Engine.Material'/VCCSim/Materials/M_SafeZone.M_SafeZone'"));
+            
+            if (DefaultMaterial)
+            {
+                SafeZoneInstancedMesh->SetMaterial(0, DefaultMaterial);
+            }
+            else
+            {
+                // Fallback to a dynamic material if the default material cannot be loaded
+                UMaterialInstanceDynamic* DynamicMaterial = UMaterialInstanceDynamic::Create(
+                    UMaterial::GetDefaultMaterial(MD_Surface), this);
+                
+                if (DynamicMaterial)
+                {
+                    DynamicMaterial->BlendMode = BLEND_Opaque;
+                    DynamicMaterial->SetScalarParameterValue(TEXT("Opacity"), 0.5f);
+                    DynamicMaterial->SetVectorParameterValue(TEXT("BaseColor"),
+                        FLinearColor(1.0f, 0.0f, 0.0f, 1.0f));
+                    
+                    SafeZoneInstancedMesh->SetMaterial(0, DynamicMaterial);
+                }
+            }
+        }
+    }
+}
+
+void ASceneAnalysisManager::VisualizeSafeZone(bool Vis)
 {
     if (!World)
         return;
@@ -467,147 +535,80 @@ void ASceneAnalysisManager::VisualizeSafeZone(bool bPersistent)
         return;
     }
     
-    // Create or clear the instanced mesh component
+    // Initialize the mesh component if it doesn't exist yet
+    InitializeSafeZoneVisualization();
+    
+    // If mesh failed to initialize, return
     if (!SafeZoneInstancedMesh)
     {
-        // Create a new instanced mesh component
-        SafeZoneInstancedMesh = NewObject<UInstancedStaticMeshComponent>(this);
-        SafeZoneInstancedMesh->RegisterComponent();
-        SafeZoneInstancedMesh->SetMobility(EComponentMobility::Movable);
-        SafeZoneInstancedMesh->AttachToComponent(GetRootComponent(),
-            FAttachmentTransformRules::KeepRelativeTransform);
-        
-        // Load the cube mesh
-        UStaticMesh* CubeMesh = LoadObject<UStaticMesh>(nullptr,
-            TEXT("/Engine/BasicShapes/Cube.Cube"));
-        
-        if (CubeMesh)
+        UE_LOG(LogTemp, Error, TEXT("VisualizeSafeZone: SafeZoneInstancedMesh is null"));
+        return;
+    }
+    
+    // Set visibility based on parameter
+    SafeZoneInstancedMesh->SetVisibility(Vis);
+    
+    // Only update instances if dirty or if visibility is changing
+    if (Dirty || !Vis)
+    {        
+        // If not visible, we're done
+        if (!Vis)
         {
-            SafeZoneInstancedMesh->SetStaticMesh(CubeMesh);
-            
-            // Disable Nanite for the cube mesh to support translucent materials
-            if (CubeMesh->NaniteSettings.bEnabled)
-            {
-                UStaticMesh* MutableCubeMesh = const_cast<UStaticMesh*>(CubeMesh);
-                if (MutableCubeMesh)
-                {
-                    MutableCubeMesh->NaniteSettings.bEnabled = false;
-                    MutableCubeMesh->PostEditChange();
-                }
-            }
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("VisualizeSafeZone: Failed to load cube mesh"));
+            Dirty = false;
+            SafeZoneInstancedMesh->SetVisibility(false);
             return;
         }
-    }
-    else
-    {
-        // Just clear existing instances
+
+        // Clear existing instances
         SafeZoneInstancedMesh->ClearInstances();
-    }
-    
-    // Set material if provided
-    bool bIsTranslucent = false;
-    
-    if (SafeZoneMaterial)
-    {
-        // Check if the provided material is translucent
-        EBlendMode BlendMode = SafeZoneMaterial->GetBlendMode();
-        bIsTranslucent = (BlendMode == BLEND_Translucent);
         
-        SafeZoneInstancedMesh->SetMaterial(0, SafeZoneMaterial);
-    }
-    else
-    {
-        // Create a dynamic material instance with a semi-transparent red color
-        UMaterialInstanceDynamic* DynamicMaterial = UMaterialInstanceDynamic::Create(
-            UMaterial::GetDefaultMaterial(MD_Surface), this);
+        // Get the scene bounds
+        FBox SceneBounds(EForceInit::ForceInit);
+        for (const FMeshInfo& MeshInfo : SceneMeshes)
+        {
+            SceneBounds += MeshInfo.Bounds.GetBox();
+        }
         
-        if (DynamicMaterial)
+        FVector BoundsMin = SceneBounds.Min;
+        
+        // Add instances for each unsafe cell
+        int32 UnsafeCellCount = 0;
+        
+        for (int32 X = 0; X < SafeZoneGrid.Num(); ++X)
         {
-            // Set the blend mode to translucent
-            DynamicMaterial->BlendMode = BLEND_Opaque;
-            DynamicMaterial->SetScalarParameterValue(TEXT("Opacity"), 0.5f);
-            DynamicMaterial->SetVectorParameterValue(TEXT("BaseColor"),
-                FLinearColor(1.0f, 0.0f, 0.0f, 1.0f));
-            
-            SafeZoneInstancedMesh->SetMaterial(0, DynamicMaterial);
-            bIsTranslucent = true;
-        }
-    }
-    
-    // If the material is translucent, make sure Nanite is disabled on the mesh
-    if (bIsTranslucent && SafeZoneInstancedMesh->GetStaticMesh())
-    {
-        UStaticMesh* Mesh = const_cast<UStaticMesh*>(SafeZoneInstancedMesh->GetStaticMesh().Get());
-        if (Mesh && Mesh->NaniteSettings.bEnabled)
-        {
-            Mesh->NaniteSettings.bEnabled = false;
-            Mesh->PostEditChange();
-            UE_LOG(LogTemp, Display, TEXT("Disabled Nanite on cube mesh "
-                                          "to support translucent material"));
-        }
-    }
-    
-    // Get the scene bounds
-    FBox SceneBounds(EForceInit::ForceInit);
-    for (const FMeshInfo& MeshInfo : SceneMeshes)
-    {
-        SceneBounds += MeshInfo.Bounds.GetBox();
-    }
-    
-    FVector BoundsMin = SceneBounds.Min;
-    
-    // Count how many unsafe cells we'll be visualizing
-    int32 UnsafeCellCount = 0;
-    
-    // Add instances for each unsafe cell
-    for (int32 X = 0; X < SafeZoneGrid.Num(); ++X)
-    {
-        for (int32 Y = 0; Y < SafeZoneGrid[X].Num(); ++Y)
-        {
-            for (int32 Z = 0; Z < SafeZoneGrid[X][Y].Num(); ++Z)
+            for (int32 Y = 0; Y < SafeZoneGrid[X].Num(); ++Y)
             {
-                // Only visualize unsafe cells
-                if (!SafeZoneGrid[X][Y][Z])
+                for (int32 Z = 0; Z < SafeZoneGrid[X][Y].Num(); ++Z)
                 {
-                    // Calculate cell position
-                    FVector CellPosition(
-                        BoundsMin.X + (X + 0.5f) * GridResolution,
-                        BoundsMin.Y + (Y + 0.5f) * GridResolution,
-                        BoundsMin.Z + (Z + 0.5f) * GridResolution
-                    );
-                    
-                    // Calculate transform
-                    FTransform CellTransform(
-                        FRotator::ZeroRotator,
-                        CellPosition,
-                        FVector(1.0f, 1.0f, 1.0f) * GridResolution / 100.0f
-                        // Scale to match grid resolution (cube is 100 UE units)
-                    );
-                    
-                    // Add instance
-                    SafeZoneInstancedMesh->AddInstance(CellTransform);
-                    UnsafeCellCount++;
+                    // Only visualize unsafe cells
+                    if (!SafeZoneGrid[X][Y][Z])
+                    {
+                        // Calculate cell position
+                        FVector CellPosition(
+                            BoundsMin.X + (X + 0.5f) * GridResolution,
+                            BoundsMin.Y + (Y + 0.5f) * GridResolution,
+                            BoundsMin.Z + (Z + 0.5f) * GridResolution
+                        );
+                        
+                        // Calculate transform
+                        FTransform CellTransform(
+                            FRotator::ZeroRotator,
+                            CellPosition,
+                            FVector(1.0f, 1.0f, 1.0f) * GridResolution / 100.0f
+                        );
+                        
+                        // Add instance
+                        SafeZoneInstancedMesh->AddInstance(CellTransform);
+                        UnsafeCellCount++;
+                    }
                 }
             }
         }
-    }
-    
-    // If not persistent, set up a timer to clear the visualization
-    if (!bPersistent && UnsafeCellCount > 0)
-    {
-        FTimerHandle TimerHandle;
-        FTimerDelegate TimerDelegate;
-        TimerDelegate.BindUObject(this, &ASceneAnalysisManager::ClearSafeZoneVisualization);
         
-        World->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 5.0f, false);
+        UE_LOG(LogTemp, Display, TEXT("VisualizeSafeZone: Added %d"
+                                      " unsafe cell instances"), UnsafeCellCount);
+        Dirty = false;
     }
-    
-    UE_LOG(LogTemp, Display, TEXT("Visualized %d unsafe cells in the safe zone grid"),
-        UnsafeCellCount);
 }
 
 void ASceneAnalysisManager::ClearSafeZoneVisualization()

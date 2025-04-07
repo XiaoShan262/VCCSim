@@ -64,6 +64,11 @@ SVCCSimPanel::~SVCCSimPanel()
         }
         PathVisualizationActor.Reset();
     }
+
+    if (SceneAnalysisManager.IsValid())
+    {
+        SceneAnalysisManager->ClearSafeZoneVisualization();
+    }
 }
 
 // Construct method
@@ -129,6 +134,7 @@ void SVCCSimPanel::Construct(const FArguments& InArgs)
             {
                 SceneAnalysisManager->Initialize(World,
                     FPaths::ProjectSavedDir() / TEXT("VCCSimCaptures"));
+                SceneAnalysisManager->InitializeSafeZoneVisualization();
                 break;
             }
             break;
@@ -1158,6 +1164,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreateSceneAnalysisPanel()
                 if (SceneAnalysisManager.IsValid())
                 {
                     SceneAnalysisManager->ScanScene();
+                    SceneAnalysisManager->GenerateSafeZone(SafeDistance, SafeHeight);
                     bNeedAnalysis = false;
                 }
                 return FReply::Handled();
@@ -2150,11 +2157,12 @@ FReply SVCCSimPanel::OnToggleSafeZoneVisualizationClicked()
 
     if (bSafeZoneVisualized)
     {
-        SceneAnalysisManager->GenerateSafeZone(SafeDistance, SafeHeight);
-        SceneAnalysisManager->VisualizeSafeZone();
+        // SceneAnalysisManager->GenerateSafeZone(SafeDistance, SafeHeight);
+        SceneAnalysisManager->VisualizeSafeZone(true);
     }
     else
     {
+        SceneAnalysisManager->VisualizeSafeZone(false);
     }
 
     VisualizePathButton->SetButtonStyle(bSafeZoneVisualized ? 

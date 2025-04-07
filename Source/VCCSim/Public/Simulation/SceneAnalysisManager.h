@@ -42,18 +42,19 @@ public:
     void GenerateSafeZone(const float& SafeDistance, const float& SafeHeight);
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "SceneAnalysis")
-    float GridResolution = 50.f;
+    float GridResolution = 100.f;
 
-    UPROPERTY()
+    UPROPERTY(EditAnywhere, Category = "SceneAnalysis")
     UInstancedStaticMeshComponent* SafeZoneInstancedMesh;
     
-    // Add to the public properties
     UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "SceneAnalysis")
     UMaterialInterface* SafeZoneMaterial;
 
-    // Add to the public functions
     UFUNCTION(BlueprintCallable, Category = "SceneAnalysis")
-    void VisualizeSafeZone(bool bPersistent = false);
+    void InitializeSafeZoneVisualization();
+    
+    UFUNCTION(BlueprintCallable, Category = "SceneAnalysis")
+    void VisualizeSafeZone(bool Vis);
 
     UFUNCTION(BlueprintCallable, Category = "SceneAnalysis")
     void ClearSafeZoneVisualization();
@@ -89,4 +90,5 @@ private:
     float SamplingDensity;
     bool bUseVertexSampling;
     TArray<TArray<TArray<bool>>> SafeZoneGrid;
+    bool Dirty = false;
 };
