@@ -49,9 +49,9 @@ void AVCCHUD::BeginPlay()
         MeshManager->RConfigure(Config);
     }
 
-    // SceneAnalysisManager = NewObject<USceneAnalysisManager>(Holder);
-    // SceneAnalysisManager->Initialize(GetWorld(), Config.VCCSim.LogSavePath.c_str());
-    // SceneAnalysisManager->ScanScene();
+    SceneAnalysisManager = NewObject<ASceneAnalysisManager>(Holder);
+    SceneAnalysisManager->Initialize(GetWorld(), Config.VCCSim.LogSavePath.c_str());
+    SceneAnalysisManager->ScanScene();
     
     RunServer(Config, Holder, RCMaps, MeshManager);
 }

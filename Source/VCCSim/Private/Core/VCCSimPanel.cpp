@@ -16,9 +16,9 @@
 */
 
 #include "Core/VCCSimPanel.h"
-#include "Components/SplineMeshComponent.h"
 #include "PropertyEditorModule.h"
 #include "Engine/Selection.h"
+#include "EngineUtils.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SNumericEntryBox.h"
@@ -29,8 +29,6 @@
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "DataType/DataMesh.h"
-#include "Pawns/FlashPawn.h"
-#include "Pawns/SimPath.h"
 #include "Sensors/CameraSensor.h"
 #include "Sensors/DepthCamera.h"
 #include "Sensors/SegmentCamera.h"
@@ -75,6 +73,8 @@ void SVCCSimPanel::Construct(const FArguments& InArgs)
     RadiusValue = Radius;
     HeightOffsetValue = HeightOffset;
     VerticalGapValue = VerticalGap;
+    SafeDistanceValue = SafeDistance;
+    SafeHeightValue = SafeHeight;
     JobNum = MakeShared<std::atomic<int32>>(0);
     
     // Register for selection change events
@@ -117,6 +117,22 @@ void SVCCSimPanel::Construct(const FArguments& InArgs)
     else
     {
         UE_LOG(LogTemp, Warning, TEXT("SZU logo file not found at: %s"), *SZULogoPath);
+    }
+
+    // Search for the SceneAnalysisManager in the world
+    if (UWorld* World = GEditor->GetEditorWorldContext().World())
+    {
+        for (TActorIterator<ASceneAnalysisManager> It(World); It; ++It)
+        {
+            SceneAnalysisManager = *It;
+            if (SceneAnalysisManager.IsValid())
+            {
+                SceneAnalysisManager->Initialize(World,
+                    FPaths::ProjectSavedDir() / TEXT("VCCSimCaptures"));
+                break;
+            }
+            break;
+        }
     }
     
     // Create the widget layout
@@ -205,6 +221,13 @@ void SVCCSimPanel::Construct(const FArguments& InArgs)
             .AutoHeight()
             [
                 CreateCapturePanel()
+            ]
+
+            // Scene analysis panel
+            +SVerticalBox::Slot()
+            .AutoHeight()
+            [
+                CreateSceneAnalysisPanel()
             ]
         ]
     ];
@@ -1028,6 +1051,145 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCapturePanel()
     ];
 }
 
+TSharedRef<SWidget> SVCCSimPanel::CreateSceneAnalysisPanel()
+{
+    return SNew(SVerticalBox)
+    +SVerticalBox::Slot()
+    .AutoHeight()
+    [
+        CreateSectionHeader("Image Capture")
+    ]
+    +SVerticalBox::Slot()
+    .AutoHeight()
+    [
+    CreateSectionContent(
+        SNew(SVerticalBox)
+        +SVerticalBox::Slot()
+        .AutoHeight()
+        .Padding(FMargin(0, 0, 0, 4))
+        [
+            SNew(SHorizontalBox)
+            // Pose Count
+            +SHorizontalBox::Slot()
+            .FillWidth(1.0f)
+            .Padding(FMargin(0, 0, 8, 0))
+            [
+                CreatePropertyRow(
+                    "Safe Distance",
+                    SNew(SBorder)
+                    .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                    .BorderBackgroundColor(FColor(5,5, 5, 255))
+                    .Padding(4, 0)
+                    [
+                        SAssignNew(SafeDistanceSpinBox, SNumericEntryBox<float>)
+                        .Value_Lambda([this]() { return SafeDistanceValue; })
+                        .MinValue(0.f)
+                        .Delta(10.f)
+                        .AllowSpin(true)
+                        .OnValueChanged(SNumericEntryBox<float>::FOnValueChanged::CreateLambda(
+                            [this](float NewValue) {
+                            SafeDistance = NewValue;
+                            SafeDistanceValue = NewValue;
+                        }))
+                    ]
+                )
+            ]
+            
+            // Vertical Gap
+            +SHorizontalBox::Slot()
+            .FillWidth(1.0f)
+            .Padding(FMargin(0, 0, 0, 0))
+            [
+                CreatePropertyRow(
+                    "Safe Height",
+                    SNew(SBorder)
+                    .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+                    .BorderBackgroundColor(FColor(5,5, 5, 255))
+                    .Padding(4, 0)
+                    [
+                        SAssignNew(SafeHeightSpinBox, SNumericEntryBox<float>)
+                        .Value_Lambda([this]() { return SafeHeightValue; })
+                        .MinValue(0.0f)
+                        .Delta(5.0f)
+                        .AllowSpin(true)
+                        .OnValueChanged(SNumericEntryBox<float>::FOnValueChanged::CreateLambda(
+                            [this](float NewValue) {
+                            SafeHeight = NewValue;
+                            SafeHeightValue = NewValue;
+                        }))
+                    ]
+                )
+            ]
+        ]
+    
+    // Separator
+    +SVerticalBox::Slot()
+    .MaxHeight(1)
+    .Padding(FMargin(0, 0, 0, 0))
+    [
+        SNew(SBorder)
+        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
+        .BorderBackgroundColor(FColor(2, 2, 2))
+        .Padding(0)
+        .Content()
+        [
+            SNew(SBox)
+            .HeightOverride(1.0f)
+        ]
+    ]
+        
+
+    +SVerticalBox::Slot()
+    .AutoHeight()
+    .Padding(0, 4, 0, 0)
+    [
+        SNew(SHorizontalBox)
+        +SHorizontalBox::Slot()
+        .MaxWidth(120)
+        .Padding(FMargin(0, 0, 4, 0))
+        .HAlign(HAlign_Fill)
+        [
+            SNew(SButton)
+            .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+            .ContentPadding(FMargin(5, 2))
+            .Text(FText::FromString("Analyze Scene"))
+            .HAlign(HAlign_Center)
+            .OnClicked_Lambda([this]() {
+                if (SceneAnalysisManager.IsValid())
+                {
+                    SceneAnalysisManager->ScanScene();
+                    bNeedAnalysis = false;
+                }
+                return FReply::Handled();
+            })
+            .IsEnabled_Lambda([this]() {
+                return SceneAnalysisManager.IsValid();
+            })
+        ]
+        +SHorizontalBox::Slot()
+        .MaxWidth(120)
+        .Padding(FMargin(4, 0, 4, 0))
+        .HAlign(HAlign_Fill)
+        [
+            SAssignNew(VisualizePathButton, SButton)
+            .ButtonStyle(bPathVisualized ? 
+               &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Danger") : 
+               &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Primary"))
+            .ContentPadding(FMargin(0, 2))
+            .HAlign(HAlign_Center)
+            .Text_Lambda([this]() {
+                return FText::FromString(bSafeZoneVisualized ? "Hide SafeZone" : "Show SafeZone");
+            })
+            .OnClicked(this, &SVCCSimPanel::OnToggleSafeZoneVisualizationClicked)
+            .IsEnabled_Lambda([this]() {
+                return SceneAnalysisManager.IsValid() && !bNeedAnalysis;
+            })
+        ]
+    ]
+    )
+    ];
+}
+
 // Selection state toggle callbacks
 void SVCCSimPanel::OnSelectFlashPawnToggleChanged(ECheckBoxState NewState)
 {
@@ -1323,7 +1485,7 @@ void SVCCSimPanel::GeneratePosesAroundTarget()
         if (MeshComponent)
         {
             FMeshInfo MeshInfo;
-            USceneAnalysisManager::ExtractMeshData(
+            ASceneAnalysisManager::ExtractMeshData(
                 MeshComponent, 
                 MeshInfo
             );
@@ -1974,6 +2136,31 @@ void SVCCSimPanel::HidePathVisualization()
             }
         }
     }
+}
+
+FReply SVCCSimPanel::OnToggleSafeZoneVisualizationClicked()
+{
+    if (!SceneAnalysisManager.IsValid())
+    {
+        return FReply::Handled();
+    }
+    
+    // Toggle the visualization state
+    bSafeZoneVisualized = !bSafeZoneVisualized;
+
+    if (bSafeZoneVisualized)
+    {
+        SceneAnalysisManager->GenerateSafeZone(SafeDistance, SafeHeight);
+    }
+    else
+    {
+    }
+
+    VisualizePathButton->SetButtonStyle(bSafeZoneVisualized ? 
+        &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Danger") : 
+        &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Primary"));
+    
+    return FReply::Handled();
 }
 
 namespace FVCCSimPanelFactory

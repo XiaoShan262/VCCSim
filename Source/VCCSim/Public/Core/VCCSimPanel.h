@@ -25,6 +25,7 @@
 class AFlashPawn;
 class AVCCSimPath;
 class USplineMeshComponent;
+class ASceneAnalysisManager;
 
 class VCCSIM_API SVCCSimPanel final : public SCompoundWidget
 {
@@ -50,6 +51,8 @@ private:
     TSharedPtr<class SNumericEntryBox<float>> RadiusSpinBox;
     TSharedPtr<class SNumericEntryBox<float>> HeightOffsetSpinBox;
     TSharedPtr<class SNumericEntryBox<float>> VerticalGapSpinBox;
+    TSharedPtr<class SNumericEntryBox<float>> SafeDistanceSpinBox;
+    TSharedPtr<class SNumericEntryBox<float>> SafeHeightSpinBox;
     
     // Camera availability indicators
     TSharedPtr<class STextBlock> RGBCameraAvailableText;
@@ -77,12 +80,16 @@ private:
     float HeightOffset = 0.0f;
     float VerticalGap = 50.0f;
     FString SaveDirectory;
+    float SafeDistance = 500.0f;
+    float SafeHeight = 300.0f;
     
     // TOptional attributes for SpinBox values
     TOptional<int32> NumPosesValue;
     TOptional<float> RadiusValue;
     TOptional<float> HeightOffsetValue;
     TOptional<float> VerticalGapValue;
+    TOptional<float> SafeDistanceValue;
+    TOptional<float> SafeHeightValue;
     
     // Camera settings
     bool bUseRGBCamera = true;
@@ -104,6 +111,7 @@ private:
     TSharedRef<SWidget> CreateTargetSelectPanel();
     TSharedRef<SWidget> CreatePoseConfigPanel();
     TSharedRef<SWidget> CreateCapturePanel();
+    TSharedRef<SWidget> CreateSceneAnalysisPanel();
     
     // UI callbacks
     void OnSelectFlashPawnToggleChanged(ECheckBoxState NewState);
@@ -147,6 +155,11 @@ private:
     void UpdatePathVisualization();
     void ShowPathVisualization();
     void HidePathVisualization();
+
+    TWeakObjectPtr<ASceneAnalysisManager> SceneAnalysisManager = nullptr;
+    bool bNeedAnalysis = true;
+    bool bSafeZoneVisualized = false;
+    FReply OnToggleSafeZoneVisualizationClicked();
 };
 
 namespace FVCCSimPanelFactory

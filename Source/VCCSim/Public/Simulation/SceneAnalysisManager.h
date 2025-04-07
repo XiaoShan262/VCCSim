@@ -15,12 +15,12 @@ struct FCoverageData
 };
 
 UCLASS(BlueprintType, Blueprintable)
-class VCCSIM_API USceneAnalysisManager : public UObject
+class VCCSIM_API ASceneAnalysisManager : public AActor
 {
     GENERATED_BODY()
 
 public:
-    USceneAnalysisManager();
+    ASceneAnalysisManager();
     
     bool Initialize(UWorld* InWorld, FString&& Path);
     void ScanScene();
@@ -37,16 +37,29 @@ public:
     void VisualizeCoverage(bool bShowVisiblePoints,
         bool bHighlightCoveredMeshes, float Duration = 5.0f);
 
-    static void ExtractMeshData(UStaticMeshComponent* MeshComponent, FMeshInfo& OutMeshInfo);
+    static void ExtractMeshData(UStaticMeshComponent* MeshComponent,
+        FMeshInfo& OutMeshInfo);
+    void GenerateSafeZone(const float& SafeDistance, const float& SafeHeight);
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "SceneAnalysis")
+    float GridResolution = 50.f;
+    /* ----------------------------- Test ----------------------------- */
+    FString LogPath;
+    void ExportMeshesToPly();
+    FString GeneratePlyContent(const FMeshInfo& MeshInfo);
+    void VisualizeSceneMeshes(float Duration, bool bShowWireframe,
+        bool bShowVertices, float VertexSize);
 
 private:
 
     void ConstructFrustum(FConvexVolume& OutFrustum,
         const FTransform& CameraPose, const FMatrix44f& CameraIntrinsic);
 
-    bool IsPointVisibleFromCamera(const FVector& Point, const FTransform& CameraPose) const;
+    bool IsPointVisibleFromCamera(const FVector& Point,
+        const FTransform& CameraPose) const;
     
-    TArray<FVector> SamplePointsOnMesh(const FMeshInfo& MeshInfo, int32 SamplesPerTriangle = 1);
+    TArray<FVector> SamplePointsOnMesh(const FMeshInfo& MeshInfo,
+        int32 SamplesPerTriangle = 1);
 
 private:
     UPROPERTY()
@@ -60,12 +73,5 @@ private:
     float CurrentCoveragePercentage;
     float SamplingDensity;
     bool bUseVertexSampling;
-    float GridResolution;
-
-    /* ----------------------------- Test ----------------------------- */
-    FString LogPath;
-    void ExportMeshesToPly();
-    FString GeneratePlyContent(const FMeshInfo& MeshInfo);
-    void VisualizeSceneMeshes(float Duration, bool bShowWireframe,
-        bool bShowVertices, float VertexSize);
+    TArray<TArray<TArray<bool>>> SafeZoneGrid;
 };

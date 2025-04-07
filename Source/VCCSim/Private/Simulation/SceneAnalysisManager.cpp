@@ -1,12 +1,12 @@
 #include "Simulation/SceneAnalysisManager.h"
 #include "Components/StaticMeshComponent.h"
 #include "Sensors/CameraSensor.h"
+#include "EngineUtils.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
 #include "DrawDebugHelpers.h"
-#include "EngineUtils.h"
 
-USceneAnalysisManager::USceneAnalysisManager()
+ASceneAnalysisManager::ASceneAnalysisManager()
 {
     World = nullptr;
     TotalPointsInScene = 0;
@@ -14,11 +14,14 @@ USceneAnalysisManager::USceneAnalysisManager()
     CurrentCoveragePercentage = 0.0f;
     SamplingDensity = 1.0f;
     bUseVertexSampling = false;
-    GridResolution = 10.0f;
     LogPath = FPaths::ProjectLogDir();
+
+    // Set no collision and no tick
+    PrimaryActorTick.bCanEverTick = false;
+    SetActorEnableCollision(false);
 }
 
-bool USceneAnalysisManager::Initialize(UWorld* InWorld, FString&& Path)
+bool ASceneAnalysisManager::Initialize(UWorld* InWorld, FString&& Path)
 {
     if (!InWorld)
         return false;
@@ -28,7 +31,7 @@ bool USceneAnalysisManager::Initialize(UWorld* InWorld, FString&& Path)
     return true;
 }
 
-void USceneAnalysisManager::ScanScene()
+void ASceneAnalysisManager::ScanScene()
 {
     if (!World)
         return;
@@ -59,7 +62,7 @@ void USceneAnalysisManager::ScanScene()
     // VisualizeSceneMeshes(10.0f, true, false, 0);
 }
 
-void USceneAnalysisManager::RegisterCamera(URGBCameraComponent* CameraComponent)
+void ASceneAnalysisManager::RegisterCamera(URGBCameraComponent* CameraComponent)
 {
     CameraIntrinsics.Add(CameraComponent->CameraName,
     CameraComponent->GetCameraIntrinsics());
@@ -68,7 +71,7 @@ void USceneAnalysisManager::RegisterCamera(URGBCameraComponent* CameraComponent)
         this, "UpdateAccumulatedCoverage");
 }
 
-FMeshInfo USceneAnalysisManager::GetMeshInfo(int32 MeshID) const
+FMeshInfo ASceneAnalysisManager::GetMeshInfo(int32 MeshID) const
 {
     for (const FMeshInfo& MeshInfo : SceneMeshes)
     {
@@ -79,12 +82,12 @@ FMeshInfo USceneAnalysisManager::GetMeshInfo(int32 MeshID) const
     return FMeshInfo();
 }
 
-TArray<FMeshInfo> USceneAnalysisManager::GetAllMeshInfo() const
+TArray<FMeshInfo> ASceneAnalysisManager::GetAllMeshInfo() const
 {
     return SceneMeshes;
 }
 
-void USceneAnalysisManager::UpdateAccumulatedCoverage(
+void ASceneAnalysisManager::UpdateAccumulatedCoverage(
     const FTransform& Transform, const FString& Name)
 {
     if (!World || SceneMeshes.Num() == 0)
@@ -142,12 +145,12 @@ void USceneAnalysisManager::UpdateAccumulatedCoverage(
         static_cast<float>(CoveredPoints) / TotalPointsInScene * 100.0f : 0.0f;
 }
 
-float USceneAnalysisManager::GetTotalCoveragePercentage() const
+float ASceneAnalysisManager::GetTotalCoveragePercentage() const
 {
     return CurrentCoveragePercentage;
 }
 
-void USceneAnalysisManager::ResetCoverage()
+void ASceneAnalysisManager::ResetCoverage()
 {
     CoverageMap.Empty();
     CurrentlyVisibleMeshIDs.Empty();
@@ -164,7 +167,7 @@ void USceneAnalysisManager::ResetCoverage()
     }
 }
 
-void USceneAnalysisManager::VisualizeCoverage(
+void ASceneAnalysisManager::VisualizeCoverage(
     bool bShowVisiblePoints, bool bHighlightCoveredMeshes, float Duration)
 {
     if (!World)
@@ -196,7 +199,7 @@ void USceneAnalysisManager::VisualizeCoverage(
     }
 }
 
-void USceneAnalysisManager::ConstructFrustum(
+void ASceneAnalysisManager::ConstructFrustum(
     FConvexVolume& OutFrustum, const FTransform& CameraPose, const FMatrix44f& CameraIntrinsic)
 {
     // Get camera parameters
@@ -257,7 +260,7 @@ void USceneAnalysisManager::ConstructFrustum(
         FarBottomRight - Position, FarBottomLeft - Position).GetSafeNormal()));
 }
 
-void USceneAnalysisManager::ExtractMeshData(
+void ASceneAnalysisManager::ExtractMeshData(
     UStaticMeshComponent* MeshComponent, FMeshInfo& OutMeshInfo)
 {
     if (!MeshComponent || !MeshComponent->GetStaticMesh())
@@ -307,7 +310,147 @@ void USceneAnalysisManager::ExtractMeshData(
     }
 }
 
-bool USceneAnalysisManager::IsPointVisibleFromCamera(
+void ASceneAnalysisManager::GenerateSafeZone(
+    const float& SafeDistance, const float& SafeHeight)
+{
+    // Try to find a valid world
+    if (GEngine)
+    {
+        for (const FWorldContext& Context : GEngine->GetWorldContexts())
+        {
+            if (Context.WorldType == EWorldType::Game || Context.WorldType == EWorldType::PIE)
+            {
+                World = Context.World();
+            }
+        }
+    }
+    
+    if (!World)
+    {
+        UE_LOG(LogTemp, Error, TEXT("GenerateSafeZone: No valid World found"));
+        return;
+    }
+    
+    // Get scene mesh data
+    if (SceneMeshes.Num() == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("GenerateSafeZone: No meshes in scene"));
+        return;
+    }
+    
+    // Calculate scene bounds
+    FBox SceneBounds(EForceInit::ForceInit);
+    for (const FMeshInfo& MeshInfo : SceneMeshes)
+    {
+        SceneBounds += MeshInfo.Bounds.GetBox();
+    }
+    
+    // Expand bounds to include safe zone
+    SceneBounds = SceneBounds.ExpandBy(FVector(SafeDistance * 2.0f,
+        SafeDistance * 2.0f, SafeHeight * 2.0f));
+    
+    // Calculate grid dimensions
+    FVector BoundsSize = SceneBounds.GetSize();
+    FVector BoundsMin = SceneBounds.Min;
+    
+    int32 NumX = FMath::Max(1, FMath::CeilToInt(BoundsSize.X / GridResolution));
+    int32 NumY = FMath::Max(1, FMath::CeilToInt(BoundsSize.Y / GridResolution));
+    int32 NumZ = FMath::Max(1, FMath::CeilToInt(BoundsSize.Z / GridResolution));
+    
+    UE_LOG(LogTemp, Display, TEXT("Generating safe zone grid: %dx%dx%d "
+                                  "with cell size %.2f"), NumX, NumY, NumZ, GridResolution);
+    
+    // Create 3D boolean grid (true = safe, false = unsafe)
+    SafeZoneGrid.SetNum(NumX);
+    for (int32 X = 0; X < NumX; ++X)
+    {
+        SafeZoneGrid[X].SetNum(NumY);
+        for (int32 Y = 0; Y < NumY; ++Y)
+        {
+            SafeZoneGrid[X][Y].Init(true, NumZ);
+        }
+    }
+    
+    // For each mesh in the scene
+    for (const FMeshInfo& MeshInfo : SceneMeshes)
+    {
+        // Process each triangle
+        for (int32 i = 0; i < MeshInfo.Indices.Num(); i += 3)
+        {
+            if (i + 2 >= MeshInfo.Indices.Num()) continue;
+            
+            // Get triangle vertices
+            const FVector& V0 = MeshInfo.VertexPositions[MeshInfo.Indices[i]];
+            const FVector& V1 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 1]];
+            const FVector& V2 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 2]];
+            
+            // Calculate triangle bounds
+            FBox TriBounds(EForceInit::ForceInit);
+            TriBounds += V0;
+            TriBounds += V1;
+            TriBounds += V2;
+            
+            // Expand bounds by safe distance
+            TriBounds = TriBounds.ExpandBy(FVector(SafeDistance,
+                SafeDistance, SafeHeight));
+            
+            // Convert to grid coordinates
+            int32 MinX = FMath::Max(0, FMath::FloorToInt(
+                (TriBounds.Min.X - BoundsMin.X) / GridResolution));
+            int32 MinY = FMath::Max(0, FMath::FloorToInt(
+                (TriBounds.Min.Y - BoundsMin.Y) / GridResolution));
+            int32 MinZ = FMath::Max(0, FMath::FloorToInt(
+                (TriBounds.Min.Z - BoundsMin.Z) / GridResolution));
+            
+            int32 MaxX = FMath::Min(NumX - 1, FMath::CeilToInt(
+                (TriBounds.Max.X - BoundsMin.X) / GridResolution));
+            int32 MaxY = FMath::Min(NumY - 1, FMath::CeilToInt(
+                (TriBounds.Max.Y - BoundsMin.Y) / GridResolution));
+            int32 MaxZ = FMath::Min(NumZ - 1, FMath::CeilToInt(
+                (TriBounds.Max.Z - BoundsMin.Z) / GridResolution));
+            
+            // Check each cell in the expanded bounds
+            for (int32 X = MinX; X <= MaxX; ++X)
+            {
+                for (int32 Y = MinY; Y <= MaxY; ++Y)
+                {
+                    for (int32 Z = MinZ; Z <= MaxZ; ++Z)
+                    {
+                        // Skip if already marked unsafe
+                        if (!SafeZoneGrid[X][Y][Z]) continue;
+                        
+                        // Calculate cell center
+                        FVector CellCenter(
+                            BoundsMin.X + (X + 0.5f) * GridResolution,
+                            BoundsMin.Y + (Y + 0.5f) * GridResolution,
+                            BoundsMin.Z + (Z + 0.5f) * GridResolution
+                        );
+                        
+                        // Find closest point on triangle
+                        FVector ClosestPoint = FMath::ClosestPointOnTriangleToPoint(
+                            CellCenter, V0, V1, V2);
+                        
+                        // Check horizontal distance (XY plane)
+                        FVector2D CellCenter2D(CellCenter.X, CellCenter.Y);
+                        FVector2D ClosestPoint2D(ClosestPoint.X, ClosestPoint.Y);
+                        float HorizontalDist = FVector2D::Distance(CellCenter2D, ClosestPoint2D);
+                        
+                        // Check vertical distance (Z axis)
+                        float VerticalDist = FMath::Abs(CellCenter.Z - ClosestPoint.Z);
+                        
+                        // Mark as unsafe if too close in both horizontal and vertical directions
+                        if (HorizontalDist < SafeDistance && VerticalDist < SafeHeight)
+                        {
+                            SafeZoneGrid[X][Y][Z] = false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+bool ASceneAnalysisManager::IsPointVisibleFromCamera(
     const FVector& Point, const FTransform& CameraPose) const
 {
     if (!World)
@@ -343,7 +486,7 @@ bool USceneAnalysisManager::IsPointVisibleFromCamera(
     return true;
 }
 
-TArray<FVector> USceneAnalysisManager::SamplePointsOnMesh(
+TArray<FVector> ASceneAnalysisManager::SamplePointsOnMesh(
     const FMeshInfo& MeshInfo, int32 SamplesPerTriangle)
 {
     TArray<FVector> SampledPoints;
@@ -396,7 +539,7 @@ TArray<FVector> USceneAnalysisManager::SamplePointsOnMesh(
 
 /* ----------------------------- Test ----------------------------- */
 
-void USceneAnalysisManager::ExportMeshesToPly()
+void ASceneAnalysisManager::ExportMeshesToPly()
 {
     if (!World)
     {
@@ -429,7 +572,7 @@ void USceneAnalysisManager::ExportMeshesToPly()
     }
 }
 
-FString USceneAnalysisManager::GeneratePlyContent(const FMeshInfo& MeshInfo)
+FString ASceneAnalysisManager::GeneratePlyContent(const FMeshInfo& MeshInfo)
 {
     FString PLYContent;
     
@@ -465,7 +608,7 @@ FString USceneAnalysisManager::GeneratePlyContent(const FMeshInfo& MeshInfo)
     return PLYContent;
 }
 
-void USceneAnalysisManager::VisualizeSceneMeshes(
+void ASceneAnalysisManager::VisualizeSceneMeshes(
     float Duration, bool bShowWireframe, bool bShowVertices, float VertexSize)
 {
     if (!World || SceneMeshes.Num() == 0)
