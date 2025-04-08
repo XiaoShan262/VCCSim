@@ -92,15 +92,8 @@ void URGBCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
     }
 }
 
-void URGBCameraComponent::RConfigure(
-    const FRGBCameraConfig& Config, ARecorder* Recorder)
-{ 
-    FOV = Config.FOV;
-    Width = Config.Width;
-    Height = Config.Height;
-    bOrthographic = Config.bOrthographic;
-    OrthoWidth = Config.OrthoWidth;
-    
+void URGBCameraComponent::ComputeIntrinsics()
+{
     float HorizontalFOVRad = FMath::DegreesToRadians(FOV);
     float fx = (Width / 2.0f) / FMath::Tan(HorizontalFOVRad / 2.0f);
 
@@ -117,6 +110,18 @@ void URGBCameraComponent::RConfigure(
     CameraIntrinsics.M[1][1] = fy;  // focal length in y
     CameraIntrinsics.M[0][2] = cx;  // principal point x
     CameraIntrinsics.M[1][2] = cy;  // principal point y
+}
+
+void URGBCameraComponent::RConfigure(
+    const FRGBCameraConfig& Config, ARecorder* Recorder)
+{ 
+    FOV = Config.FOV;
+    Width = Config.Width;
+    Height = Config.Height;
+    bOrthographic = Config.bOrthographic;
+    OrthoWidth = Config.OrthoWidth;
+    
+    ComputeIntrinsics();
     
     InitializeRenderTargets();
     SetCaptureComponent();

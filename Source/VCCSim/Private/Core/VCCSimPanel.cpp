@@ -135,6 +135,7 @@ void SVCCSimPanel::Construct(const FArguments& InArgs)
                 SceneAnalysisManager->Initialize(World,
                     FPaths::ProjectSavedDir() / TEXT("VCCSimCaptures"));
                 SceneAnalysisManager->InitializeSafeZoneVisualization();
+                SceneAnalysisManager->InitializeCoverageVisualization();
                 break;
             }
             break;
@@ -370,7 +371,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCameraSelectPanel()
                 .Padding(FMargin(0, 4, 0, 4))
                 [
                     SNew(STextBlock)
-                    .Text(FText::FromString("Available Cameras:"))
+                    .Text(FText::FromString("Available & Active Cameras:"))
                     .Font(FAppStyle::GetFontStyle("PropertyWindow.BoldFont"))
                 ]
                 +SVerticalBox::Slot()
@@ -380,18 +381,20 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCameraSelectPanel()
                     
                     // RGB Camera availability
                     +SHorizontalBox::Slot()
-                    .FillWidth(1.0f)
-                    .Padding(FMargin(0, 4, 2, 0))
+                    .MaxWidth(120)
+                    .HAlign(HAlign_Center)
+                    .Padding(FMargin(0, 0, 2, 0))
                     [
                         SNew(SBorder)
                         .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
                         .BorderBackgroundColor(FColor(5,5, 5, 255))
-                        .Padding(4)
+                        .Padding(2, 0)
                         .HAlign(HAlign_Center)
                         [
                             SNew(SHorizontalBox)
                             +SHorizontalBox::Slot()
                             .AutoWidth()
+                            .HAlign(HAlign_Left)
                             .VAlign(VAlign_Center)
                             .Padding(FMargin(0, 0, 4, 0))
                             [
@@ -409,145 +412,9 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCameraSelectPanel()
                             ]
                             +SHorizontalBox::Slot()
                             .AutoWidth()
+                            .HAlign(HAlign_Center)
                             .VAlign(VAlign_Center)
-                            [
-                                SNew(STextBlock)
-                                .Text(FText::FromString("RGB"))
-                            ]
-                        ]
-                    ]
-                    
-                    // Depth Camera availability
-                    +SHorizontalBox::Slot()
-                    .FillWidth(1.0f)
-                    .Padding(FMargin(2, 4, 2, 0))
-                    [
-                        SNew(SBorder)
-                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
-                        .BorderBackgroundColor(FColor(5,5, 5, 255))
-                        .Padding(4)
-                        .HAlign(HAlign_Center)
-                        [
-                            SNew(SHorizontalBox)
-                            +SHorizontalBox::Slot()
-                            .AutoWidth()
-                            .VAlign(VAlign_Center)
-                            .Padding(FMargin(0, 0, 4, 0))
-                            [
-                                SNew(SImage)
-                                .Image_Lambda([this]() {
-                                    return bHasDepthCamera ? 
-                                        FAppStyle::GetBrush("Icons.Checkmark") : 
-                                        FAppStyle::GetBrush("Icons.X");
-                                })
-                                .ColorAndOpacity_Lambda([this]() {
-                                    return bHasDepthCamera ? 
-                                        FColor(20, 200, 20) : 
-                                        FColor(200, 20, 20);
-                                })
-                            ]
-                            +SHorizontalBox::Slot()
-                            .AutoWidth()
-                            .VAlign(VAlign_Center)
-                            [
-                                SNew(STextBlock)
-                                .Text(FText::FromString("Depth"))
-                            ]
-                        ]
-                    ]
-                    
-                    // Segmentation Camera availability
-                    +SHorizontalBox::Slot()
-                    .FillWidth(1.0f)
-                    .Padding(FMargin(2, 4, 0, 0))
-                    [
-                        SNew(SBorder)
-                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
-                        .BorderBackgroundColor(FColor(5,5, 5, 255))
-                        .Padding(4)
-                        .HAlign(HAlign_Center)
-                        [
-                            SNew(SHorizontalBox)
-                            +SHorizontalBox::Slot()
-                            .AutoWidth()
-                            .VAlign(VAlign_Center)
-                            .Padding(FMargin(0, 0, 4, 0))
-                            [
-                                SNew(SImage)
-                                .Image_Lambda([this]() {
-                                    return bHasSegmentationCamera ? 
-                                        FAppStyle::GetBrush("Icons.Checkmark") : 
-                                        FAppStyle::GetBrush("Icons.X");
-                                })
-                                .ColorAndOpacity_Lambda([this]() {
-                                    return bHasSegmentationCamera ? 
-                                        FColor(20, 200, 20) : 
-                                        FColor(200, 20, 20);
-                                })
-                            ]
-                            +SHorizontalBox::Slot()
-                            .AutoWidth()
-                            .VAlign(VAlign_Center)
-                            [
-                                SNew(STextBlock)
-                                .Text(FText::FromString("Segmentation"))
-                            ]
-                        ]
-                    ]
-                ]
-            ]
-            
-            // Separator
-            +SVerticalBox::Slot()
-            .MaxHeight(1)
-            .Padding(FMargin(0, 0, 0, 0))
-            [
-                SNew(SBorder)
-                .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
-                .BorderBackgroundColor(FColor(2, 2, 2))
-                .Padding(0)
-                .Content()
-                [
-                    SNew(SBox)
-                    .HeightOverride(1.0f)
-                ]
-            ]
-            
-            // Active Camera Selection Row
-            +SVerticalBox::Slot()
-            .AutoHeight()
-            .Padding(FMargin(0, 0, 0, 8))
-            [
-                SNew(SVerticalBox)
-                +SVerticalBox::Slot()
-                .AutoHeight()
-                .Padding(FMargin(0, 4, 0, 4))
-                [
-                    SNew(STextBlock)
-                    .Text(FText::FromString("Active Cameras:"))
-                    .Font(FAppStyle::GetFontStyle("PropertyWindow.BoldFont"))
-                ]
-                +SVerticalBox::Slot()
-                .AutoHeight()
-                [
-                    SNew(SHorizontalBox)
-                    
-                    // RGB Camera activation
-                    +SHorizontalBox::Slot()
-                    .FillWidth(1.0f)
-                    .Padding(FMargin(0, 4, 2, 0))
-                    [
-                        SNew(SBorder)
-                        .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
-                        .BorderBackgroundColor(FColor(5,5, 5, 255))
-                        .Padding(4)
-                        .HAlign(HAlign_Center)
-                        [
-                            SNew(SHorizontalBox)
-                            +SHorizontalBox::Slot()
-                            .AutoWidth()
-                            .VAlign(VAlign_Center)
-                            .Padding(FMargin(0, 0, 4, 0))
+                            .Padding(FMargin(0, 0, 2, 0))
                             [
                                 SAssignNew(RGBCameraCheckBox, SCheckBox)
                                 .IsChecked(bUseRGBCamera ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
@@ -558,33 +425,52 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCameraSelectPanel()
                             ]
                             +SHorizontalBox::Slot()
                             .AutoWidth()
+                            .HAlign(HAlign_Right)
                             .VAlign(VAlign_Center)
+                            .Padding(0, 0, 4, 0)
                             [
                                 SNew(STextBlock)
                                 .Text(FText::FromString("RGB"))
-                                .ColorAndOpacity_Lambda([this]() {
-                                    return bHasRGBCamera ? FColor(233, 233, 233) : FColor(172, 172, 172);
-                                })
                             ]
                         ]
                     ]
                     
-                    // Depth Camera activation
+                    // Depth Camera availability
                     +SHorizontalBox::Slot()
-                    .FillWidth(1.0f)
-                    .Padding(FMargin(2, 4, 2, 0))
+                    .MaxWidth(120)
+                    .HAlign(HAlign_Center)
+                    .Padding(FMargin(0, 0, 2, 0))
                     [
                         SNew(SBorder)
                         .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
                         .BorderBackgroundColor(FColor(5,5, 5, 255))
-                        .Padding(4)
+                        .Padding(2, 0)
                         .HAlign(HAlign_Center)
                         [
                             SNew(SHorizontalBox)
                             +SHorizontalBox::Slot()
                             .AutoWidth()
+                            .HAlign(HAlign_Left)
                             .VAlign(VAlign_Center)
                             .Padding(FMargin(0, 0, 4, 0))
+                            [
+                                SNew(SImage)
+                                .Image_Lambda([this]() {
+                                    return bHasDepthCamera ? 
+                                        FAppStyle::GetBrush("Icons.Checkmark") : 
+                                        FAppStyle::GetBrush("Icons.X");
+                                })
+                                .ColorAndOpacity_Lambda([this]() {
+                                    return bHasDepthCamera ? 
+                                        FColor(20, 200, 20) : 
+                                        FColor(200, 20, 20);
+                                })
+                            ]
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .HAlign(HAlign_Center)
+                            .VAlign(VAlign_Center)
+                            .Padding(FMargin(0, 0, 2, 0))
                             [
                                 SAssignNew(DepthCameraCheckBox, SCheckBox)
                                 .IsChecked(bUseDepthCamera ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
@@ -595,33 +481,52 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCameraSelectPanel()
                             ]
                             +SHorizontalBox::Slot()
                             .AutoWidth()
+                            .Padding(0, 0, 4, 0)
+                            .HAlign(HAlign_Right)
                             .VAlign(VAlign_Center)
                             [
                                 SNew(STextBlock)
                                 .Text(FText::FromString("Depth"))
-                                .ColorAndOpacity_Lambda([this]() {
-                                    return bHasDepthCamera ? FColor(233, 233, 233) : FColor(172, 172, 172);
-                                })
                             ]
                         ]
                     ]
                     
-                    // Segmentation Camera activation
+                    // Segmentation Camera availability
                     +SHorizontalBox::Slot()
-                    .FillWidth(1.0f)
-                    .Padding(FMargin(2, 4, 0, 0))
+                    .MaxWidth(140)
+                    .HAlign(HAlign_Center)
+                    .Padding(FMargin(0, 0, 2, 0))
                     [
                         SNew(SBorder)
                         .BorderImage(FAppStyle::GetBrush("DetailsView.CategoryMiddle"))
                         .BorderBackgroundColor(FColor(5,5, 5, 255))
-                        .Padding(4)
+                        .Padding(2, 0)
                         .HAlign(HAlign_Center)
                         [
                             SNew(SHorizontalBox)
                             +SHorizontalBox::Slot()
                             .AutoWidth()
+                            .HAlign(HAlign_Left)
                             .VAlign(VAlign_Center)
                             .Padding(FMargin(0, 0, 4, 0))
+                            [
+                                SNew(SImage)
+                                .Image_Lambda([this]() {
+                                    return bHasSegmentationCamera ? 
+                                        FAppStyle::GetBrush("Icons.Checkmark") : 
+                                        FAppStyle::GetBrush("Icons.X");
+                                })
+                                .ColorAndOpacity_Lambda([this]() {
+                                    return bHasSegmentationCamera ? 
+                                        FColor(20, 200, 20) : 
+                                        FColor(200, 20, 20);
+                                })
+                            ]
+                            +SHorizontalBox::Slot()
+                            .AutoWidth()
+                            .HAlign(HAlign_Center)
+                            .VAlign(VAlign_Center)
+                            .Padding(FMargin(0, 0, 2, 0))
                             [
                                 SAssignNew(SegmentationCameraCheckBox, SCheckBox)
                                 .IsChecked(bUseSegmentationCamera ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
@@ -632,19 +537,17 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCameraSelectPanel()
                             ]
                             +SHorizontalBox::Slot()
                             .AutoWidth()
+                            .Padding(0, 0, 4, 0)
+                            .HAlign(HAlign_Right)
                             .VAlign(VAlign_Center)
                             [
                                 SNew(STextBlock)
                                 .Text(FText::FromString("Segmentation"))
-                                .ColorAndOpacity_Lambda([this]() {
-                                    return bHasSegmentationCamera ? FColor(233, 233, 233) : FColor(172, 172, 172);
-                                })
                             ]
                         ]
                     ]
                 ]
             ]
-            
             // Update button
             +SVerticalBox::Slot()
             .AutoHeight()
@@ -1063,7 +966,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreateSceneAnalysisPanel()
     +SVerticalBox::Slot()
     .AutoHeight()
     [
-        CreateSectionHeader("Image Capture")
+        CreateSectionHeader("Scene Analysis")
     ]
     +SVerticalBox::Slot()
     .AutoHeight()
@@ -1158,14 +1061,13 @@ TSharedRef<SWidget> SVCCSimPanel::CreateSceneAnalysisPanel()
             SNew(SButton)
             .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
             .ContentPadding(FMargin(5, 2))
-            .Text(FText::FromString("Analyze Scene"))
+            .Text(FText::FromString("Scan Scene"))
             .HAlign(HAlign_Center)
             .OnClicked_Lambda([this]() {
                 if (SceneAnalysisManager.IsValid())
                 {
                     SceneAnalysisManager->ScanScene();
-                    SceneAnalysisManager->GenerateSafeZone(SafeDistance, SafeHeight);
-                    bNeedAnalysis = false;
+                    bNeedScan = false;
                 }
                 return FReply::Handled();
             })
@@ -1175,10 +1077,32 @@ TSharedRef<SWidget> SVCCSimPanel::CreateSceneAnalysisPanel()
         ]
         +SHorizontalBox::Slot()
         .MaxWidth(120)
+        .Padding(FMargin(0, 0, 4, 0))
+        .HAlign(HAlign_Fill)
+        [
+            SNew(SButton)
+            .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+            .ContentPadding(FMargin(5, 2))
+            .Text(FText::FromString("Gen SafeZone"))
+            .HAlign(HAlign_Center)
+            .OnClicked_Lambda([this]() {
+                if (SceneAnalysisManager.IsValid())
+                {
+                    SceneAnalysisManager->GenerateSafeZone(SafeDistance, SafeHeight);
+                    bGenSafeZone = false;
+                }
+                return FReply::Handled();
+            })
+            .IsEnabled_Lambda([this]() {
+                return SceneAnalysisManager.IsValid() && !bNeedScan;
+            })
+        ]
+        +SHorizontalBox::Slot()
+        .MaxWidth(120)
         .Padding(FMargin(4, 0, 4, 0))
         .HAlign(HAlign_Fill)
         [
-            SAssignNew(VisualizePathButton, SButton)
+            SAssignNew(VisualizeSafeZoneButton, SButton)
             .ButtonStyle(bPathVisualized ? 
                &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Danger") : 
                &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Primary"))
@@ -1189,7 +1113,94 @@ TSharedRef<SWidget> SVCCSimPanel::CreateSceneAnalysisPanel()
             })
             .OnClicked(this, &SVCCSimPanel::OnToggleSafeZoneVisualizationClicked)
             .IsEnabled_Lambda([this]() {
-                return SceneAnalysisManager.IsValid() && !bNeedAnalysis;
+                return SceneAnalysisManager.IsValid() && !bGenSafeZone;
+            })
+        ]
+    ]
+
+    +SVerticalBox::Slot()
+    .AutoHeight()
+    .Padding(0, 4, 0, 0)
+    [
+        SNew(SHorizontalBox)
+        +SHorizontalBox::Slot()
+        .MaxWidth(120)
+        .Padding(FMargin(0, 0, 4, 0))
+        .HAlign(HAlign_Fill)
+        [
+            SNew(SButton)
+            .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+            .ContentPadding(FMargin(5, 2))
+            .Text(FText::FromString("Init Coverage"))
+            .HAlign(HAlign_Center)
+            .OnClicked_Lambda([this]() {
+                if (SceneAnalysisManager.IsValid())
+                {
+                    URGBCameraComponent* Camera =
+                        SelectedFlashPawn->GetComponentByClass<URGBCameraComponent>();
+                    Camera->CameraName = "CoverageCamera";
+                    if (Camera)
+                    {
+                        Camera->ComputeIntrinsics();
+                        SceneAnalysisManager->RegisterCamera(Camera);
+                    }
+                    bInitCoverage = false;
+                }
+                return FReply::Handled();
+            })
+            .IsEnabled_Lambda([this]() {
+                return SceneAnalysisManager.IsValid() && SelectedFlashPawn.IsValid();
+            })
+        ]
+        +SHorizontalBox::Slot()
+        .MaxWidth(120)
+        .Padding(FMargin(0, 0, 4, 0))
+        .HAlign(HAlign_Fill)
+        [
+            SNew(SButton)
+            .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+            .ContentPadding(FMargin(5, 2))
+            .Text(FText::FromString("Gen Coverage"))
+            .HAlign(HAlign_Center)
+            .OnClicked_Lambda([this]() {
+                if (SceneAnalysisManager.IsValid())
+                {
+                    TArray<FTransform> CoverageTransforms;
+                    const auto Positions = SelectedFlashPawn->PendingPositions;
+                    const auto Rotations = SelectedFlashPawn->PendingRotations;
+                    for (int32 i = 0; i < Positions.Num(); ++i)
+                    {
+                        FTransform Transform;
+                        Transform.SetLocation(Positions[i]);
+                        Transform.SetRotation(FQuat(Rotations[i]));
+                        CoverageTransforms.Add(Transform);
+                    }
+                    SceneAnalysisManager->ComputeCoverage(CoverageTransforms, "CoverageCamera");
+                    bGenCoverage = false;
+                }
+                return FReply::Handled();
+            })
+            .IsEnabled_Lambda([this]() {
+                return SceneAnalysisManager.IsValid() && !bInitCoverage;
+            })
+        ]
+        +SHorizontalBox::Slot()
+        .MaxWidth(120)
+        .Padding(FMargin(4, 0, 4, 0))
+        .HAlign(HAlign_Fill)
+        [
+            SAssignNew(VisualizeCoverageButton, SButton)
+            .ButtonStyle(bPathVisualized ? 
+               &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Danger") : 
+               &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Primary"))
+            .ContentPadding(FMargin(0, 2))
+            .HAlign(HAlign_Center)
+            .Text_Lambda([this]() {
+                return FText::FromString(bCoverageVisualized ? "Hide Coverage" : "Show Coverage");
+            })
+            .OnClicked(this, &SVCCSimPanel::OnToggleCoverageVisualizationClicked)
+            .IsEnabled_Lambda([this]() {
+                return SceneAnalysisManager.IsValid() && !bGenCoverage;
             })
         ]
     ]
@@ -2157,7 +2168,6 @@ FReply SVCCSimPanel::OnToggleSafeZoneVisualizationClicked()
 
     if (bSafeZoneVisualized)
     {
-        // SceneAnalysisManager->GenerateSafeZone(SafeDistance, SafeHeight);
         SceneAnalysisManager->VisualizeSafeZone(true);
     }
     else
@@ -2165,7 +2175,26 @@ FReply SVCCSimPanel::OnToggleSafeZoneVisualizationClicked()
         SceneAnalysisManager->VisualizeSafeZone(false);
     }
 
-    VisualizePathButton->SetButtonStyle(bSafeZoneVisualized ? 
+    VisualizeSafeZoneButton->SetButtonStyle(bSafeZoneVisualized ? 
+        &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Danger") : 
+        &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Primary"));
+    
+    return FReply::Handled();
+}
+
+FReply SVCCSimPanel::OnToggleCoverageVisualizationClicked()
+{
+    if (!SceneAnalysisManager.IsValid())
+    {
+        return FReply::Handled();
+    }
+    
+    // Toggle the visualization state
+    bCoverageVisualized = !bCoverageVisualized;
+    
+    SceneAnalysisManager->VisualizeCoverage(bCoverageVisualized);
+    
+    VisualizeCoverageButton->SetButtonStyle(bCoverageVisualized ? 
         &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Danger") : 
         &FAppStyle::Get().GetWidgetStyle<FButtonStyle>("FlatButton.Primary"));
     

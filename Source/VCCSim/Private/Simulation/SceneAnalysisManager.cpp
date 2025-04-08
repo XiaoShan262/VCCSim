@@ -15,8 +15,6 @@ ASceneAnalysisManager::ASceneAnalysisManager()
     TotalPointsInScene = 0;
     TotalTrianglesInScene = 0;
     CurrentCoveragePercentage = 0.0f;
-    SamplingDensity = 1.0f;
-    bUseVertexSampling = false;
     LogPath = FPaths::ProjectLogDir();
     SafeZoneMaterial = nullptr;
     SafeZoneInstancedMesh = nullptr;
@@ -64,16 +62,15 @@ void ASceneAnalysisManager::ScanScene()
     }
     
     ResetCoverage();
-    // VisualizeSceneMeshes(10.0f, true, false, 0);
 }
 
 void ASceneAnalysisManager::RegisterCamera(URGBCameraComponent* CameraComponent)
 {
     CameraIntrinsics.Add(CameraComponent->CameraName,
     CameraComponent->GetCameraIntrinsics());
-    
-    CameraComponent->OnKeyPointCaptured.BindUFunction(
-        this, "UpdateAccumulatedCoverage");
+    //
+    // CameraComponent->OnKeyPointCaptured.BindUFunction(
+    //     this, "");
 }
 
 FMeshInfo ASceneAnalysisManager::GetMeshInfo(int32 MeshID) const
@@ -92,74 +89,414 @@ TArray<FMeshInfo> ASceneAnalysisManager::GetAllMeshInfo() const
     return SceneMeshes;
 }
 
-void ASceneAnalysisManager::UpdateAccumulatedCoverage(
-    const FTransform& Transform, const FString& Name)
+FCoverageData ASceneAnalysisManager::ComputeCoverage(
+    const TArray<FTransform>& CameraTransforms, const FString& CameraName)
 {
-    if (!World || SceneMeshes.Num() == 0)
-        return;
+    FCoverageData CoverageData;
+    CoverageData.CoveragePercentage = 0.0f;
+    CoverageData.TotalVisibleTriangles = 0;
     
-    // Get camera intrinsics
-    const FMatrix44f* CameraMatrix = CameraIntrinsics.Find(Name);
-    if (!CameraMatrix)
-        return;
+    if (!World || CameraTransforms.Num() == 0 || CoverageMap.Num() == 0)
+        return CoverageData;
     
-    // Construct frustum for visibility checks
-    FConvexVolume Frustum;
-    ConstructFrustum(Frustum, Transform, *CameraMatrix);
+    // Get camera intrinsic for specified camera name
+    FMatrix44f CameraIntrinsic;
     
-    // Reset current visibility data
-    CurrentlyVisibleMeshIDs.Empty();
-    
-    // Check visibility for each mesh
-    for (const FMeshInfo& MeshInfo : SceneMeshes)
+    if (CameraIntrinsics.Contains(CameraName))
     {
-        // Quick frustum-bounds check
-        if (!Frustum.IntersectBox(MeshInfo.Bounds.Origin, MeshInfo.Bounds.BoxExtent))
-            continue;
+        CameraIntrinsic = CameraIntrinsics[CameraName];
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ComputeCoverage: No intrinsics "
+                                      "found for camera %s"), *CameraName);
+    }
+    
+    // Reset visibility of all points
+    VisiblePoints.Empty();
+    InvisiblePoints.Empty();
+    
+    // Reset all points to invisible first
+    for (auto& Pair : CoverageMap)
+    {
+        Pair.Value = false;
+    }
+    
+    // For each camera, check which points are visible
+    for (const FTransform& CameraTransform : CameraTransforms)
+    {
+        // Construct frustum for this camera
+        FConvexVolume Frustum;
+        ConstructFrustum(Frustum, CameraTransform, CameraIntrinsic);
         
-        // Sample points on the mesh
-        TArray<FVector> SampledPoints = SamplePointsOnMesh(MeshInfo);
-        
-        // Check visibility for each point
-        int32 VisiblePoints = 0;
-        for (const FVector& Point : SampledPoints)
+        // Check each point in the coverage map
+        for (auto& Pair : CoverageMap)
         {
-            if (IsPointVisibleFromCamera(Point, Transform))
+            const FVector& Point = Pair.Key;
+            bool& bIsVisible = Pair.Value;
+            
+            // Skip points that are already marked as visible
+            if (bIsVisible)
+                continue;
+            
+            // Check if point is inside frustum
+            bool bInFrustum = true;
+            for (const FPlane& Plane : Frustum.Planes)
             {
-                VisiblePoints++;
-                CoverageMap.FindOrAdd(Point, true);
+                if (Plane.PlaneDot(Point) < 0.0f)
+                {
+                    bInFrustum = false;
+                    break;
+                }
+            }
+            
+            // If in frustum, check if it's occluded
+            if (bInFrustum && IsPointVisibleFromCamera(Point, CameraTransform))
+            {
+                bIsVisible = true;
             }
         }
-        
-        // If any points are visible, mark mesh as visible
-        if (VisiblePoints > 0)
+    }
+    
+    // Now collect visible/invisible points and meshes
+    for (const auto& Pair : CoverageMap)
+    {
+        if (Pair.Value)
         {
-            CurrentlyVisibleMeshIDs.Add(MeshInfo.MeshID);
+            VisiblePoints.Add(Pair.Key);
+        }
+        else
+        {
+            InvisiblePoints.Add(Pair.Key);
         }
     }
     
-    // Update coverage percentage
-    int32 CoveredPoints = 0;
-    for (const auto& PointPair : CoverageMap)
+    // Calculate coverage percentage
+    int32 TotalPoints = CoverageMap.Num();
+    int32 VisiblePointCount = VisiblePoints.Num();
+    
+    // Identify visible meshes
+    TSet<int32> VisibleMeshIDs;
+    for (const FVector& Point : VisiblePoints)
     {
-        if (PointPair.Value)
-            CoveredPoints++;
+        for (const FMeshInfo& MeshInfo : SceneMeshes)
+        {
+            if (MeshInfo.Bounds.GetBox().IsInsideOrOn(Point))
+            {
+                VisibleMeshIDs.Add(MeshInfo.MeshID);
+                break;
+            }
+        }
     }
     
-    CurrentCoveragePercentage = TotalPointsInScene > 0 ? 
-        static_cast<float>(CoveredPoints) / TotalPointsInScene * 100.0f : 0.0f;
+    // Calculate coverage percentage
+    float CoveragePercentage = TotalPoints > 0 ? (float)VisiblePointCount /
+        (float)TotalPoints * 100.0f : 0.0f;
+    
+    // Update class members
+    CurrentlyVisibleMeshIDs = VisibleMeshIDs;
+    CurrentCoveragePercentage = CoveragePercentage;
+    bCoverageVisualizationDirty = true;
+    
+    // Populate return data structure
+    CoverageData.CoveragePercentage = CoveragePercentage;
+    CoverageData.VisibleMeshIDs = VisibleMeshIDs;
+    CoverageData.VisiblePoints = VisiblePoints;
+    
+    // Calculate total visible triangles (approx based on visible points)
+    int32 VisibleTriangles = 0;
+    for (const FMeshInfo& MeshInfo : SceneMeshes)
+    {
+        if (VisibleMeshIDs.Contains(MeshInfo.MeshID))
+        {
+            // Approximate visible triangles based on visible sample points from this mesh
+            float MeshVisiblePointRatio = 0.0f;
+            int32 MeshTotalPoints = 0;
+            int32 MeshVisiblePoints = 0;
+            
+            for (const auto& Pair : CoverageMap)
+            {
+                if (MeshInfo.Bounds.GetBox().IsInsideOrOn(Pair.Key))
+                {
+                    MeshTotalPoints++;
+                    if (Pair.Value)
+                        MeshVisiblePoints++;
+                }
+            }
+            
+            if (MeshTotalPoints > 0)
+            {
+                MeshVisiblePointRatio = (float)MeshVisiblePoints / (float)MeshTotalPoints;
+                VisibleTriangles += FMath::RoundToInt(MeshInfo.NumTriangles * MeshVisiblePointRatio);
+            }
+        }
+    }
+    
+    CoverageData.TotalVisibleTriangles = VisibleTriangles;
+    
+    UE_LOG(LogTemp, Display, TEXT("Coverage computed for camera %s: %.2f%% of points visible (%d/%d), %d visible meshes, ~%d visible triangles"),
+        *CameraName, CoveragePercentage, VisiblePointCount, TotalPoints, VisibleMeshIDs.Num(), VisibleTriangles);
+    
+    return CoverageData;
 }
 
-float ASceneAnalysisManager::GetTotalCoveragePercentage() const
+FCoverageData ASceneAnalysisManager::ComputeCoverage(
+    const FTransform& CameraTransform, const FString& CameraName)
 {
-    return CurrentCoveragePercentage;
+    // Create array with single transform and call the multi-transform version
+    TArray<FTransform> CameraTransforms;
+    CameraTransforms.Add(CameraTransform);
+    return ComputeCoverage(CameraTransforms, CameraName);
 }
 
+void ASceneAnalysisManager::InitializeCoverageVisualization()
+{
+    if (!World)
+        return;
+    
+    // Initialize the instanced mesh components if they don't exist
+    if (!CoveredPointsInstancedMesh)
+    {
+        CoveredPointsInstancedMesh = NewObject<UInstancedStaticMeshComponent>(this);
+        CoveredPointsInstancedMesh->RegisterComponent();
+        CoveredPointsInstancedMesh->SetMobility(EComponentMobility::Movable);
+        CoveredPointsInstancedMesh->AttachToComponent(GetRootComponent(),
+            FAttachmentTransformRules::KeepWorldTransform);
+        CoveredPointsInstancedMesh->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+        
+        // Load the disc/circle mesh
+        UStaticMesh* CircleMesh = LoadObject<UStaticMesh>(nullptr,
+            TEXT("/Script/Engine.StaticMesh'/VCCSim/Simulation/Plane_NoNanite.Plane_NoNanite'"));
+        
+        if (CircleMesh)
+        {
+            CoveredPointsInstancedMesh->SetStaticMesh(CircleMesh);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("InitializeCoverageVisualization: "
+                                        "Failed to load circle mesh"));
+            return;
+        }
+        
+        // Load the covered material
+        UMaterialInterface* CoveredMaterial = LoadObject<UMaterialInterface>(nullptr,
+            TEXT("/Script/Engine.Material'/VCCSim/Materials/M_Covered.M_Covered'"));
+        
+        if (CoveredMaterial)
+        {
+            CoveredPointsInstancedMesh->SetMaterial(0, CoveredMaterial);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("InitializeCoverageVisualization: "
+                                        "Failed to load covered material"));
+        }
+    }
+    
+    if (!UncoveredPointsInstancedMesh)
+    {
+        UncoveredPointsInstancedMesh = NewObject<UInstancedStaticMeshComponent>(this);
+        UncoveredPointsInstancedMesh->RegisterComponent();
+        UncoveredPointsInstancedMesh->SetMobility(EComponentMobility::Movable);
+        UncoveredPointsInstancedMesh->AttachToComponent(GetRootComponent(),
+            FAttachmentTransformRules::KeepWorldTransform);
+        UncoveredPointsInstancedMesh->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+        
+        // Use the same mesh as for covered points
+        if (CoveredPointsInstancedMesh->GetStaticMesh())
+        {
+            UncoveredPointsInstancedMesh->SetStaticMesh(CoveredPointsInstancedMesh->GetStaticMesh());
+        }
+        
+        // Load the uncovered material
+        UMaterialInterface* UncoveredMaterial = LoadObject<UMaterialInterface>(nullptr,
+            TEXT("/Script/Engine.Material'/VCCSim/Materials/M_Uncovered.M_Uncovered'"));
+        
+        if (UncoveredMaterial)
+        {
+            UncoveredPointsInstancedMesh->SetMaterial(0, UncoveredMaterial);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("InitializeCoverageVisualization: Failed to load uncovered material"));
+        }
+    }
+}
+
+void ASceneAnalysisManager::VisualizeCoverage(bool bShow)
+{
+    if (!World)
+        return;
+    
+    // Check if we have coverage data
+    if (CoverageMap.Num() == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("VisualizeCoverage: No coverage data available"));
+        return;
+    }
+    
+    // If not showing, clear visualization and return
+    if (!bShow)
+    {
+        CoveredPointsInstancedMesh->SetVisibility(false);
+        UncoveredPointsInstancedMesh->SetVisibility(false);
+        return;
+    }
+    
+    // Initialize visualization if needed
+    InitializeCoverageVisualization();
+    
+    // If mesh components failed to initialize, return
+    if (!CoveredPointsInstancedMesh || !UncoveredPointsInstancedMesh)
+    {
+        UE_LOG(LogTemp, Error, TEXT("VisualizeCoverage: "
+                                    "Coverage mesh components not initialized"));
+        return;
+    }
+    
+    // Only update instances if dirty or visibility is changing
+    if (bCoverageVisualizationDirty)
+    {
+        // Clear existing instances
+        CoveredPointsInstancedMesh->ClearInstances();
+        UncoveredPointsInstancedMesh->ClearInstances();
+        
+        // Calculate circle size based on sampling density
+        float CircleRadius = FMath::Max(5.0f, SamplingDensity * 0.5f);
+        float CircleSize = CircleRadius / 20.0f;
+        
+        // Create instances for visible points
+        for (const FVector& Point : VisiblePoints)
+        {
+            // Find closest normal for this point
+            FVector Normal = FVector::UpVector; // Default to up
+            
+            // Find mesh and triangle this point belongs to for better normal estimation
+            for (const FMeshInfo& MeshInfo : SceneMeshes)
+            {
+                if (MeshInfo.Bounds.GetBox().IsInsideOrOn(Point))
+                {
+                    // Find closest triangle's normal
+                    float ClosestDistSq = FLT_MAX;
+                    
+                    for (int32 i = 0; i < MeshInfo.Indices.Num(); i += 3)
+                    {
+                        if (i + 2 < MeshInfo.Indices.Num())
+                        {
+                            const FVector& V0 = MeshInfo.VertexPositions[MeshInfo.Indices[i]];
+                            const FVector& V1 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 1]];
+                            const FVector& V2 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 2]];
+                            
+                            FVector ClosestPoint = FMath::ClosestPointOnTriangleToPoint(Point, V0, V1, V2);
+                            float DistSq = (Point - ClosestPoint).SizeSquared();
+                            
+                            if (DistSq < ClosestDistSq)
+                            {
+                                ClosestDistSq = DistSq;
+                                Normal = FVector::CrossProduct(V1 - V0, V2 - V0).GetSafeNormal();
+                            }
+                        }
+                    }
+                    
+                    break; // Break after finding the mesh
+                }
+            }
+            
+            // Create rotation from normal
+            FRotator CircleRotation = Normal.Rotation();
+            
+            // Create transform with a slight offset along normal to prevent Z-fighting
+            FTransform CircleTransform(
+                CircleRotation,
+                Point + Normal * 1.0f, // Small offset along normal
+                FVector(CircleSize, CircleSize, CircleSize)
+            );
+            
+            // Add instance to covered points
+            CoveredPointsInstancedMesh->AddInstance(CircleTransform);
+        }
+        
+        // Create instances for invisible points
+        for (const FVector& Point : InvisiblePoints)
+        {
+            // Find closest normal using same approach as for visible points
+            FVector Normal = FVector::UpVector; // Default
+            
+            // (Same code as above for finding normal - consider making a helper function)
+            for (const FMeshInfo& MeshInfo : SceneMeshes)
+            {
+                if (MeshInfo.Bounds.GetBox().IsInsideOrOn(Point))
+                {
+                    float ClosestDistSq = FLT_MAX;
+                    
+                    for (int32 i = 0; i < MeshInfo.Indices.Num(); i += 3)
+                    {
+                        if (i + 2 < MeshInfo.Indices.Num())
+                        {
+                            const FVector& V0 = MeshInfo.VertexPositions[MeshInfo.Indices[i]];
+                            const FVector& V1 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 1]];
+                            const FVector& V2 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 2]];
+                            
+                            FVector ClosestPoint = FMath::ClosestPointOnTriangleToPoint(Point, V0, V1, V2);
+                            float DistSq = (Point - ClosestPoint).SizeSquared();
+                            
+                            if (DistSq < ClosestDistSq)
+                            {
+                                ClosestDistSq = DistSq;
+                                Normal = FVector::CrossProduct(V1 - V0, V2 - V0).GetSafeNormal();
+                            }
+                        }
+                    }
+                    
+                    break;
+                }
+            }
+            
+            FRotator CircleRotation = Normal.Rotation();
+            
+            // Create transform with an offset from visible points to prevent Z-fighting
+            FTransform CircleTransform(
+                CircleRotation,
+                Point + Normal * 2.0f, // Slightly larger offset for uncovered points
+                FVector(CircleSize * 0.8f, CircleSize * 0.8f, CircleSize * 0.8f) // Slightly smaller
+            );
+            
+            // Add instance to uncovered points
+            UncoveredPointsInstancedMesh->AddInstance(CircleTransform);
+        }
+        
+        UE_LOG(LogTemp, Display, TEXT("VisualizeCoverage: Added %d covered "
+                                      "and %d uncovered point instances"),
+            VisiblePoints.Num(), InvisiblePoints.Num());
+        
+        bCoverageVisualizationDirty = false;
+    }
+}
+
+void ASceneAnalysisManager::ClearCoverageVisualization()
+{
+    if (CoveredPointsInstancedMesh)
+    {
+        CoveredPointsInstancedMesh->ClearInstances();
+        CoveredPointsInstancedMesh->SetVisibility(false);
+    }
+    
+    if (UncoveredPointsInstancedMesh)
+    {
+        UncoveredPointsInstancedMesh->ClearInstances();
+        UncoveredPointsInstancedMesh->SetVisibility(false);
+    }
+}
+
+// Update the ResetCoverage function to initialize the point arrays
 void ASceneAnalysisManager::ResetCoverage()
 {
     CoverageMap.Empty();
     CurrentlyVisibleMeshIDs.Empty();
     CurrentCoveragePercentage = 0.0f;
+    VisiblePoints.Empty();
+    InvisiblePoints.Empty();
     
     // Initialize coverage map with all points set to not visible
     for (const FMeshInfo& MeshInfo : SceneMeshes)
@@ -168,40 +505,11 @@ void ASceneAnalysisManager::ResetCoverage()
         for (const FVector& Point : SampledPoints)
         {
             CoverageMap.Add(Point, false);
-        }
-    }
-}
-
-void ASceneAnalysisManager::VisualizeCoverage(
-    bool bShowVisiblePoints, bool bHighlightCoveredMeshes, float Duration)
-{
-    if (!World)
-        return;
-    
-    // Visualize visible points
-    if (bShowVisiblePoints)
-    {
-        for (const auto& PointPair : CoverageMap)
-        {
-            if (PointPair.Value) // If point is visible
-            {
-                DrawDebugPoint(World, PointPair.Key, 5.0f, FColor::Green,
-                    false, Duration);
-            }
+            InvisiblePoints.Add(Point);
         }
     }
     
-    // Highlight covered meshes
-    if (bHighlightCoveredMeshes)
-    {
-        for (const FMeshInfo& MeshInfo : SceneMeshes)
-        {
-            FColor Color = CurrentlyVisibleMeshIDs.Contains(MeshInfo.MeshID) ?
-                FColor::Green : FColor::Red;
-            DrawDebugBox(World, MeshInfo.Bounds.Origin,
-                MeshInfo.Bounds.BoxExtent, Color, false, Duration);
-        }
-    }
+    bCoverageVisualizationDirty = true;
 }
 
 void ASceneAnalysisManager::ConstructFrustum(
@@ -456,7 +764,7 @@ void ASceneAnalysisManager::GenerateSafeZone(
         }
     }
 
-    Dirty = true;
+    bSafeZoneDirty = true;
 }
 
 void ASceneAnalysisManager::InitializeSafeZoneVisualization()
@@ -474,6 +782,8 @@ void ASceneAnalysisManager::InitializeSafeZoneVisualization()
         SafeZoneInstancedMesh->AttachToComponent(GetRootComponent(),
             FAttachmentTransformRules::KeepWorldTransform);
         SafeZoneInstancedMesh->SetWorldTransform(FTransform::Identity);
+        // No collision
+        SafeZoneInstancedMesh->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
         
         // Load the custom cube mesh with Nanite already disabled
         UStaticMesh* CubeMesh = LoadObject<UStaticMesh>(nullptr,
@@ -551,12 +861,12 @@ void ASceneAnalysisManager::VisualizeSafeZone(bool Vis)
     SafeZoneInstancedMesh->SetVisibility(Vis);
     
     // Only update instances if dirty or if visibility is changing
-    if (Dirty || !Vis)
+    if (bSafeZoneDirty || !Vis)
     {        
         // If not visible, we're done
         if (!Vis)
         {
-            Dirty = false;
+            bSafeZoneDirty = false;
             SafeZoneInstancedMesh->SetVisibility(false);
             return;
         }
@@ -602,7 +912,7 @@ void ASceneAnalysisManager::VisualizeSafeZone(bool Vis)
         
         UE_LOG(LogTemp, Display, TEXT("VisualizeSafeZone: Added %d"
                                       " unsafe cell instances"), UnsafeCellCount);
-        Dirty = false;
+        bSafeZoneDirty = false;
     }
 }
 
@@ -650,8 +960,7 @@ bool ASceneAnalysisManager::IsPointVisibleFromCamera(
     return true;
 }
 
-TArray<FVector> ASceneAnalysisManager::SamplePointsOnMesh(
-    const FMeshInfo& MeshInfo, int32 SamplesPerTriangle)
+TArray<FVector> ASceneAnalysisManager::SamplePointsOnMesh(const FMeshInfo& MeshInfo)
 {
     TArray<FVector> SampledPoints;
     
@@ -661,9 +970,8 @@ TArray<FVector> ASceneAnalysisManager::SamplePointsOnMesh(
         return MeshInfo.VertexPositions;
     }
     
-    // Pre-allocate for efficiency
-    const int32 EstimatedPoints = MeshInfo.NumTriangles * (3 + SamplesPerTriangle);
-    SampledPoints.Reserve(EstimatedPoints);
+    // Pre-allocate for efficiency (rough estimation)
+    SampledPoints.Reserve(MeshInfo.NumTriangles * 5); // 3 vertices plus estimated samples
     
     // Sample points based on triangles
     for (int32 i = 0; i < MeshInfo.Indices.Num(); i += 3)
@@ -679,8 +987,15 @@ TArray<FVector> ASceneAnalysisManager::SamplePointsOnMesh(
             SampledPoints.Add(V1);
             SampledPoints.Add(V2);
             
+            // Calculate triangle area (in square units)
+            float TriangleArea = 0.5f * FVector::CrossProduct(V1 - V0, V2 - V0).Size();
+            
+            // Calculate number of samples based on SamplingDensity and triangle area
+            // SamplingDensity represents points per square meter
+            int32 NumSamples = FMath::Max(1, FMath::RoundToInt(TriangleArea * SamplingDensity));
+            
             // Add additional samples within the triangle
-            for (int32 SampleIdx = 0; SampleIdx < SamplesPerTriangle; ++SampleIdx)
+            for (int32 SampleIdx = 0; SampleIdx < NumSamples; ++SampleIdx)
             {
                 // Generate random barycentric coordinates
                 float r1 = FMath::SRand();
@@ -697,6 +1012,8 @@ TArray<FVector> ASceneAnalysisManager::SamplePointsOnMesh(
             }
         }
     }
+    UE_LOG(LogTemp, Warning, TEXT("Sampled %d points from mesh %s"),
+        SampledPoints.Num(), *MeshInfo.MeshName);
     
     return SampledPoints;
 }
@@ -839,4 +1156,13 @@ void ASceneAnalysisManager::VisualizeSceneMeshes(
     UE_LOG(LogTemp, Display, TEXT("Visualized %d meshes with %d total "
                                   "triangles and %d total vertices"), 
         SceneMeshes.Num(), TotalTrianglesInScene, TotalPointsInScene);
+}
+
+void ASceneAnalysisManager::VisualizeSampledPoints(float Duration, float VertexSize)
+{
+    for (const auto& Point : CoverageMap)
+    {
+        DrawDebugPoint(World, Point.Key, VertexSize, FColor::Green,
+            false, Duration);
+    }
 }

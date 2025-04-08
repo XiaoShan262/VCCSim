@@ -157,9 +157,17 @@ private:
     void HidePathVisualization();
 
     TWeakObjectPtr<ASceneAnalysisManager> SceneAnalysisManager = nullptr;
-    bool bNeedAnalysis = true;
+    bool bNeedScan = true;
+    bool bGenSafeZone = true;
     bool bSafeZoneVisualized = false;
+    TSharedPtr<class SButton> VisualizeSafeZoneButton;
     FReply OnToggleSafeZoneVisualizationClicked();
+
+    bool bInitCoverage = true;
+    bool bGenCoverage = true;
+    bool bCoverageVisualized = false;
+    TSharedPtr<class SButton> VisualizeCoverageButton;
+    FReply OnToggleCoverageVisualizationClicked();
 };
 
 namespace FVCCSimPanelFactory
