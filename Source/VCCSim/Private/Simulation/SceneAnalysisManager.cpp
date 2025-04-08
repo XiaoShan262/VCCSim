@@ -357,6 +357,8 @@ void ASceneAnalysisManager::GenerateSafeZone(
     // Calculate grid dimensions
     FVector BoundsSize = SceneBounds.GetSize();
     FVector BoundsMin = SceneBounds.Min;
+
+    ExpandedSceneBounds = SceneBounds;
     
     int32 NumX = FMath::Max(1, FMath::CeilToInt(BoundsSize.X / GridResolution));
     int32 NumY = FMath::Max(1, FMath::CeilToInt(BoundsSize.Y / GridResolution));
@@ -562,14 +564,7 @@ void ASceneAnalysisManager::VisualizeSafeZone(bool Vis)
         // Clear existing instances
         SafeZoneInstancedMesh->ClearInstances();
         
-        // Get the scene bounds
-        FBox SceneBounds(EForceInit::ForceInit);
-        for (const FMeshInfo& MeshInfo : SceneMeshes)
-        {
-            SceneBounds += MeshInfo.Bounds.GetBox();
-        }
-        
-        FVector BoundsMin = SceneBounds.Min;
+        FVector BoundsMin = ExpandedSceneBounds.Min;
         
         // Add instances for each unsafe cell
         int32 UnsafeCellCount = 0;

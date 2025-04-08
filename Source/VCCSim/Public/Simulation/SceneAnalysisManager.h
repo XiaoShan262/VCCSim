@@ -89,6 +89,8 @@ private:
     float CurrentCoveragePercentage;
     float SamplingDensity;
     bool bUseVertexSampling;
+    UPROPERTY()
+    FBox ExpandedSceneBounds;
     TArray<TArray<TArray<bool>>> SafeZoneGrid;
     bool Dirty = false;
 };
