@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "DataType/DataMesh.h"
+#include "ProceduralMeshComponent.h"
 #include "SceneAnalysisManager.generated.h"
 
 class URGBCameraComponent;
@@ -33,20 +34,28 @@ public:
         const TArray<FTransform>& CameraTransforms, const FString& CameraName);
     FCoverageData ComputeCoverage(
         const FTransform& CameraTransform, const FString& CameraName);
+    
+    // Coverage Grid Visualization - New Approach
     UFUNCTION(BlueprintCallable, Category = "SceneAnalysis|Coverage")
     void InitializeCoverageVisualization();
     UFUNCTION(BlueprintCallable, Category = "SceneAnalysis|Coverage")
     void VisualizeCoverage(bool bShow);
     UFUNCTION(BlueprintCallable, Category = "SceneAnalysis|Coverage")
     void ClearCoverageVisualization();
+    
+    // Coverage Grid Settings
     UPROPERTY(EditAnywhere, Category = "SceneAnalysis|Coverage")
-    UInstancedStaticMeshComponent* CoveredPointsInstancedMesh;
+    UProceduralMeshComponent* CoverageVisualizationMesh;
     UPROPERTY(EditAnywhere, Category = "SceneAnalysis|Coverage")
-    UInstancedStaticMeshComponent* UncoveredPointsInstancedMesh;
+    UMaterialInterface* CoverageMaterial;
+    UPROPERTY(EditAnywhere, Category = "SceneAnalysis|Coverage")
+    float CoverageGridResolution = 50.0f;
     UPROPERTY(EditAnywhere, Category = "SceneAnalysis|Coverage")
     int SamplingDensity = 1;
     UPROPERTY(EditAnywhere, Category = "SceneAnalysis|Coverage")
     bool bUseVertexSampling = true;
+    UPROPERTY(EditAnywhere, Category = "SceneAnalysis|Coverage", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+    float VisualizationThreshold = 0.01f;
     
     // Safe zone
     void GenerateSafeZone(const float& SafeDistance, const float& SafeHeight);
@@ -84,6 +93,10 @@ private:
         const FTransform& CameraPose) const;
     TArray<FVector> SamplePointsOnMesh(const FMeshInfo& MeshInfo);
 
+    void InitializeCoverageGrid();
+    void UpdateCoverageGrid();
+    void CreateCoverageMesh();
+
 private:
     UPROPERTY()
     UWorld* World;
@@ -102,6 +115,12 @@ private:
     bool bCoverageVisualizationDirty = false;
     TArray<FVector> VisiblePoints;
     TArray<FVector> InvisiblePoints;
+
+    // Coverage Grid
+    TArray<TArray<TArray<float>>> CoverageGrid;
+    FVector CoverageGridOrigin;
+    FVector CoverageGridSize;
+    bool bCoverageGridInitialized = false;
 
     // Safe zone
     UPROPERTY()

@@ -18,6 +18,9 @@ ASceneAnalysisManager::ASceneAnalysisManager()
     LogPath = FPaths::ProjectLogDir();
     SafeZoneMaterial = nullptr;
     SafeZoneInstancedMesh = nullptr;
+    CoverageVisualizationMesh = nullptr;
+    CoverageMaterial = nullptr;
+    bCoverageGridInitialized = false;
 
     // Set no collision and no tick
     PrimaryActorTick.bCanEverTick = false;
@@ -236,6 +239,11 @@ FCoverageData ASceneAnalysisManager::ComputeCoverage(
     
     UE_LOG(LogTemp, Display, TEXT("Coverage computed for camera %s: %.2f%% of points visible (%d/%d), %d visible meshes, ~%d visible triangles"),
         *CameraName, CoveragePercentage, VisiblePointCount, TotalPoints, VisibleMeshIDs.Num(), VisibleTriangles);
+
+    if (bCoverageGridInitialized)
+    {
+        UpdateCoverageGrid();
+    }
     
     return CoverageData;
 }
@@ -254,73 +262,27 @@ void ASceneAnalysisManager::InitializeCoverageVisualization()
     if (!World)
         return;
     
-    // Initialize the instanced mesh components if they don't exist
-    if (!CoveredPointsInstancedMesh)
+    // Initialize the procedural mesh component if it doesn't exist
+    if (!CoverageVisualizationMesh)
     {
-        CoveredPointsInstancedMesh = NewObject<UInstancedStaticMeshComponent>(this);
-        CoveredPointsInstancedMesh->RegisterComponent();
-        CoveredPointsInstancedMesh->SetMobility(EComponentMobility::Movable);
-        CoveredPointsInstancedMesh->AttachToComponent(GetRootComponent(),
-            FAttachmentTransformRules::KeepWorldTransform);
-        CoveredPointsInstancedMesh->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
-        
-        // Load the disc/circle mesh
-        UStaticMesh* CircleMesh = LoadObject<UStaticMesh>(nullptr,
-            TEXT("/Script/Engine.StaticMesh'/VCCSim/Simulation/Plane_NoNanite.Plane_NoNanite'"));
-        
-        if (CircleMesh)
-        {
-            CoveredPointsInstancedMesh->SetStaticMesh(CircleMesh);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("InitializeCoverageVisualization: "
-                                        "Failed to load circle mesh"));
-            return;
-        }
-        
-        // Load the covered material
-        UMaterialInterface* CoveredMaterial = LoadObject<UMaterialInterface>(nullptr,
-            TEXT("/Script/Engine.Material'/VCCSim/Materials/M_Covered.M_Covered'"));
-        
-        if (CoveredMaterial)
-        {
-            CoveredPointsInstancedMesh->SetMaterial(0, CoveredMaterial);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("InitializeCoverageVisualization: "
-                                        "Failed to load covered material"));
-        }
+        CoverageVisualizationMesh = NewObject<UProceduralMeshComponent>(this);
+        CoverageVisualizationMesh->RegisterComponent();
+        CoverageVisualizationMesh->SetMobility(EComponentMobility::Movable);
+        CoverageVisualizationMesh->AttachToComponent(GetRootComponent(), 
+                                                   FAttachmentTransformRules::KeepWorldTransform);
+        CoverageVisualizationMesh->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
     }
     
-    if (!UncoveredPointsInstancedMesh)
+    // Load or create the coverage material if not already set
+    if (!CoverageMaterial)
     {
-        UncoveredPointsInstancedMesh = NewObject<UInstancedStaticMeshComponent>(this);
-        UncoveredPointsInstancedMesh->RegisterComponent();
-        UncoveredPointsInstancedMesh->SetMobility(EComponentMobility::Movable);
-        UncoveredPointsInstancedMesh->AttachToComponent(GetRootComponent(),
-            FAttachmentTransformRules::KeepWorldTransform);
-        UncoveredPointsInstancedMesh->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+        // Try to load the coverage material
+        CoverageMaterial = LoadObject<UMaterialInterface>(nullptr, 
+            TEXT("/Script/Engine.Material'/VCCSim/Materials/M_Coverage.M_Coverage'"));
         
-        // Use the same mesh as for covered points
-        if (CoveredPointsInstancedMesh->GetStaticMesh())
-        {
-            UncoveredPointsInstancedMesh->SetStaticMesh(CoveredPointsInstancedMesh->GetStaticMesh());
-        }
-        
-        // Load the uncovered material
-        UMaterialInterface* UncoveredMaterial = LoadObject<UMaterialInterface>(nullptr,
-            TEXT("/Script/Engine.Material'/VCCSim/Materials/M_Uncovered.M_Uncovered'"));
-        
-        if (UncoveredMaterial)
-        {
-            UncoveredPointsInstancedMesh->SetMaterial(0, UncoveredMaterial);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("InitializeCoverageVisualization: Failed to load uncovered material"));
-        }
+        UE_LOG(LogTemp, Error, TEXT("InitializeCoverageVisualization: "
+                                    "Failed to load coverage material."));
+           
     }
 }
 
@@ -330,162 +292,50 @@ void ASceneAnalysisManager::VisualizeCoverage(bool bShow)
         return;
     
     // Check if we have coverage data
-    if (CoverageMap.Num() == 0)
+    if (!bCoverageGridInitialized)
     {
-        UE_LOG(LogTemp, Warning, TEXT("VisualizeCoverage: No coverage data available"));
+        UE_LOG(LogTemp, Warning, TEXT("VisualizeCoverage: No coverage grid initialized"));
         return;
     }
     
     // If not showing, clear visualization and return
     if (!bShow)
     {
-        CoveredPointsInstancedMesh->SetVisibility(false);
-        UncoveredPointsInstancedMesh->SetVisibility(false);
+        if (CoverageVisualizationMesh)
+        {
+            CoverageVisualizationMesh->SetVisibility(false);
+        }
         return;
     }
     
-    // Initialize visualization if needed
+    // Initialize visualization components if needed
     InitializeCoverageVisualization();
     
-    // If mesh components failed to initialize, return
-    if (!CoveredPointsInstancedMesh || !UncoveredPointsInstancedMesh)
+    // If mesh component failed to initialize, return
+    if (!CoverageVisualizationMesh)
     {
-        UE_LOG(LogTemp, Error, TEXT("VisualizeCoverage: "
-                                    "Coverage mesh components not initialized"));
+        UE_LOG(LogTemp, Error, TEXT("VisualizeCoverage: Coverage "
+                                    "mesh component not initialized"));
         return;
     }
     
-    // Only update instances if dirty or visibility is changing
+    // Only update mesh if dirty or visibility is changing
     if (bCoverageVisualizationDirty)
     {
-        // Clear existing instances
-        CoveredPointsInstancedMesh->ClearInstances();
-        UncoveredPointsInstancedMesh->ClearInstances();
-        
-        // Calculate circle size based on sampling density
-        float CircleRadius = FMath::Max(5.0f, SamplingDensity * 0.5f);
-        float CircleSize = CircleRadius / 20.0f;
-        
-        // Create instances for visible points
-        for (const FVector& Point : VisiblePoints)
-        {
-            // Find closest normal for this point
-            FVector Normal = FVector::UpVector; // Default to up
-            
-            // Find mesh and triangle this point belongs to for better normal estimation
-            for (const FMeshInfo& MeshInfo : SceneMeshes)
-            {
-                if (MeshInfo.Bounds.GetBox().IsInsideOrOn(Point))
-                {
-                    // Find closest triangle's normal
-                    float ClosestDistSq = FLT_MAX;
-                    
-                    for (int32 i = 0; i < MeshInfo.Indices.Num(); i += 3)
-                    {
-                        if (i + 2 < MeshInfo.Indices.Num())
-                        {
-                            const FVector& V0 = MeshInfo.VertexPositions[MeshInfo.Indices[i]];
-                            const FVector& V1 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 1]];
-                            const FVector& V2 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 2]];
-                            
-                            FVector ClosestPoint = FMath::ClosestPointOnTriangleToPoint(Point, V0, V1, V2);
-                            float DistSq = (Point - ClosestPoint).SizeSquared();
-                            
-                            if (DistSq < ClosestDistSq)
-                            {
-                                ClosestDistSq = DistSq;
-                                Normal = FVector::CrossProduct(V1 - V0, V2 - V0).GetSafeNormal();
-                            }
-                        }
-                    }
-                    
-                    break; // Break after finding the mesh
-                }
-            }
-            
-            // Create rotation from normal
-            FRotator CircleRotation = Normal.Rotation();
-            
-            // Create transform with a slight offset along normal to prevent Z-fighting
-            FTransform CircleTransform(
-                CircleRotation,
-                Point + Normal * 1.0f, // Small offset along normal
-                FVector(CircleSize, CircleSize, CircleSize)
-            );
-            
-            // Add instance to covered points
-            CoveredPointsInstancedMesh->AddInstance(CircleTransform);
-        }
-        
-        // Create instances for invisible points
-        for (const FVector& Point : InvisiblePoints)
-        {
-            // Find closest normal using same approach as for visible points
-            FVector Normal = FVector::UpVector; // Default
-            
-            // (Same code as above for finding normal - consider making a helper function)
-            for (const FMeshInfo& MeshInfo : SceneMeshes)
-            {
-                if (MeshInfo.Bounds.GetBox().IsInsideOrOn(Point))
-                {
-                    float ClosestDistSq = FLT_MAX;
-                    
-                    for (int32 i = 0; i < MeshInfo.Indices.Num(); i += 3)
-                    {
-                        if (i + 2 < MeshInfo.Indices.Num())
-                        {
-                            const FVector& V0 = MeshInfo.VertexPositions[MeshInfo.Indices[i]];
-                            const FVector& V1 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 1]];
-                            const FVector& V2 = MeshInfo.VertexPositions[MeshInfo.Indices[i + 2]];
-                            
-                            FVector ClosestPoint = FMath::ClosestPointOnTriangleToPoint(Point, V0, V1, V2);
-                            float DistSq = (Point - ClosestPoint).SizeSquared();
-                            
-                            if (DistSq < ClosestDistSq)
-                            {
-                                ClosestDistSq = DistSq;
-                                Normal = FVector::CrossProduct(V1 - V0, V2 - V0).GetSafeNormal();
-                            }
-                        }
-                    }
-                    
-                    break;
-                }
-            }
-            
-            FRotator CircleRotation = Normal.Rotation();
-            
-            // Create transform with an offset from visible points to prevent Z-fighting
-            FTransform CircleTransform(
-                CircleRotation,
-                Point + Normal * 2.0f, // Slightly larger offset for uncovered points
-                FVector(CircleSize * 0.8f, CircleSize * 0.8f, CircleSize * 0.8f) // Slightly smaller
-            );
-            
-            // Add instance to uncovered points
-            UncoveredPointsInstancedMesh->AddInstance(CircleTransform);
-        }
-        
-        UE_LOG(LogTemp, Display, TEXT("VisualizeCoverage: Added %d covered "
-                                      "and %d uncovered point instances"),
-            VisiblePoints.Num(), InvisiblePoints.Num());
-        
+        CreateCoverageMesh();
         bCoverageVisualizationDirty = false;
     }
+    
+    // Set visibility
+    CoverageVisualizationMesh->SetVisibility(true);
 }
 
 void ASceneAnalysisManager::ClearCoverageVisualization()
 {
-    if (CoveredPointsInstancedMesh)
+    if (CoverageVisualizationMesh)
     {
-        CoveredPointsInstancedMesh->ClearInstances();
-        CoveredPointsInstancedMesh->SetVisibility(false);
-    }
-    
-    if (UncoveredPointsInstancedMesh)
-    {
-        UncoveredPointsInstancedMesh->ClearInstances();
-        UncoveredPointsInstancedMesh->SetVisibility(false);
+        CoverageVisualizationMesh->ClearAllMeshSections();
+        CoverageVisualizationMesh->SetVisibility(false);
     }
 }
 
@@ -508,6 +358,9 @@ void ASceneAnalysisManager::ResetCoverage()
             InvisiblePoints.Add(Point);
         }
     }
+    
+    // Initialize the coverage grid
+    InitializeCoverageGrid();
     
     bCoverageVisualizationDirty = true;
 }
@@ -1016,6 +869,280 @@ TArray<FVector> ASceneAnalysisManager::SamplePointsOnMesh(const FMeshInfo& MeshI
         SampledPoints.Num(), *MeshInfo.MeshName);
     
     return SampledPoints;
+}
+
+void ASceneAnalysisManager::InitializeCoverageGrid()
+{
+    if (!World || SceneMeshes.Num() == 0)
+        return;
+    
+    // Calculate bounds of the scene
+    FBox SceneBounds(EForceInit::ForceInit);
+    for (const FMeshInfo& MeshInfo : SceneMeshes)
+    {
+        SceneBounds += MeshInfo.Bounds.GetBox();
+    }
+    
+    // Expand bounds slightly
+    SceneBounds = SceneBounds.ExpandBy(100.0f);
+    
+    // Store grid origin
+    CoverageGridOrigin = SceneBounds.Min;
+    
+    // Calculate grid dimensions
+    FVector BoundsSize = SceneBounds.GetSize();
+    int32 GridSizeX = FMath::Max(1, FMath::CeilToInt(BoundsSize.X / CoverageGridResolution));
+    int32 GridSizeY = FMath::Max(1, FMath::CeilToInt(BoundsSize.Y / CoverageGridResolution));
+    int32 GridSizeZ = FMath::Max(1, FMath::CeilToInt(BoundsSize.Z / CoverageGridResolution));
+    
+    CoverageGridSize = FVector(GridSizeX, GridSizeY, GridSizeZ);
+    
+    // Initialize the grid with zeros (no coverage)
+    CoverageGrid.SetNum(GridSizeX);
+    for (int32 X = 0; X < GridSizeX; ++X)
+    {
+        CoverageGrid[X].SetNum(GridSizeY);
+        for (int32 Y = 0; Y < GridSizeY; ++Y)
+        {
+            CoverageGrid[X][Y].Init(0.0f, GridSizeZ);
+        }
+    }
+    
+    bCoverageGridInitialized = true;
+    
+    UE_LOG(LogTemp, Display, TEXT("Coverage grid initialized: %dx%dx%d with cell size %.2f"), 
+           GridSizeX, GridSizeY, GridSizeZ, CoverageGridResolution);
+}
+
+void ASceneAnalysisManager::UpdateCoverageGrid()
+{
+     if (!bCoverageGridInitialized)
+        return;
+    
+    // Reset grid to zero
+    for (auto& YZPlane : CoverageGrid)
+    {
+        for (auto& ZArray : YZPlane)
+        {
+            for (auto& Value : ZArray)
+            {
+                Value = 0.0f;
+            }
+        }
+    }
+    
+    // Count number of points in each grid cell
+    TArray<TArray<TArray<int32>>> PointsInCell;
+    PointsInCell.SetNum(CoverageGrid.Num());
+    for (int32 X = 0; X < CoverageGrid.Num(); ++X)
+    {
+        PointsInCell[X].SetNum(CoverageGrid[X].Num());
+        for (int32 Y = 0; Y < CoverageGrid[X].Num(); ++Y)
+        {
+            PointsInCell[X][Y].Init(0, CoverageGrid[X][Y].Num());
+        }
+    }
+    
+    // Count total points and visible points in each cell
+    for (const auto& Pair : CoverageMap)
+    {
+        const FVector& Point = Pair.Key;
+        bool bIsVisible = Pair.Value;
+        
+        // Convert world position to grid indices
+        int32 GridX = FMath::Clamp(FMath::FloorToInt((Point.X - CoverageGridOrigin.X) / CoverageGridResolution), 
+                                  0, CoverageGrid.Num() - 1);
+        int32 GridY = FMath::Clamp(FMath::FloorToInt((Point.Y - CoverageGridOrigin.Y) / CoverageGridResolution), 
+                                  0, CoverageGrid[GridX].Num() - 1);
+        int32 GridZ = FMath::Clamp(FMath::FloorToInt((Point.Z - CoverageGridOrigin.Z) / CoverageGridResolution), 
+                                  0, CoverageGrid[GridX][GridY].Num() - 1);
+        
+        // Increment total points in cell
+        PointsInCell[GridX][GridY][GridZ]++;
+        
+        // If point is visible, increment coverage for this cell
+        if (bIsVisible)
+        {
+            CoverageGrid[GridX][GridY][GridZ] += 1.0f;
+        }
+    }
+    
+    // Normalize coverage values by the number of points in each cell
+    for (int32 X = 0; X < CoverageGrid.Num(); ++X)
+    {
+        for (int32 Y = 0; Y < CoverageGrid[X].Num(); ++Y)
+        {
+            for (int32 Z = 0; Z < CoverageGrid[X][Y].Num(); ++Z)
+            {
+                if (PointsInCell[X][Y][Z] > 0)
+                {
+                    CoverageGrid[X][Y][Z] /= PointsInCell[X][Y][Z];
+                }
+            }
+        }
+    }
+}
+
+void ASceneAnalysisManager::CreateCoverageMesh()
+{
+    // Clear existing mesh sections
+    CoverageVisualizationMesh->ClearAllMeshSections();
+    
+    // Create arrays for procedural mesh
+    TArray<FVector> Vertices;
+    TArray<int32> Triangles;
+    TArray<FVector> Normals;
+    TArray<FVector2D> UV0;
+    TArray<FColor> VertexColors;
+    TArray<FProcMeshTangent> Tangents;
+    
+    // Create cubes for each grid cell with coverage above threshold
+    int32 NumCellsVisualized = 0;
+    for (int32 X = 0; X < CoverageGrid.Num(); ++X)
+    {
+        for (int32 Y = 0; Y < CoverageGrid[X].Num(); ++Y)
+        {
+            for (int32 Z = 0; Z < CoverageGrid[X][Y].Num(); ++Z)
+            {
+                float Coverage = CoverageGrid[X][Y][Z];
+                
+                // Skip cells with no or very low coverage
+                if (Coverage < VisualizationThreshold)
+                    continue;
+                
+                // Calculate cell center in world space
+                FVector CellCenter(
+                    CoverageGridOrigin.X + (X + 0.5f) * CoverageGridResolution,
+                    CoverageGridOrigin.Y + (Y + 0.5f) * CoverageGridResolution,
+                    CoverageGridOrigin.Z + (Z + 0.5f) * CoverageGridResolution
+                );
+                
+                // Calculate cell size (slightly smaller than grid resolution to see cell boundaries)
+                float CellSize = CoverageGridResolution * 0.9f;
+                float HalfSize = CellSize * 0.5f;
+                
+                // Convert coverage to color (green = 1.0, red = 0.0)
+                FColor CellColor = FLinearColor::LerpUsingHSV(
+                    FLinearColor(1.0f, 0.0f, 0.0f), // Red (0% coverage)
+                    FLinearColor(0.0f, 1.0f, 0.0f), // Green (100% coverage)
+                    Coverage
+                ).ToFColor(false);
+                
+                // Adjust alpha based on coverage
+                CellColor.A = 128 + FMath::FloorToInt(127.0f * Coverage); // 128-255 range for alpha
+                
+                // Add a cube for this cell
+                int32 BaseVertexIndex = Vertices.Num();
+                
+                // Define the 8 corners of the cube
+                Vertices.Add(CellCenter + FVector(-HalfSize, -HalfSize, -HalfSize)); // 0: bottom left back
+                Vertices.Add(CellCenter + FVector(HalfSize, -HalfSize, -HalfSize));  // 1: bottom right back
+                Vertices.Add(CellCenter + FVector(HalfSize, HalfSize, -HalfSize));   // 2: bottom right front
+                Vertices.Add(CellCenter + FVector(-HalfSize, HalfSize, -HalfSize));  // 3: bottom left front
+                Vertices.Add(CellCenter + FVector(-HalfSize, -HalfSize, HalfSize));  // 4: top left back
+                Vertices.Add(CellCenter + FVector(HalfSize, -HalfSize, HalfSize));   // 5: top right back
+                Vertices.Add(CellCenter + FVector(HalfSize, HalfSize, HalfSize));    // 6: top right front
+                Vertices.Add(CellCenter + FVector(-HalfSize, HalfSize, HalfSize));   // 7: top left front
+                
+                // Add colors for all 8 vertices
+                for (int32 i = 0; i < 8; ++i)
+                {
+                    VertexColors.Add(CellColor);
+                }
+                
+                // Add texture coordinates
+                UV0.Add(FVector2D(0, 0)); // 0
+                UV0.Add(FVector2D(1, 0)); // 1
+                UV0.Add(FVector2D(1, 1)); // 2
+                UV0.Add(FVector2D(0, 1)); // 3
+                UV0.Add(FVector2D(0, 0)); // 4
+                UV0.Add(FVector2D(1, 0)); // 5
+                UV0.Add(FVector2D(1, 1)); // 6
+                UV0.Add(FVector2D(0, 1)); // 7
+                
+                // Add normals
+                Normals.Add(FVector(-1, -1, -1).GetSafeNormal()); // 0
+                Normals.Add(FVector(1, -1, -1).GetSafeNormal());  // 1
+                Normals.Add(FVector(1, 1, -1).GetSafeNormal());   // 2
+                Normals.Add(FVector(-1, 1, -1).GetSafeNormal());  // 3
+                Normals.Add(FVector(-1, -1, 1).GetSafeNormal());  // 4
+                Normals.Add(FVector(1, -1, 1).GetSafeNormal());   // 5
+                Normals.Add(FVector(1, 1, 1).GetSafeNormal());    // 6
+                Normals.Add(FVector(-1, 1, 1).GetSafeNormal());   // 7
+                
+                // Add tangents (simplified)
+                for (int32 i = 0; i < 8; ++i)
+                {
+                    Tangents.Add(FProcMeshTangent(1, 0, 0));
+                }
+                
+                // Add triangles for each face
+                // Bottom face (0,1,2,3)
+                Triangles.Add(BaseVertexIndex + 0);
+                Triangles.Add(BaseVertexIndex + 1);
+                Triangles.Add(BaseVertexIndex + 2);
+                Triangles.Add(BaseVertexIndex + 0);
+                Triangles.Add(BaseVertexIndex + 2);
+                Triangles.Add(BaseVertexIndex + 3);
+                
+                // Top face (4,5,6,7)
+                Triangles.Add(BaseVertexIndex + 4);
+                Triangles.Add(BaseVertexIndex + 6);
+                Triangles.Add(BaseVertexIndex + 5);
+                Triangles.Add(BaseVertexIndex + 4);
+                Triangles.Add(BaseVertexIndex + 7);
+                Triangles.Add(BaseVertexIndex + 6);
+                
+                // Front face (3,2,6,7)
+                Triangles.Add(BaseVertexIndex + 3);
+                Triangles.Add(BaseVertexIndex + 2);
+                Triangles.Add(BaseVertexIndex + 6);
+                Triangles.Add(BaseVertexIndex + 3);
+                Triangles.Add(BaseVertexIndex + 6);
+                Triangles.Add(BaseVertexIndex + 7);
+                
+                // Back face (0,1,5,4)
+                Triangles.Add(BaseVertexIndex + 0);
+                Triangles.Add(BaseVertexIndex + 5);
+                Triangles.Add(BaseVertexIndex + 1);
+                Triangles.Add(BaseVertexIndex + 0);
+                Triangles.Add(BaseVertexIndex + 4);
+                Triangles.Add(BaseVertexIndex + 5);
+                
+                // Left face (0,3,7,4)
+                Triangles.Add(BaseVertexIndex + 0);
+                Triangles.Add(BaseVertexIndex + 3);
+                Triangles.Add(BaseVertexIndex + 7);
+                Triangles.Add(BaseVertexIndex + 0);
+                Triangles.Add(BaseVertexIndex + 7);
+                Triangles.Add(BaseVertexIndex + 4);
+                
+                // Right face (1,2,6,5)
+                Triangles.Add(BaseVertexIndex + 1);
+                Triangles.Add(BaseVertexIndex + 6);
+                Triangles.Add(BaseVertexIndex + 2);
+                Triangles.Add(BaseVertexIndex + 1);
+                Triangles.Add(BaseVertexIndex + 5);
+                Triangles.Add(BaseVertexIndex + 6);
+                
+                NumCellsVisualized++;
+            }
+        }
+    }
+    
+    // Create the mesh section
+    CoverageVisualizationMesh->CreateMeshSection(0, Vertices, Triangles, Normals,
+        UV0, VertexColors, Tangents, false);
+    
+    // Set the material
+    if (CoverageMaterial)
+    {
+        CoverageVisualizationMesh->SetMaterial(0, CoverageMaterial);
+    }
+    
+    UE_LOG(LogTemp, Display, TEXT("VisualizeCoverage: Created mesh with %d cells, "
+                                  "%d vertices, %d triangles"), 
+           NumCellsVisualized, Vertices.Num(), Triangles.Num() / 3);
 }
 
 /* ----------------------------- Test ----------------------------- */

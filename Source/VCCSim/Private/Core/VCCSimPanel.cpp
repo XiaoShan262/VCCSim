@@ -68,6 +68,7 @@ SVCCSimPanel::~SVCCSimPanel()
     if (SceneAnalysisManager.IsValid())
     {
         SceneAnalysisManager->ClearSafeZoneVisualization();
+        SceneAnalysisManager->ClearCoverageVisualization();
     }
 }
 
