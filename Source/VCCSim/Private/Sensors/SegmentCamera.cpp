@@ -100,7 +100,7 @@ void USegmentationCameraComponent::RConfigure(
     float fx = (Width / 2.0f) / FMath::Tan(HorizontalFOVRad / 2.0f);
 
     // Compute vertical FOV from horizontal FOV and aspect ratio.
-    float verticalFOVRad = 2.0f * FMath::Atan((Height / Width) *
+    float verticalFOVRad = 2.0f * FMath::Atan((static_cast<float>(Height) / Width) *
         FMath::Tan(HorizontalFOVRad / 2.0f));
     float fy = (Height / 2.0f) / FMath::Tan(verticalFOVRad / 2.0f);
 

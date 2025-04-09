@@ -71,7 +71,7 @@ void ASceneAnalysisManager::RegisterCamera(URGBCameraComponent* CameraComponent)
 {
     CameraIntrinsics.Add(CameraComponent->CameraName,
     CameraComponent->GetCameraIntrinsics());
-    //
+
     // CameraComponent->OnKeyPointCaptured.BindUFunction(
     //     this, "");
 }
@@ -101,6 +101,9 @@ FCoverageData ASceneAnalysisManager::ComputeCoverage(
     
     if (!World || CameraTransforms.Num() == 0 || CoverageMap.Num() == 0)
         return CoverageData;
+
+    UE_LOG(LogTemp, Warning, TEXT("ComputeCoverage: Number of cameras: %d"),
+        CameraTransforms.Num());
     
     // Get camera intrinsic for specified camera name
     FMatrix44f CameraIntrinsic;
@@ -133,15 +136,18 @@ FCoverageData ASceneAnalysisManager::ComputeCoverage(
         ConstructFrustum(Frustum, CameraTransform, CameraIntrinsic);
         
         // Check each point in the coverage map
+        int32 PointsInFrustum = 0;
+        int32 PointsOutsideFrustum = 0;
+
         for (auto& Pair : CoverageMap)
         {
             const FVector& Point = Pair.Key;
             bool& bIsVisible = Pair.Value;
-            
+    
             // Skip points that are already marked as visible
             if (bIsVisible)
                 continue;
-            
+    
             // Check if point is inside frustum
             bool bInFrustum = true;
             for (const FPlane& Plane : Frustum.Planes)
@@ -152,13 +158,24 @@ FCoverageData ASceneAnalysisManager::ComputeCoverage(
                     break;
                 }
             }
-            
-            // If in frustum, check if it's occluded
-            if (bInFrustum && IsPointVisibleFromCamera(Point, CameraTransform))
+    
+            if (bInFrustum)
             {
-                bIsVisible = true;
+                PointsInFrustum++;
+                // If in frustum, check if it's occluded
+                if (IsPointVisibleFromCamera(Point, CameraTransform))
+                {
+                    bIsVisible = true;
+                }
+            }
+            else
+            {
+                PointsOutsideFrustum++;
             }
         }
+
+        UE_LOG(LogTemp, Warning, TEXT("Frustum culling: %d points inside frustum, %d points outside"), 
+               PointsInFrustum, PointsOutsideFrustum);
     }
     
     // Now collect visible/invisible points and meshes
@@ -368,9 +385,28 @@ void ASceneAnalysisManager::ResetCoverage()
 void ASceneAnalysisManager::ConstructFrustum(
     FConvexVolume& OutFrustum, const FTransform& CameraPose, const FMatrix44f& CameraIntrinsic)
 {
-    // Get camera parameters
-    float FOV = 2.0f * FMath::Atan(1.0f / CameraIntrinsic.M[0][0]); // FOV from focal length
-    float AspectRatio = CameraIntrinsic.M[1][1] / CameraIntrinsic.M[0][0];
+    // Extract camera parameters
+    const float fx = CameraIntrinsic.M[0][0];
+    const float fy = CameraIntrinsic.M[1][1];
+    const float cx = CameraIntrinsic.M[0][2];
+    const float cy = CameraIntrinsic.M[1][2];
+    
+    // Calculate image width and height from principal points (assuming centered)
+    const float width = cx * 2.0f;  // Width is twice the x principal point
+    const float height = cy * 2.0f; // Height is twice the y principal point
+    
+    // Calculate FOV correctly
+    float HorizontalFOV = (fx > 0.0f) ? 2.0f * FMath::Atan(width / (2.0f * fx))
+    : FMath::DegreesToRadians(90.0f);
+    float VerticalFOV = (fy > 0.0f) ? 2.0f * FMath::Atan(height / (2.0f * fy))
+    : FMath::DegreesToRadians(60.0f);
+    float AspectRatio = width / height;
+    
+    // If values are extreme, use reasonable defaults
+    if (FMath::IsNaN(HorizontalFOV) || HorizontalFOV < FMath::DegreesToRadians(1.0f)) {
+        UE_LOG(LogTemp, Warning, TEXT("FOV calculation failed - using default 90°"));
+        HorizontalFOV = FMath::DegreesToRadians(90.0f);
+    }
     
     // Create frustum planes
     const FVector ForwardVector = CameraPose.GetRotation().GetForwardVector();
@@ -378,52 +414,53 @@ void ASceneAnalysisManager::ConstructFrustum(
     const FVector UpVector = CameraPose.GetRotation().GetUpVector();
     const FVector Position = CameraPose.GetLocation();
     
-    // Near plane
-    const float NearPlaneDistance = 10.0f;
-    const float FarPlaneDistance = 10000.0f;
+    constexpr float NearPlaneDistance = 10.0f;
+    constexpr float FarPlaneDistance = 5000.0f;
     
     // Calculate frustum corners
-    const float HalfFOV = FOV * 0.5f;
-    const float HalfFOVTan = FMath::Tan(HalfFOV);
-    const float NearHeight = NearPlaneDistance * HalfFOVTan;
-    const float NearWidth = NearHeight * AspectRatio;
-    const float FarHeight = FarPlaneDistance * HalfFOVTan;
+    const float HalfVFOV = VerticalFOV * 0.5f;
+
+    const float FarHeight = FarPlaneDistance * FMath::Tan(HalfVFOV);
     const float FarWidth = FarHeight * AspectRatio;
     
     // Near and far plane centers
     const FVector NearCenter = Position + ForwardVector * NearPlaneDistance;
     const FVector FarCenter = Position + ForwardVector * FarPlaneDistance;
     
-    // Near plane corners
-    const FVector NearTopLeft = NearCenter + UpVector * NearHeight - RightVector * NearWidth;
-    const FVector NearTopRight = NearCenter + UpVector * NearHeight + RightVector * NearWidth;
-    const FVector NearBottomLeft = NearCenter - UpVector * NearHeight - RightVector * NearWidth;
-    const FVector NearBottomRight = NearCenter - UpVector * NearHeight + RightVector * NearWidth;
-    
     // Far plane corners
     const FVector FarTopLeft = FarCenter + UpVector * FarHeight - RightVector * FarWidth;
     const FVector FarTopRight = FarCenter + UpVector * FarHeight + RightVector * FarWidth;
     const FVector FarBottomLeft = FarCenter - UpVector * FarHeight - RightVector * FarWidth;
     const FVector FarBottomRight = FarCenter - UpVector * FarHeight + RightVector * FarWidth;
-    
+
     // Create frustum planes
     OutFrustum.Planes.Empty(6);
     
-    // Near plane
-    OutFrustum.Planes.Add(FPlane(NearCenter, -ForwardVector));
+    // Near plane (normal points backward)
+    OutFrustum.Planes.Add(FPlane(NearCenter, ForwardVector));
     
-    // Far plane
-    OutFrustum.Planes.Add(FPlane(FarCenter, ForwardVector));
+    // Far plane (normal points forward)
+    OutFrustum.Planes.Add(FPlane(FarCenter, -ForwardVector));
     
-    // Side planes
-    OutFrustum.Planes.Add(FPlane(Position, FVector::CrossProduct(
-        FarBottomLeft - Position, FarTopLeft - Position).GetSafeNormal()));
-    OutFrustum.Planes.Add(FPlane(Position, FVector::CrossProduct(
-        FarTopRight - Position, FarBottomRight - Position).GetSafeNormal()));
-    OutFrustum.Planes.Add(FPlane(Position, FVector::CrossProduct(
-        FarTopLeft - Position, FarTopRight - Position).GetSafeNormal()));
-    OutFrustum.Planes.Add(FPlane(Position, FVector::CrossProduct(
-        FarBottomRight - Position, FarBottomLeft - Position).GetSafeNormal()));
+    // Left plane
+    FVector LeftNormal = -FVector::CrossProduct(
+        FarBottomLeft - Position, FarTopLeft - Position).GetSafeNormal();
+    OutFrustum.Planes.Add(FPlane(Position, LeftNormal));
+
+    // Right plane
+    FVector RightNormal = -FVector::CrossProduct(
+        FarTopRight - Position, FarBottomRight - Position).GetSafeNormal();
+    OutFrustum.Planes.Add(FPlane(Position, RightNormal));
+
+    // Top plane
+    FVector TopNormal = -FVector::CrossProduct(
+        FarTopLeft - Position, FarTopRight - Position).GetSafeNormal();
+    OutFrustum.Planes.Add(FPlane(Position, TopNormal));
+
+    // Bottom plane
+    FVector BottomNormal = -FVector::CrossProduct(
+        FarBottomRight - Position, FarBottomLeft - Position).GetSafeNormal();
+    OutFrustum.Planes.Add(FPlane(Position, BottomNormal));
 }
 
 void ASceneAnalysisManager::ExtractMeshData(
@@ -781,7 +818,10 @@ bool ASceneAnalysisManager::IsPointVisibleFromCamera(
     const FVector& Point, const FTransform& CameraPose) const
 {
     if (!World)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("IsPointVisibleFromCamera: No valid world"));
         return false;
+    }
     
     // Get camera position
     FVector CameraPos = CameraPose.GetLocation();
