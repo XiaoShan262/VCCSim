@@ -101,9 +101,6 @@ FCoverageData ASceneAnalysisManager::ComputeCoverage(
     
     if (!World || CameraTransforms.Num() == 0 || CoverageMap.Num() == 0)
         return CoverageData;
-
-    UE_LOG(LogTemp, Warning, TEXT("ComputeCoverage: Number of cameras: %d"),
-        CameraTransforms.Num());
     
     // Get camera intrinsic for specified camera name
     FMatrix44f CameraIntrinsic;
@@ -134,10 +131,6 @@ FCoverageData ASceneAnalysisManager::ComputeCoverage(
         // Construct frustum for this camera
         FConvexVolume Frustum;
         ConstructFrustum(Frustum, CameraTransform, CameraIntrinsic);
-        
-        // Check each point in the coverage map
-        int32 PointsInFrustum = 0;
-        int32 PointsOutsideFrustum = 0;
 
         for (auto& Pair : CoverageMap)
         {
@@ -158,24 +151,11 @@ FCoverageData ASceneAnalysisManager::ComputeCoverage(
                     break;
                 }
             }
-    
-            if (bInFrustum)
+            if (IsPointVisibleFromCamera(Point, CameraTransform))
             {
-                PointsInFrustum++;
-                // If in frustum, check if it's occluded
-                if (IsPointVisibleFromCamera(Point, CameraTransform))
-                {
-                    bIsVisible = true;
-                }
-            }
-            else
-            {
-                PointsOutsideFrustum++;
+                bIsVisible = true;
             }
         }
-
-        UE_LOG(LogTemp, Warning, TEXT("Frustum culling: %d points inside frustum, %d points outside"), 
-               PointsInFrustum, PointsOutsideFrustum);
     }
     
     // Now collect visible/invisible points and meshes
@@ -511,6 +491,15 @@ void ASceneAnalysisManager::ExtractMeshData(
             OutMeshInfo.Indices.Add(LODModel.IndexBuffer.GetIndex(IndexIdx));
         }
     }
+}
+
+FIntVector ASceneAnalysisManager::WorldToGridCoordinates(const FVector& WorldPos) const
+{
+    return FIntVector(
+        FMath::FloorToInt((WorldPos.X - CoverageGridOrigin.X) / CoverageGridResolution),
+        FMath::FloorToInt((WorldPos.Y - CoverageGridOrigin.Y) / CoverageGridResolution),
+        FMath::FloorToInt((WorldPos.Z - CoverageGridOrigin.Z) / CoverageGridResolution)
+    );
 }
 
 void ASceneAnalysisManager::GenerateSafeZone(
@@ -929,7 +918,6 @@ void ASceneAnalysisManager::InitializeCoverageGrid()
     // Store grid origin
     CoverageGridOrigin = SceneBounds.Min;
     
-    // Calculate grid dimensions
     FVector BoundsSize = SceneBounds.GetSize();
     int32 GridSizeX = FMath::Max(1, FMath::CeilToInt(BoundsSize.X / CoverageGridResolution));
     int32 GridSizeY = FMath::Max(1, FMath::CeilToInt(BoundsSize.Y / CoverageGridResolution));
@@ -937,88 +925,69 @@ void ASceneAnalysisManager::InitializeCoverageGrid()
     
     CoverageGridSize = FVector(GridSizeX, GridSizeY, GridSizeZ);
     
-    // Initialize the grid with zeros (no coverage)
-    CoverageGrid.SetNum(GridSizeX);
-    for (int32 X = 0; X < GridSizeX; ++X)
+    // Clear the coverage grid (sparse structure)
+    CoverageGrid.Empty();
+    
+    // Pre-populate the grid with cells that contain sampled points
+    for (const auto& Pair : CoverageMap)
     {
-        CoverageGrid[X].SetNum(GridSizeY);
-        for (int32 Y = 0; Y < GridSizeY; ++Y)
-        {
-            CoverageGrid[X][Y].Init(0.0f, GridSizeZ);
-        }
+        const FVector& Point = Pair.Key;
+        FIntVector GridCoords = WorldToGridCoordinates(Point);
+        
+        // Add cell with no coverage yet
+        FCoverageCell& Cell = CoverageGrid.FindOrAdd(GridCoords);
+        Cell.TotalPoints++;
     }
     
     bCoverageGridInitialized = true;
     
-    UE_LOG(LogTemp, Display, TEXT("Coverage grid initialized: %dx%dx%d with cell size %.2f"), 
-           GridSizeX, GridSizeY, GridSizeZ, CoverageGridResolution);
+    UE_LOG(LogTemp, Display, TEXT("Coverage grid initialized: "
+                                  "theoretical grid %dx%dx%d, actual populated cells: %d"), 
+           GridSizeX, GridSizeY, GridSizeZ, CoverageGrid.Num());
 }
 
 void ASceneAnalysisManager::UpdateCoverageGrid()
 {
-     if (!bCoverageGridInitialized)
+    if (!bCoverageGridInitialized)
         return;
     
-    // Reset grid to zero
-    for (auto& YZPlane : CoverageGrid)
+    // Reset visible points and coverage in existing cells
+    for (auto& Pair : CoverageGrid)
     {
-        for (auto& ZArray : YZPlane)
-        {
-            for (auto& Value : ZArray)
-            {
-                Value = 0.0f;
-            }
-        }
+        FCoverageCell& Cell = Pair.Value;
+        Cell.VisiblePoints = 0;
+        Cell.Coverage = 0.0f;
     }
     
-    // Count number of points in each grid cell
-    TArray<TArray<TArray<int32>>> PointsInCell;
-    PointsInCell.SetNum(CoverageGrid.Num());
-    for (int32 X = 0; X < CoverageGrid.Num(); ++X)
-    {
-        PointsInCell[X].SetNum(CoverageGrid[X].Num());
-        for (int32 Y = 0; Y < CoverageGrid[X].Num(); ++Y)
-        {
-            PointsInCell[X][Y].Init(0, CoverageGrid[X][Y].Num());
-        }
-    }
-    
-    // Count total points and visible points in each cell
+    // Process each point in the coverage map
     for (const auto& Pair : CoverageMap)
     {
         const FVector& Point = Pair.Key;
         bool bIsVisible = Pair.Value;
         
-        // Convert world position to grid indices
-        int32 GridX = FMath::Clamp(FMath::FloorToInt((Point.X - CoverageGridOrigin.X) / CoverageGridResolution), 
-                                  0, CoverageGrid.Num() - 1);
-        int32 GridY = FMath::Clamp(FMath::FloorToInt((Point.Y - CoverageGridOrigin.Y) / CoverageGridResolution), 
-                                  0, CoverageGrid[GridX].Num() - 1);
-        int32 GridZ = FMath::Clamp(FMath::FloorToInt((Point.Z - CoverageGridOrigin.Z) / CoverageGridResolution), 
-                                  0, CoverageGrid[GridX][GridY].Num() - 1);
+        // Convert world position to grid coordinates
+        FIntVector GridCoords = WorldToGridCoordinates(Point);
         
-        // Increment total points in cell
-        PointsInCell[GridX][GridY][GridZ]++;
-        
-        // If point is visible, increment coverage for this cell
-        if (bIsVisible)
+        // Get the cell (should already exist from initialization)
+        if (CoverageGrid.Contains(GridCoords))
         {
-            CoverageGrid[GridX][GridY][GridZ] += 1.0f;
+            FCoverageCell& Cell = CoverageGrid[GridCoords];
+            
+            // If point is visible, increment visible points
+            if (bIsVisible)
+            {
+                Cell.VisiblePoints++;
+            }
         }
     }
     
-    // Normalize coverage values by the number of points in each cell
-    for (int32 X = 0; X < CoverageGrid.Num(); ++X)
+    // Normalize coverage values
+    for (auto& Pair : CoverageGrid)
     {
-        for (int32 Y = 0; Y < CoverageGrid[X].Num(); ++Y)
+        FCoverageCell& Cell = Pair.Value;
+        if (Cell.TotalPoints > 0)
         {
-            for (int32 Z = 0; Z < CoverageGrid[X][Y].Num(); ++Z)
-            {
-                if (PointsInCell[X][Y][Z] > 0)
-                {
-                    CoverageGrid[X][Y][Z] /= PointsInCell[X][Y][Z];
-                }
-            }
+            Cell.Coverage = (float)Cell.VisiblePoints / (float)Cell.TotalPoints;
         }
     }
 }
@@ -1036,153 +1005,161 @@ void ASceneAnalysisManager::CreateCoverageMesh()
     TArray<FColor> VertexColors;
     TArray<FProcMeshTangent> Tangents;
     
-    // Create cubes for each grid cell with coverage above threshold
+    // Pre-allocate memory based on number of cells (optimization)
+    int32 EstimatedCells = CoverageGrid.Num() / 2; // Assume about half will be above threshold
+    Vertices.Reserve(EstimatedCells * 8);          // 8 vertices per cube
+    Triangles.Reserve(EstimatedCells * 36);        // 36 indices per cube
+    Normals.Reserve(EstimatedCells * 8);
+    UV0.Reserve(EstimatedCells * 8);
+    VertexColors.Reserve(EstimatedCells * 8);
+    Tangents.Reserve(EstimatedCells * 8);
+    
+    // Create cubes only for cells with coverage above threshold
     int32 NumCellsVisualized = 0;
-    for (int32 X = 0; X < CoverageGrid.Num(); ++X)
+    for (const auto& Pair : CoverageGrid)
     {
-        for (int32 Y = 0; Y < CoverageGrid[X].Num(); ++Y)
+        const FIntVector& GridCoords = Pair.Key;
+        const FCoverageCell& Cell = Pair.Value;
+        
+        // Skip cells with no or very low coverage
+        if (Cell.Coverage < VisualizationThreshold)
+            continue;
+        
+        // Calculate cell center in world space
+        FVector CellCenter(
+            CoverageGridOrigin.X + (GridCoords.X + 0.5f) * CoverageGridResolution,
+            CoverageGridOrigin.Y + (GridCoords.Y + 0.5f) * CoverageGridResolution,
+            CoverageGridOrigin.Z + (GridCoords.Z + 0.5f) * CoverageGridResolution
+        );
+        
+        // Calculate cell size (slightly smaller than grid resolution to see cell boundaries)
+        float CellSize = CoverageGridResolution * 0.9f;
+        float HalfSize = CellSize * 0.5f;
+        
+        // Convert coverage to color (green = 1.0, red = 0.0)
+        FColor CellColor = FLinearColor::LerpUsingHSV(
+            FLinearColor(1.0f, 0.0f, 0.0f), // Red (0% coverage)
+            FLinearColor(0.0f, 1.0f, 0.0f), // Green (100% coverage)
+            Cell.Coverage
+        ).ToFColor(false);
+        
+        // Adjust alpha based on coverage
+        CellColor.A = 128 + FMath::FloorToInt(127.0f * Cell.Coverage); // 128-255 range for alpha
+        
+        // Add a cube for this cell
+        int32 BaseVertexIndex = Vertices.Num();
+        
+        // Define the 8 corners of the cube
+        Vertices.Add(CellCenter + FVector(-HalfSize, -HalfSize, -HalfSize)); // 0: bottom left back
+        Vertices.Add(CellCenter + FVector(HalfSize, -HalfSize, -HalfSize));  // 1: bottom right back
+        Vertices.Add(CellCenter + FVector(HalfSize, HalfSize, -HalfSize));   // 2: bottom right front
+        Vertices.Add(CellCenter + FVector(-HalfSize, HalfSize, -HalfSize));  // 3: bottom left front
+        Vertices.Add(CellCenter + FVector(-HalfSize, -HalfSize, HalfSize));  // 4: top left back
+        Vertices.Add(CellCenter + FVector(HalfSize, -HalfSize, HalfSize));   // 5: top right back
+        Vertices.Add(CellCenter + FVector(HalfSize, HalfSize, HalfSize));    // 6: top right front
+        Vertices.Add(CellCenter + FVector(-HalfSize, HalfSize, HalfSize));   // 7: top left front
+        
+        // Add colors for all 8 vertices
+        for (int32 i = 0; i < 8; ++i)
         {
-            for (int32 Z = 0; Z < CoverageGrid[X][Y].Num(); ++Z)
-            {
-                float Coverage = CoverageGrid[X][Y][Z];
-                
-                // Skip cells with no or very low coverage
-                if (Coverage < VisualizationThreshold)
-                    continue;
-                
-                // Calculate cell center in world space
-                FVector CellCenter(
-                    CoverageGridOrigin.X + (X + 0.5f) * CoverageGridResolution,
-                    CoverageGridOrigin.Y + (Y + 0.5f) * CoverageGridResolution,
-                    CoverageGridOrigin.Z + (Z + 0.5f) * CoverageGridResolution
-                );
-                
-                // Calculate cell size (slightly smaller than grid resolution to see cell boundaries)
-                float CellSize = CoverageGridResolution * 0.9f;
-                float HalfSize = CellSize * 0.5f;
-                
-                // Convert coverage to color (green = 1.0, red = 0.0)
-                FColor CellColor = FLinearColor::LerpUsingHSV(
-                    FLinearColor(1.0f, 0.0f, 0.0f), // Red (0% coverage)
-                    FLinearColor(0.0f, 1.0f, 0.0f), // Green (100% coverage)
-                    Coverage
-                ).ToFColor(false);
-                
-                // Adjust alpha based on coverage
-                CellColor.A = 128 + FMath::FloorToInt(127.0f * Coverage); // 128-255 range for alpha
-                
-                // Add a cube for this cell
-                int32 BaseVertexIndex = Vertices.Num();
-                
-                // Define the 8 corners of the cube
-                Vertices.Add(CellCenter + FVector(-HalfSize, -HalfSize, -HalfSize)); // 0: bottom left back
-                Vertices.Add(CellCenter + FVector(HalfSize, -HalfSize, -HalfSize));  // 1: bottom right back
-                Vertices.Add(CellCenter + FVector(HalfSize, HalfSize, -HalfSize));   // 2: bottom right front
-                Vertices.Add(CellCenter + FVector(-HalfSize, HalfSize, -HalfSize));  // 3: bottom left front
-                Vertices.Add(CellCenter + FVector(-HalfSize, -HalfSize, HalfSize));  // 4: top left back
-                Vertices.Add(CellCenter + FVector(HalfSize, -HalfSize, HalfSize));   // 5: top right back
-                Vertices.Add(CellCenter + FVector(HalfSize, HalfSize, HalfSize));    // 6: top right front
-                Vertices.Add(CellCenter + FVector(-HalfSize, HalfSize, HalfSize));   // 7: top left front
-                
-                // Add colors for all 8 vertices
-                for (int32 i = 0; i < 8; ++i)
-                {
-                    VertexColors.Add(CellColor);
-                }
-                
-                // Add texture coordinates
-                UV0.Add(FVector2D(0, 0)); // 0
-                UV0.Add(FVector2D(1, 0)); // 1
-                UV0.Add(FVector2D(1, 1)); // 2
-                UV0.Add(FVector2D(0, 1)); // 3
-                UV0.Add(FVector2D(0, 0)); // 4
-                UV0.Add(FVector2D(1, 0)); // 5
-                UV0.Add(FVector2D(1, 1)); // 6
-                UV0.Add(FVector2D(0, 1)); // 7
-                
-                // Add normals
-                Normals.Add(FVector(-1, -1, -1).GetSafeNormal()); // 0
-                Normals.Add(FVector(1, -1, -1).GetSafeNormal());  // 1
-                Normals.Add(FVector(1, 1, -1).GetSafeNormal());   // 2
-                Normals.Add(FVector(-1, 1, -1).GetSafeNormal());  // 3
-                Normals.Add(FVector(-1, -1, 1).GetSafeNormal());  // 4
-                Normals.Add(FVector(1, -1, 1).GetSafeNormal());   // 5
-                Normals.Add(FVector(1, 1, 1).GetSafeNormal());    // 6
-                Normals.Add(FVector(-1, 1, 1).GetSafeNormal());   // 7
-                
-                // Add tangents (simplified)
-                for (int32 i = 0; i < 8; ++i)
-                {
-                    Tangents.Add(FProcMeshTangent(1, 0, 0));
-                }
-                
-                // Add triangles for each face
-                // Bottom face (0,1,2,3)
-                Triangles.Add(BaseVertexIndex + 0);
-                Triangles.Add(BaseVertexIndex + 1);
-                Triangles.Add(BaseVertexIndex + 2);
-                Triangles.Add(BaseVertexIndex + 0);
-                Triangles.Add(BaseVertexIndex + 2);
-                Triangles.Add(BaseVertexIndex + 3);
-                
-                // Top face (4,5,6,7)
-                Triangles.Add(BaseVertexIndex + 4);
-                Triangles.Add(BaseVertexIndex + 6);
-                Triangles.Add(BaseVertexIndex + 5);
-                Triangles.Add(BaseVertexIndex + 4);
-                Triangles.Add(BaseVertexIndex + 7);
-                Triangles.Add(BaseVertexIndex + 6);
-                
-                // Front face (3,2,6,7)
-                Triangles.Add(BaseVertexIndex + 3);
-                Triangles.Add(BaseVertexIndex + 2);
-                Triangles.Add(BaseVertexIndex + 6);
-                Triangles.Add(BaseVertexIndex + 3);
-                Triangles.Add(BaseVertexIndex + 6);
-                Triangles.Add(BaseVertexIndex + 7);
-                
-                // Back face (0,1,5,4)
-                Triangles.Add(BaseVertexIndex + 0);
-                Triangles.Add(BaseVertexIndex + 5);
-                Triangles.Add(BaseVertexIndex + 1);
-                Triangles.Add(BaseVertexIndex + 0);
-                Triangles.Add(BaseVertexIndex + 4);
-                Triangles.Add(BaseVertexIndex + 5);
-                
-                // Left face (0,3,7,4)
-                Triangles.Add(BaseVertexIndex + 0);
-                Triangles.Add(BaseVertexIndex + 3);
-                Triangles.Add(BaseVertexIndex + 7);
-                Triangles.Add(BaseVertexIndex + 0);
-                Triangles.Add(BaseVertexIndex + 7);
-                Triangles.Add(BaseVertexIndex + 4);
-                
-                // Right face (1,2,6,5)
-                Triangles.Add(BaseVertexIndex + 1);
-                Triangles.Add(BaseVertexIndex + 6);
-                Triangles.Add(BaseVertexIndex + 2);
-                Triangles.Add(BaseVertexIndex + 1);
-                Triangles.Add(BaseVertexIndex + 5);
-                Triangles.Add(BaseVertexIndex + 6);
-                
-                NumCellsVisualized++;
-            }
+            VertexColors.Add(CellColor);
+        }
+        
+        // Add texture coordinates
+        UV0.Add(FVector2D(0, 0)); // 0
+        UV0.Add(FVector2D(1, 0)); // 1
+        UV0.Add(FVector2D(1, 1)); // 2
+        UV0.Add(FVector2D(0, 1)); // 3
+        UV0.Add(FVector2D(0, 0)); // 4
+        UV0.Add(FVector2D(1, 0)); // 5
+        UV0.Add(FVector2D(1, 1)); // 6
+        UV0.Add(FVector2D(0, 1)); // 7
+        
+        // Add normals
+        Normals.Add(FVector(-1, -1, -1).GetSafeNormal()); // 0
+        Normals.Add(FVector(1, -1, -1).GetSafeNormal());  // 1
+        Normals.Add(FVector(1, 1, -1).GetSafeNormal());   // 2
+        Normals.Add(FVector(-1, 1, -1).GetSafeNormal());  // 3
+        Normals.Add(FVector(-1, -1, 1).GetSafeNormal());  // 4
+        Normals.Add(FVector(1, -1, 1).GetSafeNormal());   // 5
+        Normals.Add(FVector(1, 1, 1).GetSafeNormal());    // 6
+        Normals.Add(FVector(-1, 1, 1).GetSafeNormal());   // 7
+        
+        // Add tangents (simplified)
+        for (int32 i = 0; i < 8; ++i)
+        {
+            Tangents.Add(FProcMeshTangent(1, 0, 0));
+        }
+        
+        // Add triangles for each face
+        // Bottom face (0,1,2,3)
+        Triangles.Add(BaseVertexIndex + 0);
+        Triangles.Add(BaseVertexIndex + 1);
+        Triangles.Add(BaseVertexIndex + 2);
+        Triangles.Add(BaseVertexIndex + 0);
+        Triangles.Add(BaseVertexIndex + 2);
+        Triangles.Add(BaseVertexIndex + 3);
+        
+        // Top face (4,5,6,7)
+        Triangles.Add(BaseVertexIndex + 4);
+        Triangles.Add(BaseVertexIndex + 6);
+        Triangles.Add(BaseVertexIndex + 5);
+        Triangles.Add(BaseVertexIndex + 4);
+        Triangles.Add(BaseVertexIndex + 7);
+        Triangles.Add(BaseVertexIndex + 6);
+        
+        // Front face (3,2,6,7)
+        Triangles.Add(BaseVertexIndex + 3);
+        Triangles.Add(BaseVertexIndex + 2);
+        Triangles.Add(BaseVertexIndex + 6);
+        Triangles.Add(BaseVertexIndex + 3);
+        Triangles.Add(BaseVertexIndex + 6);
+        Triangles.Add(BaseVertexIndex + 7);
+        
+        // Back face (0,1,5,4)
+        Triangles.Add(BaseVertexIndex + 0);
+        Triangles.Add(BaseVertexIndex + 5);
+        Triangles.Add(BaseVertexIndex + 1);
+        Triangles.Add(BaseVertexIndex + 0);
+        Triangles.Add(BaseVertexIndex + 4);
+        Triangles.Add(BaseVertexIndex + 5);
+        
+        // Left face (0,3,7,4)
+        Triangles.Add(BaseVertexIndex + 0);
+        Triangles.Add(BaseVertexIndex + 3);
+        Triangles.Add(BaseVertexIndex + 7);
+        Triangles.Add(BaseVertexIndex + 0);
+        Triangles.Add(BaseVertexIndex + 7);
+        Triangles.Add(BaseVertexIndex + 4);
+        
+        // Right face (1,2,6,5)
+        Triangles.Add(BaseVertexIndex + 1);
+        Triangles.Add(BaseVertexIndex + 6);
+        Triangles.Add(BaseVertexIndex + 2);
+        Triangles.Add(BaseVertexIndex + 1);
+        Triangles.Add(BaseVertexIndex + 5);
+        Triangles.Add(BaseVertexIndex + 6);
+        
+        NumCellsVisualized++;
+    }
+    
+    // Only create mesh if we have cells to visualize
+    if (NumCellsVisualized > 0)
+    {
+        // Create the mesh section
+        CoverageVisualizationMesh->CreateMeshSection(0, Vertices, Triangles, Normals,
+            UV0, VertexColors, Tangents, false);
+        
+        // Set the material
+        if (CoverageMaterial)
+        {
+            CoverageVisualizationMesh->SetMaterial(0, CoverageMaterial);
         }
     }
     
-    // Create the mesh section
-    CoverageVisualizationMesh->CreateMeshSection(0, Vertices, Triangles, Normals,
-        UV0, VertexColors, Tangents, false);
-    
-    // Set the material
-    if (CoverageMaterial)
-    {
-        CoverageVisualizationMesh->SetMaterial(0, CoverageMaterial);
-    }
-    
-    UE_LOG(LogTemp, Display, TEXT("VisualizeCoverage: Created mesh with %d cells, "
-                                  "%d vertices, %d triangles"), 
-           NumCellsVisualized, Vertices.Num(), Triangles.Num() / 3);
+    UE_LOG(LogTemp, Display, TEXT("Coverage visualization: Created mesh with %d cells "
+                                  "visible out of %d populated cells (%d vertices, %d triangles)"), 
+           NumCellsVisualized, CoverageGrid.Num(), Vertices.Num(), Triangles.Num() / 3);
 }
 
 /* ----------------------------- Test ----------------------------- */

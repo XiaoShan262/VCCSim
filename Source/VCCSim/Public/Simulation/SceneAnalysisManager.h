@@ -15,6 +15,15 @@ struct FCoverageData
     int32 TotalVisibleTriangles;
 };
 
+struct FCoverageCell
+{
+    int32 TotalPoints;
+    int32 VisiblePoints;
+    float Coverage;
+    
+    FCoverageCell() : TotalPoints(0), VisiblePoints(0), Coverage(0.0f) {}
+};
+
 UCLASS(BlueprintType, Blueprintable)
 class VCCSIM_API ASceneAnalysisManager : public AActor
 {
@@ -55,7 +64,7 @@ public:
     UPROPERTY(EditAnywhere, Category = "SceneAnalysis|Coverage")
     bool bUseVertexSampling = true;
     UPROPERTY(EditAnywhere, Category = "SceneAnalysis|Coverage", meta = (ClampMin = "0.0", ClampMax = "1.0"))
-    float VisualizationThreshold = 0.01f;
+    float VisualizationThreshold = 0.f;
     
     // Safe zone
     void GenerateSafeZone(const float& SafeDistance, const float& SafeHeight);
@@ -77,6 +86,7 @@ public:
     TArray<FMeshInfo> GetAllMeshInfo() const;
     static void ExtractMeshData(UStaticMeshComponent* MeshComponent,
     FMeshInfo& OutMeshInfo);
+    FIntVector WorldToGridCoordinates(const FVector& WorldPos) const;
     
     /* ----------------------------- Test ----------------------------- */
     FString LogPath;
@@ -117,7 +127,7 @@ private:
     TArray<FVector> InvisiblePoints;
 
     // Coverage Grid
-    TArray<TArray<TArray<float>>> CoverageGrid;
+    TMap<FIntVector, FCoverageCell> CoverageGrid;
     FVector CoverageGridOrigin;
     FVector CoverageGridSize;
     bool bCoverageGridInitialized = false;
