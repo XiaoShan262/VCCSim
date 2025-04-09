@@ -67,6 +67,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "RGBCamera")
     void CaptureRGBScene();
 
+    void ComputeIntrinsics();
     FMatrix44f GetCameraIntrinsics() const { return CameraIntrinsics; }
     // For GRPC call
     void AsyncGetRGBImageData(TFunction<void(const TArray<FColor>&)> Callback);

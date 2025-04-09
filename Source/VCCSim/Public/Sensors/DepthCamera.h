@@ -60,7 +60,8 @@ public:
     void SetRecordState(bool RState){ RecordState = RState; }
     
     int32 GetCameraIndex() const { return CameraIndex; }
-    
+
+    void InitializeRenderTargets();
     void SetCaptureComponent() const;
 
     UFUNCTION(BlueprintCallable, Category = "DepthCamera")
@@ -80,7 +81,6 @@ protected:
     virtual void TickComponent(float DeltaTime, ELevelTick TickType,
     FActorComponentTickFunction* ThisTickFunction) override;
     
-    void InitializeRenderTargets();
     void ProcessDepthTexture(TFunction<void()> OnComplete);
     void ProcessDepthTextureParam(
         TFunction<void(const TArray<FFloat16Color>&)> OnComplete);

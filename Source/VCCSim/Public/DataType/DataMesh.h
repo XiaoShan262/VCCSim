@@ -17,6 +17,7 @@
 
 #pragma once
 
+// grpc
 struct FCompactVertex {
 	float X, Y, Z;
 };
@@ -27,4 +28,19 @@ struct FMeshHeader {
 	uint32 VertexCount;
 	uint32 IndexCount;
 	uint32 Flags;
+};
+
+// simulation
+struct FMeshInfo
+{
+	int32 MeshID;
+	FString MeshName;
+	UStaticMesh* Mesh;
+	FTransform Transform;
+	FBoxSphereBounds Bounds;
+	int32 NumTriangles;
+	int32 NumVertices;
+	TArray<FVector> VertexPositions;
+	TArray<int32> Indices;
+	bool bIsVisible;
 };

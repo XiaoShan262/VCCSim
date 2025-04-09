@@ -33,7 +33,6 @@
 #include "LevelSequenceActor.h"
 #include "Kismet/GameplayStatics.h"
 
-
 void AVCCHUD::BeginPlay()
 {
     Super::BeginPlay();
@@ -50,7 +49,7 @@ void AVCCHUD::BeginPlay()
         MeshManager->RConfigure(Config);
     }
 
-    // SceneAnalysisManager = NewObject<USceneAnalysisManager>(Holder);
+    // SceneAnalysisManager = NewObject<ASceneAnalysisManager>(Holder);
     // SceneAnalysisManager->Initialize(GetWorld(), Config.VCCSim.LogSavePath.c_str());
     // SceneAnalysisManager->ScanScene();
     
@@ -428,9 +427,9 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                         // Use both robot tag and camera ID/index for unique identification
                         // FString cameraKey = FString::Printf(TEXT("%s^%d"), 
                         //     *FString(Robot.UETag.c_str()), DepthCam->GetCameraIndex());
-                        FString cameraKey = FString::Printf(TEXT("%s"),
+                        FString CameraKey = FString::Printf(TEXT("%s"),
                             *FString(Robot.UETag.c_str()));
-                        RGrpcMaps.RCMaps.RDCMap[TCHAR_TO_UTF8(*cameraKey)] = DepthCam;
+                        RGrpcMaps.RCMaps.RDCMap[TCHAR_TO_UTF8(*CameraKey)] = DepthCam;
                     }
 
                     if (DepthCam->bRecorded)
@@ -451,9 +450,10 @@ FRobotGrpcMaps AVCCHUD::SetupActors(const FVCCSimConfig& Config)
                         RGBCam->RConfigure(
                             *static_cast<FRGBCameraConfig*>(Component.second.get()), Recorder);
                         // Use both robot tag and camera ID/index for unique identification
-                        FString cameraKey = FString::Printf(TEXT("%s^%d"), 
+                        FString CameraKey = FString::Printf(TEXT("%s^%d"), 
                             *FString(Robot.UETag.c_str()), RGBCam->GetCameraIndex());
-                        RGrpcMaps.RCMaps.RRGBCMap[TCHAR_TO_UTF8(*cameraKey)] = RGBCam;
+                        RGrpcMaps.RCMaps.RRGBCMap[TCHAR_TO_UTF8(*CameraKey)] = RGBCam;
+                        RGBCam->CameraName = CameraKey;
                     }
 
                     if (RGBCam->bRecorded)

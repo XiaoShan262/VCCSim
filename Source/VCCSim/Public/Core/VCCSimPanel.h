@@ -1,10 +1,31 @@
+/*
+* Copyright (C) 2025 Visual Computing Research Center, Shenzhen University
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Widgets/Docking/SDockTab.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Editor/PropertyEditor/Public/IDetailsView.h"
-#include "Pawns/FlashPawn.h"
+
+class AFlashPawn;
+class AVCCSimPath;
+class USplineMeshComponent;
+class ASceneAnalysisManager;
 
 class VCCSIM_API SVCCSimPanel final : public SCompoundWidget
 {
@@ -30,6 +51,8 @@ private:
     TSharedPtr<class SNumericEntryBox<float>> RadiusSpinBox;
     TSharedPtr<class SNumericEntryBox<float>> HeightOffsetSpinBox;
     TSharedPtr<class SNumericEntryBox<float>> VerticalGapSpinBox;
+    TSharedPtr<class SNumericEntryBox<float>> SafeDistanceSpinBox;
+    TSharedPtr<class SNumericEntryBox<float>> SafeHeightSpinBox;
     
     // Camera availability indicators
     TSharedPtr<class STextBlock> RGBCameraAvailableText;
@@ -52,17 +75,21 @@ private:
     TWeakObjectPtr<AActor> SelectedTargetObject;
     
     // Configuration
-    int32 NumPoses = 8;
+    int32 NumPoses = 50;
     float Radius = 500.0f;
     float HeightOffset = 0.0f;
     float VerticalGap = 50.0f;
     FString SaveDirectory;
+    float SafeDistance = 500.0f;
+    float SafeHeight = 300.0f;
     
     // TOptional attributes for SpinBox values
     TOptional<int32> NumPosesValue;
     TOptional<float> RadiusValue;
     TOptional<float> HeightOffsetValue;
     TOptional<float> VerticalGapValue;
+    TOptional<float> SafeDistanceValue;
+    TOptional<float> SafeHeightValue;
     
     // Camera settings
     bool bUseRGBCamera = true;
@@ -80,10 +107,11 @@ private:
     
     // UI creation helpers
     TSharedRef<SWidget> CreatePawnSelectPanel();
+    TSharedRef<SWidget> CreateCameraSelectPanel();
     TSharedRef<SWidget> CreateTargetSelectPanel();
     TSharedRef<SWidget> CreatePoseConfigPanel();
     TSharedRef<SWidget> CreateCapturePanel();
-    TSharedRef<SWidget> CreateCameraSelectPanel();
+    TSharedRef<SWidget> CreateSceneAnalysisPanel();
     
     // UI callbacks
     void OnSelectFlashPawnToggleChanged(ECheckBoxState NewState);
@@ -96,7 +124,10 @@ private:
     FReply OnGeneratePosesClicked();
     FReply OnCaptureImagesClicked();
     void SaveRGB(int32 PoseIndex, bool& bAnyCaptured);
+    void SaveDepth(int32 PoseIndex, bool& bAnyCaptured);
+    void SaveSeg(int32 PoseIndex, bool& bAnyCaptured);
     void StartAutoCapture();
+    TSharedPtr<std::atomic<int32>> JobNum;
     
     // Helper functions
     void GeneratePosesAroundTarget();
@@ -115,6 +146,28 @@ private:
     TSharedRef<SWidget> CreateSectionHeader(const FString& Title);
     TSharedRef<SWidget> CreateSectionContent(TSharedRef<SWidget> Content);
     TSharedRef<SWidget> CreatePropertyRow(const FString& Label, TSharedRef<SWidget> Content);
+
+    bool bPathVisualized = false;
+    bool bPathNeedsUpdate = true;
+    TWeakObjectPtr<AActor> PathVisualizationActor;
+    TSharedPtr<class SButton> VisualizePathButton;
+    FReply OnTogglePathVisualizationClicked();
+    void UpdatePathVisualization();
+    void ShowPathVisualization();
+    void HidePathVisualization();
+
+    TWeakObjectPtr<ASceneAnalysisManager> SceneAnalysisManager = nullptr;
+    bool bNeedScan = true;
+    bool bGenSafeZone = true;
+    bool bSafeZoneVisualized = false;
+    TSharedPtr<class SButton> VisualizeSafeZoneButton;
+    FReply OnToggleSafeZoneVisualizationClicked();
+
+    bool bInitCoverage = true;
+    bool bGenCoverage = true;
+    bool bCoverageVisualized = false;
+    TSharedPtr<class SButton> VisualizeCoverageButton;
+    FReply OnToggleCoverageVisualizationClicked();
 };
 
 namespace FVCCSimPanelFactory

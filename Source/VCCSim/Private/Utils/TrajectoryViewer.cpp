@@ -67,6 +67,99 @@ void UTrajectoryViewer::TickComponent(float DeltaTime, enum ELevelTick TickType,
     }
 }
 
+AActor* UTrajectoryViewer::GenerateVisibleElements(
+    UWorld* World,
+    const TArray<FVector>& InPositions,
+    const TArray<FRotator>& InRotations,
+    UMaterialInterface* PathMaterial,
+    UMaterialInterface* CameraMaterial,
+    float PathWidth,
+    float ConeSize,
+    float ConeLength)
+{
+    if (!World || InPositions.Num() == 0 || InPositions.Num() != InRotations.Num())
+    {
+        return nullptr;
+    }
+    
+    // Create a container actor for all visualization elements
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.ObjectFlags = RF_Transient;  // Make it not saved
+    AActor* VisualizationActor = World->SpawnActor<AActor>(AActor::StaticClass(), FTransform::Identity, SpawnParams);
+    VisualizationActor->SetActorLabel(TEXT("PathVisualization_Temp"));
+    
+    // Load meshes
+    UStaticMesh* CylinderMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder"));
+    UStaticMesh* ConeMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cone"));
+    
+    if (!CylinderMesh || !ConeMesh)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to load basic shapes for path visualization"));
+        World->DestroyActor(VisualizationActor);
+        return nullptr;
+    }
+    
+    // Create path lines
+    for (int32 i = 0; i < InPositions.Num() - 1; ++i)
+    {
+        FVector Start = InPositions[i];
+        FVector End = InPositions[i + 1];
+        FVector Direction = End - Start;
+        float Distance = Direction.Size();
+        
+        // Skip if points are too close
+        if (Distance < 1.0f)
+        {
+            continue;
+        }
+        
+        UStaticMeshComponent* CylinderComponent = NewObject<UStaticMeshComponent>(VisualizationActor);
+        CylinderComponent->SetStaticMesh(CylinderMesh);
+        CylinderComponent->SetMaterial(0, PathMaterial);
+        CylinderComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        
+        // Scale cylinder to connect points
+        // Cylinder default is 100x50x50 units (height x radius x radius)
+        float ScaleX = Distance / 100.0f;  // Scale along length
+        float ScaleYZ = PathWidth / 100.0f;  // Scale for thickness
+        CylinderComponent->SetWorldScale3D(FVector(ScaleX, ScaleYZ, ScaleYZ));
+        
+        // Align cylinder with direction
+        FRotator Rotation = FRotationMatrix::MakeFromX(Direction).Rotator();
+        CylinderComponent->SetWorldRotation(Rotation);
+        
+        // Position cylinder between points
+        CylinderComponent->SetWorldLocation(Start + Direction * 0.5f);
+        
+        CylinderComponent->RegisterComponent();
+    }
+    
+    // Create camera representations (cones)
+    for (int32 i = 0; i < InPositions.Num(); ++i)
+    {
+        FVector Location = InPositions[i];
+        FRotator Rotation = InRotations[i];
+        
+        UStaticMeshComponent* ConeComponent = NewObject<UStaticMeshComponent>(VisualizationActor);
+        ConeComponent->SetStaticMesh(ConeMesh);
+        ConeComponent->SetMaterial(0, CameraMaterial);
+        ConeComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        
+        // Scale cone (default cone is 100x50x50 units)
+        float BaseScale = ConeSize / 100.0f;
+        float LengthScale = ConeLength / 100.0f;
+        ConeComponent->SetWorldScale3D(FVector(LengthScale, BaseScale, BaseScale));
+        
+        FRotator ConeRotation = Rotation;
+        ConeRotation.Pitch += 90.0f;
+        ConeComponent->SetWorldRotation(ConeRotation);
+        ConeComponent->SetWorldLocation(Location);
+        ConeComponent->RegisterComponent();
+    }
+    
+    return VisualizationActor;
+}
+
 void UTrajectoryViewer::UpdatePartialPath()
 {
     const float ComponentZ = GetRelativeLocation().Z;

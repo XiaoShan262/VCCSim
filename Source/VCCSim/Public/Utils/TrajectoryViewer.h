@@ -36,6 +36,16 @@ public:
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void TickComponent(float DeltaTime, enum ELevelTick TickType,
        FActorComponentTickFunction* ThisTickFunction) override;
+
+    static AActor* GenerateVisibleElements(
+        UWorld* World,
+        const TArray<FVector>& InPositions,
+        const TArray<FRotator>& InRotations,
+        UMaterialInterface* PathMaterial,
+        UMaterialInterface* CameraMaterial,
+        float PathWidth = 5.0f,
+        float ConeSize = 20.0f,
+        float ConeLength = 30.0f);
     
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trajectory")
     USplineComponent* SplineComponent;

@@ -29,7 +29,7 @@ class UInputAction;
 class UInputMappingContext;
 class ARecorder;
 class UFMeshManager;
-class USceneAnalysisManager;
+class ASceneAnalysisManager;
 struct FRobotGrpcMaps;
 
 UCLASS()
@@ -84,7 +84,7 @@ private:
 	UPROPERTY()
 	UFMeshManager* MeshManager = nullptr;
 	UPROPERTY()
-	USceneAnalysisManager* SceneAnalysisManager = nullptr;
+	ASceneAnalysisManager* SceneAnalysisManager = nullptr;
 
 	AActor* FindPawnInTagAndName(const std::string& Target, TArray<AActor*> FoundPawns);
 };
