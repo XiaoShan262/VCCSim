@@ -15,13 +15,22 @@ struct FCoverageData
     int32 TotalVisibleTriangles;
 };
 
-struct FCoverageCell
+struct FUnifiedGridCell
 {
+    // Coverage data
     int32 TotalPoints;
     int32 VisiblePoints;
     float Coverage;
     
-    FCoverageCell() : TotalPoints(0), VisiblePoints(0), Coverage(0.0f) {}
+    // Safe zone data
+    bool bIsSafe;
+    
+    FUnifiedGridCell() 
+        : TotalPoints(0)
+        , VisiblePoints(0)
+        , Coverage(0.0f)
+        , bIsSafe(true) 
+    {}
 };
 
 UCLASS(BlueprintType, Blueprintable)
@@ -35,7 +44,10 @@ public:
     bool Initialize(UWorld* InWorld, FString&& Path);
     void ScanScene();
     void RegisterCamera(URGBCameraComponent* CameraComponent);
-
+    
+    UPROPERTY(EditAnywhere, Category = "SceneAnalysis")
+    float GridResolution = 50.0f;
+    
     // Coverage
     float GetTotalCoveragePercentage() const { return CurrentCoveragePercentage;}
     void ResetCoverage();
@@ -44,7 +56,7 @@ public:
     FCoverageData ComputeCoverage(
         const FTransform& CameraTransform, const FString& CameraName);
     
-    // Coverage Grid Visualization - New Approach
+    // Coverage Grid Visualization
     UFUNCTION(BlueprintCallable, Category = "SceneAnalysis|Coverage")
     void InitializeCoverageVisualization();
     UFUNCTION(BlueprintCallable, Category = "SceneAnalysis|Coverage")
@@ -58,8 +70,6 @@ public:
     UPROPERTY(EditAnywhere, Category = "SceneAnalysis|Coverage")
     UMaterialInterface* CoverageMaterial;
     UPROPERTY(EditAnywhere, Category = "SceneAnalysis|Coverage")
-    float CoverageGridResolution = 50.0f;
-    UPROPERTY(EditAnywhere, Category = "SceneAnalysis|Coverage")
     int SamplingDensity = 1;
     UPROPERTY(EditAnywhere, Category = "SceneAnalysis|Coverage")
     bool bUseVertexSampling = true;
@@ -69,9 +79,7 @@ public:
     // Safe zone
     void GenerateSafeZone(const float& SafeDistance, const float& SafeHeight);
     UPROPERTY(EditAnywhere, Category = "SceneAnalysis | SafeZone")
-    float GridResolution = 100.f;
-    UPROPERTY(EditAnywhere, Category = "SceneAnalysis | SafeZone")
-    UInstancedStaticMeshComponent* SafeZoneInstancedMesh;
+    UProceduralMeshComponent* SafeZoneVisualizationMesh;
     UPROPERTY(EditAnywhere, Category = "SceneAnalysis | SafeZone")
     UMaterialInterface* SafeZoneMaterial;
     UFUNCTION(BlueprintCallable, Category = "SceneAnalysis | SafeZone")
@@ -87,6 +95,7 @@ public:
     static void ExtractMeshData(UStaticMeshComponent* MeshComponent,
     FMeshInfo& OutMeshInfo);
     FIntVector WorldToGridCoordinates(const FVector& WorldPos) const;
+    void InitializeUnifiedGrid();
     
     /* ----------------------------- Test ----------------------------- */
     FString LogPath;
@@ -103,9 +112,9 @@ private:
         const FTransform& CameraPose) const;
     TArray<FVector> SamplePointsOnMesh(const FMeshInfo& MeshInfo);
 
-    void InitializeCoverageGrid();
     void UpdateCoverageGrid();
     void CreateCoverageMesh();
+    void CreateSafeZoneMesh();
 
 private:
     UPROPERTY()
@@ -119,22 +128,20 @@ private:
     
     TSet<int32> CurrentlyVisibleMeshIDs;
 
+    TMap<FIntVector, FUnifiedGridCell> UnifiedGrid;
+    FVector GridOrigin;
+    FVector GridSize;
+    bool bGridInitialized = false;
+    
     // Coverage
     TMap<FVector, bool> CoverageMap;
     float CurrentCoveragePercentage;
-    bool bCoverageVisualizationDirty = false;
     TArray<FVector> VisiblePoints;
     TArray<FVector> InvisiblePoints;
-
-    // Coverage Grid
-    TMap<FIntVector, FCoverageCell> CoverageGrid;
-    FVector CoverageGridOrigin;
-    FVector CoverageGridSize;
-    bool bCoverageGridInitialized = false;
+    bool bCoverageVisualizationDirty = false;
 
     // Safe zone
     UPROPERTY()
     FBox ExpandedSceneBounds;
-    TArray<TArray<TArray<bool>>> SafeZoneGrid;
     bool bSafeZoneDirty = false;
 };

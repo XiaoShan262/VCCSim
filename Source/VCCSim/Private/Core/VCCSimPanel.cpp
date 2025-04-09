@@ -868,7 +868,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCapturePanel()
                         return FReply::Handled();
                     })
                     .IsEnabled_Lambda([this]() {
-                        return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
+                        return SelectedFlashPawn.IsValid();
                     })
                 ]
                 +SHorizontalBox::Slot()
@@ -889,7 +889,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCapturePanel()
                         return FReply::Handled();
                     })
                     .IsEnabled_Lambda([this]() {
-                        return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
+                        return SelectedFlashPawn.IsValid();
                     })
                 ]
             ]
