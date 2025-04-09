@@ -868,7 +868,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCapturePanel()
                         return FReply::Handled();
                     })
                     .IsEnabled_Lambda([this]() {
-                        return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
+                        return SelectedFlashPawn.IsValid();
                     })
                 ]
                 +SHorizontalBox::Slot()
@@ -889,7 +889,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreateCapturePanel()
                         return FReply::Handled();
                     })
                     .IsEnabled_Lambda([this]() {
-                        return SelectedFlashPawn.IsValid() && SelectedTargetObject.IsValid();
+                        return SelectedFlashPawn.IsValid();
                     })
                 ]
             ]
@@ -1100,7 +1100,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreateSceneAnalysisPanel()
         ]
         +SHorizontalBox::Slot()
         .MaxWidth(120)
-        .Padding(FMargin(4, 0, 4, 0))
+        .Padding(FMargin(0, 0, 4, 0))
         .HAlign(HAlign_Fill)
         [
             SAssignNew(VisualizeSafeZoneButton, SButton)
@@ -1113,6 +1113,25 @@ TSharedRef<SWidget> SVCCSimPanel::CreateSceneAnalysisPanel()
                 return FText::FromString(bSafeZoneVisualized ? "Hide SafeZone" : "Show SafeZone");
             })
             .OnClicked(this, &SVCCSimPanel::OnToggleSafeZoneVisualizationClicked)
+            .IsEnabled_Lambda([this]() {
+                return SceneAnalysisManager.IsValid() && !bGenSafeZone;
+            })
+        ]
+        +SHorizontalBox::Slot()
+        .MaxWidth(120)
+        .Padding(FMargin(0, 0, 4, 0))
+        .HAlign(HAlign_Fill)
+        [
+            SNew(SButton)
+            .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+            .ContentPadding(FMargin(0, 2))
+            .Text(FText::FromString("Clear SafeZone"))
+            .HAlign(HAlign_Center)
+            .OnClicked_Lambda([this]() {
+                SceneAnalysisManager->ClearSafeZoneVisualization();
+                bGenSafeZone = true;
+                return FReply::Handled();
+            })
             .IsEnabled_Lambda([this]() {
                 return SceneAnalysisManager.IsValid() && !bGenSafeZone;
             })
@@ -1187,7 +1206,7 @@ TSharedRef<SWidget> SVCCSimPanel::CreateSceneAnalysisPanel()
         ]
         +SHorizontalBox::Slot()
         .MaxWidth(120)
-        .Padding(FMargin(4, 0, 4, 0))
+        .Padding(FMargin(0, 0, 4, 0))
         .HAlign(HAlign_Fill)
         [
             SAssignNew(VisualizeCoverageButton, SButton)
@@ -1200,6 +1219,25 @@ TSharedRef<SWidget> SVCCSimPanel::CreateSceneAnalysisPanel()
                 return FText::FromString(bCoverageVisualized ? "Hide Coverage" : "Show Coverage");
             })
             .OnClicked(this, &SVCCSimPanel::OnToggleCoverageVisualizationClicked)
+            .IsEnabled_Lambda([this]() {
+                return SceneAnalysisManager.IsValid() && !bGenCoverage;
+            })
+        ]
+        +SHorizontalBox::Slot()
+        .MaxWidth(120)
+        .Padding(FMargin(0, 0, 4, 0))
+        .HAlign(HAlign_Fill)
+        [
+            SNew(SButton)
+            .ButtonStyle(FAppStyle::Get(), "FlatButton.Default")
+            .ContentPadding(FMargin(0, 2))
+            .Text(FText::FromString("Clear Coverage"))
+            .HAlign(HAlign_Center)
+            .OnClicked_Lambda([this]() {
+                SceneAnalysisManager->ClearCoverageVisualization();
+                bGenCoverage = true;
+                return FReply::Handled();
+            })
             .IsEnabled_Lambda([this]() {
                 return SceneAnalysisManager.IsValid() && !bGenCoverage;
             })
